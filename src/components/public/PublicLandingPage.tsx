@@ -16,7 +16,6 @@ import {
   Star,
   CheckCircle2,
   Heart,
-  ShieldCheck,
   ChevronRight,
   MessageCircle,
   CreditCard,
@@ -517,13 +516,6 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             <div className="flex items-center gap-2 text-xs text-white/70 mb-3">
               <CreditCard className="w-4 h-4 text-[#c4b491]" />
               <span>Aceitamos Pix, Cartão de Crédito, Débito e Dinheiro.</span>
-            </div>
-            <div className="pt-2 border-t border-white/10">
-              <span className="text-[10px] text-white/40 block mb-1">Acesso Restrito:</span>
-              <span className="inline-flex items-center gap-1.5 text-xs text-[#c4b491] font-semibold">
-                <ShieldCheck className="w-4 h-4 text-[#c4b491]" />
-                <span>Gestão Admin: admin@levcoworkingbeauty.com.br (Senha: 123)</span>
-              </span>
             </div>
           </div>
         </div>
