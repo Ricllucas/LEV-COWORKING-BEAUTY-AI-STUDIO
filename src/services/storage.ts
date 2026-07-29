@@ -169,6 +169,10 @@ export class StorageService {
       return { success: false, error: 'Usuário não encontrado com este E-mail ou Celular. Verifique os dados ou cadastre-se.' };
     }
 
+    if (found.role !== 'cliente') {
+      return { success: false, error: 'Este acesso é exclusivo para clientes cadastrados.' };
+    }
+
     if (found.password && found.password !== cleanPass) {
       return { success: false, error: 'Senha incorreta. Tente novamente.' };
     }
@@ -313,6 +317,10 @@ export class StorageService {
       return { success: false, error: 'Nenhuma conta foi encontrada com esse E-mail ou Celular/WhatsApp.' };
     }
 
+    if (users[userIndex].role !== 'cliente') {
+      return { success: false, error: 'A recuperação pública de senha é exclusiva para clientes.' };
+    }
+
     users[userIndex].password = cleanNew;
     setStored(STORAGE_KEYS.USERS, users);
 
@@ -344,7 +352,12 @@ export class StorageService {
 
   // Current User
   static getCurrentUser(): User {
-    return getStored<User>(STORAGE_KEYS.CURRENT_USER, DEFAULT_CURRENT_USER);
+    const user = getStored<User>(STORAGE_KEYS.CURRENT_USER, DEFAULT_CURRENT_USER);
+    if (user.role !== 'cliente') {
+      setStored<User>(STORAGE_KEYS.CURRENT_USER, DEFAULT_CURRENT_USER);
+      return DEFAULT_CURRENT_USER;
+    }
+    return user;
   }
 
   static setCurrentUser(user: User): void {
