@@ -8,7 +8,6 @@ import { MobileNav } from './components/common/MobileNav';
 import { SplashScreen } from './components/common/SplashScreen';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
 import { PWAInstallerModal } from './components/common/PWAInstallerModal';
-import { RoleSwitcherModal } from './components/auth/RoleSwitcherModal';
 import { AuthModal } from './components/auth/AuthModal';
 
 // Views
@@ -34,7 +33,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('inicio');
 
   // Modals
-  const [isRoleSwitcherOpen, setIsRoleSwitcherOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register' | 'forgot' | 'changePassword'>('login');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -80,7 +78,6 @@ export default function App() {
       {/* Header */}
       <Header
         currentUser={currentUser}
-        onOpenRoleSwitcher={() => setIsRoleSwitcherOpen(true)}
         onOpenAuthModal={handleOpenAuthModal}
         onLogout={handleLogout}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
@@ -165,7 +162,7 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={tab => setActiveTab(tab)}
         onOpenNewBooking={() => handleOpenBooking()}
-        onOpenMoreMenu={() => setIsRoleSwitcherOpen(true)}
+        onOpenMoreMenu={() => setActiveTab('cliente-portal')}
       />
 
       {/* Global Modals */}
@@ -181,20 +178,6 @@ export default function App() {
         onClose={() => setIsAuthModalOpen(false)}
         defaultMode={authModalMode}
         onUserAuthenticated={u => {
-          setCurrentUser(u);
-          if (u.role === 'cliente') {
-            setActiveTab('cliente-portal');
-          } else {
-            setActiveTab('inicio');
-          }
-        }}
-      />
-
-      <RoleSwitcherModal
-        isOpen={isRoleSwitcherOpen}
-        onClose={() => setIsRoleSwitcherOpen(false)}
-        currentUser={currentUser}
-        onUserChanged={u => {
           setCurrentUser(u);
           if (u.role === 'cliente') {
             setActiveTab('cliente-portal');
