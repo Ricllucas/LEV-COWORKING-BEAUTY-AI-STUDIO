@@ -39,7 +39,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     whatsapp: "5511971112233",
     email: "elisangela@levcoworkingbeauty.com.br",
     bio: "Especialista em manicure e pedicure tradicional, cutilagem técnica funda sem agressão e spa dos pés relaxante. Cuidado clássico e impecável.",
-    avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400",
+    avatarUrl: "/profiles/elisangela.webp",
     categories: ["Unha Raiz"],
     color: "#D4AF37", // Warm Gold
     workingHours: {
@@ -68,7 +68,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     whatsapp: "5511972223344",
     email: "talitha@levcoworkingbeauty.com.br",
     bio: "Especialista em Micropigmentação Nanobrow & Shadow, Design Visagista de Sobrancelhas, Lash Lifting, Extensão de Cílios e Hydra Gloss Lips. Focada na beleza natural, precisão técnica e rejuvenescimento no LEV Coworking Beauty.",
-    avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400&h=400",
+    avatarUrl: "/profiles/talitha.webp",
     categories: ["Sobrancelhas & Cílios", "Micropigmentação", "Estética Labial", "Maquiagem e Sobrancelhas"],
     color: "#B8860B", // Dark Goldenrod
     workingHours: {
@@ -97,7 +97,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     whatsapp: "5511973334455",
     email: "nayara@levcoworkingbeauty.com.br",
     bio: "Nail designer especialista em alongamento em gel, banho de gel, blindagem de alta resistência e nail art minimalista e elegante.",
-    avatarUrl: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=400&h=400",
+    avatarUrl: "/profiles/nayara.webp",
     categories: ["Unhas em Gel"],
     color: "#996515", // Warm Bronze Gold
     workingHours: {
