@@ -11,6 +11,9 @@ import { PWAInstallerModal } from './components/common/PWAInstallerModal';
 import { AuthModal } from './components/auth/AuthModal';
 import { AdminLoginPage } from './components/auth/AdminLoginPage';
 import { AdminAuthService } from './services/adminAuth';
+import { ProfessionalLoginPage } from './components/auth/ProfessionalLoginPage';
+import { ProfessionalAuthService } from './services/professionalAuth';
+import { ProfessionalAccessManager } from './components/professionals/ProfessionalAccessManager';
 
 // Views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
@@ -30,7 +33,9 @@ import { SettingsManager } from './components/settings/SettingsManager';
 import { AuditLogsView } from './components/audit/AuditLogsView';
 
 export default function App() {
-  const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin';
+  const cleanPath = window.location.pathname.replace(/\/+$/, '');
+  const isAdminRoute = cleanPath === '/admin';
+  const isProfessionalRoute = cleanPath === '/profissional';
   const [showSplash, setShowSplash] = useState(true);
   const [currentUser, setCurrentUser] = useState<User>(StorageService.getCurrentUser());
   const [activeTab, setActiveTab] = useState<string>('inicio');
@@ -69,10 +74,26 @@ export default function App() {
       void AdminAuthService.signOut().finally(() => window.location.assign('/admin'));
       return;
     }
+    if (isProfessionalRoute) {
+      ProfessionalAuthService.signOut();
+      window.location.assign('/profissional');
+      return;
+    }
     StorageService.logout();
     setCurrentUser(StorageService.getCurrentUser());
     setActiveTab('publica');
   };
+
+  if (isProfessionalRoute && currentUser.role !== 'profissional') {
+    return (
+      <ProfessionalLoginPage
+        onAuthenticated={user => {
+          setCurrentUser(user);
+          setActiveTab('agenda');
+        }}
+      />
+    );
+  }
 
   if (isAdminRoute && currentUser.role !== 'admin') {
     return (
@@ -85,7 +106,7 @@ export default function App() {
     );
   }
 
-  if (!isAdminRoute && showSplash) {
+  if (!isAdminRoute && !isProfessionalRoute && showSplash) {
     return <SplashScreen onFinished={() => setShowSplash(false)} />;
   }
 
@@ -106,6 +127,7 @@ export default function App() {
 
       {/* Main Content View */}
       <main className="flex-1 pb-24 md:pb-12">
+        {isAdminRoute && currentUser.role === 'admin' && <ProfessionalAccessManager />}
         {/* Client or Guest Views */}
         {isClientOrGuest && (
           <>
