@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Logo } from '../brand/Logo';
 import { User } from '../../types';
 import { StorageService } from '../../services/storage';
-import { Bell, Smartphone, User as UserIcon, Globe, Calendar, LogOut, KeyRound, UserPlus, ShieldCheck } from 'lucide-react';
+import { Bell, Smartphone, User as UserIcon, Globe, Calendar, LogOut, KeyRound, UserPlus } from 'lucide-react';
 
 interface HeaderProps {
   currentUser: User;
-  onOpenRoleSwitcher: () => void;
   onOpenAuthModal: (mode?: 'login' | 'register' | 'forgot' | 'changePassword') => void;
   onLogout: () => void;
   onOpenNotifications: () => void;
@@ -17,7 +16,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentUser,
-  onOpenRoleSwitcher,
   onOpenAuthModal,
   onLogout,
   onOpenNotifications,
@@ -153,33 +151,14 @@ export const Header: React.FC<HeaderProps> = ({
                   <UserPlus className="w-3.5 h-3.5 text-[#c4b491]" />
                   <span>Cadastrar</span>
                 </button>
-                <button
-                  onClick={onOpenRoleSwitcher}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#c4b491]/40 bg-[#c4b491]/15 text-[#c4b491] hover:bg-[#c4b491]/25 text-xs font-semibold transition-all shadow-xs"
-                  title="Acesso da Administração, Profissionais e Recepção"
-                >
-                  <ShieldCheck className="w-3.5 h-3.5 text-[#c4b491]" />
-                  <span>Login Admin</span>
-                </button>
               </div>
             ) : (
               <div className="flex items-center gap-1">
-                {currentUser.role === 'cliente' && (
-                  <button
-                    onClick={onOpenRoleSwitcher}
-                    className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-[#c4b491]/30 bg-[#c4b491]/10 text-[#c4b491] hover:bg-[#c4b491]/20 text-xs font-semibold transition-all mr-1"
-                    title="Acessar Área de Administração / Equipe"
-                  >
-                    <ShieldCheck className="w-3.5 h-3.5 text-[#c4b491]" />
-                    <span>Painel Admin</span>
-                  </button>
-                )}
-
                 {/* Active User Badge (Click to open Demo Switcher) */}
                 <button
-                  onClick={onOpenRoleSwitcher}
+                  onClick={() => onTabChange('cliente-portal')}
                   className="flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-xl border border-[#c4b491]/30 bg-[#0a0a0a] hover:border-[#c4b491] transition-all shadow-2xs text-left"
-                  title="Clique para alternar perfil de teste"
+                  title="Abrir minha área de cliente"
                 >
                   <div className="w-6 h-6 rounded-full bg-[#c4b491]/20 border border-[#c4b491]/50 flex items-center justify-center shrink-0">
                     <UserIcon className="w-3.5 h-3.5 text-[#c4b491]" />
