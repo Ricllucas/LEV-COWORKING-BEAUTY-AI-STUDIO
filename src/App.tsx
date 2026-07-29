@@ -9,6 +9,8 @@ import { SplashScreen } from './components/common/SplashScreen';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
 import { PWAInstallerModal } from './components/common/PWAInstallerModal';
 import { AuthModal } from './components/auth/AuthModal';
+import { AdminLoginPage } from './components/auth/AdminLoginPage';
+import { AdminAuthService } from './services/adminAuth';
 
 // Views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
@@ -28,6 +30,7 @@ import { SettingsManager } from './components/settings/SettingsManager';
 import { AuditLogsView } from './components/audit/AuditLogsView';
 
 export default function App() {
+  const isAdminRoute = window.location.pathname.replace(/\/+$/, '') === '/admin';
   const [showSplash, setShowSplash] = useState(true);
   const [currentUser, setCurrentUser] = useState<User>(StorageService.getCurrentUser());
   const [activeTab, setActiveTab] = useState<string>('inicio');
@@ -62,12 +65,27 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    if (isAdminRoute) {
+      void AdminAuthService.signOut().finally(() => window.location.assign('/admin'));
+      return;
+    }
     StorageService.logout();
     setCurrentUser(StorageService.getCurrentUser());
     setActiveTab('publica');
   };
 
-  if (showSplash) {
+  if (isAdminRoute && currentUser.role !== 'admin') {
+    return (
+      <AdminLoginPage
+        onAuthenticated={user => {
+          setCurrentUser(user);
+          setActiveTab('inicio');
+        }}
+      />
+    );
+  }
+
+  if (!isAdminRoute && showSplash) {
     return <SplashScreen onFinished={() => setShowSplash(false)} />;
   }
 
