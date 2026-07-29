@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { StorageService } from '../../services/storage';
 import { User } from '../../types';
-import { X, Mail, Lock, User as UserIcon, Phone, ShieldCheck, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { X, Mail, Lock, User as UserIcon, Phone, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -197,12 +197,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     }, 1000);
   };
 
-  const handleQuickFill = (identifier: string, pass: string = '123') => {
-    setLoginIdentifier(identifier);
-    setLoginPassword(pass);
-    setErrorMsg('');
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-200">
       <div className="bg-[#0a0a0a] rounded-2xl max-w-md w-full border border-white/10 shadow-2xl p-6 relative text-white">
@@ -301,30 +295,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* LOGIN FORM */}
         {mode === 'login' && (
           <form onSubmit={handleLoginSubmit} className="space-y-4">
-            {/* Admin Fast Pass Box */}
-            <div className="p-3.5 rounded-2xl bg-[#c4b491]/10 border border-[#c4b491]/30 flex flex-col gap-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-[#c4b491]">
-                  <ShieldCheck className="w-4 h-4 text-[#c4b491]" />
-                  <span>Área da Administração & Equipe MEI</span>
-                </div>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#c4b491]/20 text-[#c4b491] font-mono font-bold">
-                  Painel Geral
-                </span>
-              </div>
-              <p className="text-[11px] text-white/70 leading-tight">
-                Acesse o painel completo de gestão com e-mail: <strong className="text-white font-mono">admin@levcoworkingbeauty.com.br</strong> (Senha: <strong className="text-white font-mono">123</strong>)
-              </p>
-              <button
-                type="button"
-                onClick={() => handleQuickFill('admin@levcoworkingbeauty.com.br', '123')}
-                className="w-full py-2 rounded-xl bg-[#c4b491] text-[#050505] font-semibold text-xs hover:bg-[#b5a37f] transition-all flex items-center justify-center gap-1.5 shadow-sm mt-0.5"
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Preencher e Entrar como Administrador</span>
-              </button>
-            </div>
-
             <div>
               <label className="text-xs font-semibold text-white/70 block mb-1">
                 E-mail ou Celular/WhatsApp *
@@ -379,67 +349,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               Entrar na Minha Conta
             </button>
 
-            {/* Quick Demo Test Accounts */}
-            <div className="pt-4 border-t border-white/10 mt-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] uppercase font-semibold text-[#c4b491] tracking-wider block">
-                  Atalhos Rápidos de Acesso:
-                </span>
-                {currentUser && currentUser.role !== 'cliente' && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMode('changePassword');
-                      setErrorMsg('');
-                      setSuccessMsg('');
-                    }}
-                    className="text-[10px] text-white/60 hover:text-[#c4b491] underline"
-                  >
-                    Alterar minha senha
-                  </button>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-1.5 text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('elisangela@levcoworkingbeauty.com.br')}
-                  className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/10 hover:border-[#c4b491] text-left text-white/80 transition-all truncate"
-                >
-                  <span className="font-semibold block text-[#c4b491]">Elisangela</span>
-                  <span className="text-[10px] text-white/50">Unha Raiz (MEI)</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('talitha@levcoworkingbeauty.com.br')}
-                  className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/10 hover:border-[#c4b491] text-left text-white/80 transition-all truncate"
-                >
-                  <span className="font-semibold block text-[#c4b491]">Talitha</span>
-                  <span className="text-[10px] text-white/50">Maquiagem/Sob.</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('nayara@levcoworkingbeauty.com.br')}
-                  className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/10 hover:border-[#c4b491] text-left text-white/80 transition-all truncate"
-                >
-                  <span className="font-semibold block text-[#c4b491]">Nayara</span>
-                  <span className="text-[10px] text-white/50">Unhas em Gel</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('camila@gmail.com')}
-                  className="px-2.5 py-1.5 rounded-lg bg-white/[0.03] border border-white/10 hover:border-emerald-500 text-left text-white/80 transition-all truncate"
-                >
-                  <span className="font-semibold block text-emerald-400">Cliente Camila</span>
-                  <span className="text-[10px] text-white/50">Área da Cliente</span>
-                </button>
-              </div>
-              <p className="text-[10px] text-white/40 text-center pt-1">
-                Senha padrão para contas salvas: <code className="text-[#c4b491]">123</code>
-              </p>
-            </div>
           </form>
         )}
 
