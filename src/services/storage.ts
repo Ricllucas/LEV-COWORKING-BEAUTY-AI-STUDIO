@@ -369,31 +369,35 @@ export class StorageService {
   // Professionals
   static getProfessionals(): Professional[] {
     const list = getStored<Professional[]>(STORAGE_KEYS.PROFESSIONALS, INITIAL_PROFESSIONALS);
+    const officialAvatars: Record<string, string> = {
+      prof_elisangela: '/profiles/elisangela.webp',
+      prof_talitha: '/profiles/talitha.webp',
+      prof_nayara: '/profiles/nayara.webp'
+    };
+
     let updated = false;
     const sanitized = list.map(p => {
-      let avatar = p.avatarUrl;
-      // If old relative url or missing, upgrade to high quality CDN url
-      if (!avatar || avatar.startsWith('/') || avatar === '/elisangela.jpg' || avatar === '/talitha.jpg' || avatar === '/nayara.jpg') {
-        const initialMatch = INITIAL_PROFESSIONALS.find(init => init.id === p.id || init.name.toLowerCase() === p.name.toLowerCase());
-        if (initialMatch && initialMatch.avatarUrl) {
-          avatar = initialMatch.avatarUrl;
-        } else if (p.name.toLowerCase().includes('elisangela')) {
-          avatar = 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=400&h=400';
-        } else if (p.name.toLowerCase().includes('talitha')) {
-          avatar = 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=400&h=400';
-        } else if (p.name.toLowerCase().includes('nayara')) {
-          avatar = 'https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=400&h=400';
-        }
-      }
-      if (avatar !== p.avatarUrl) {
+      const officialAvatar = officialAvatars[p.id];
+      const shouldUseOfficialAvatar = Boolean(
+        officialAvatar && (
+          !p.avatarUrl ||
+          p.avatarUrl.startsWith('/') ||
+          p.avatarUrl.includes('images.unsplash.com')
+        )
+      );
+
+      if (shouldUseOfficialAvatar && p.avatarUrl !== officialAvatar) {
         updated = true;
-        return { ...p, avatarUrl: avatar };
+        return { ...p, avatarUrl: officialAvatar };
       }
+
       return p;
     });
+
     if (updated) {
       setStored(STORAGE_KEYS.PROFESSIONALS, sanitized);
     }
+
     return sanitized;
   }
 
