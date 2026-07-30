@@ -118,7 +118,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             {[
               { title: "Atendimento Exclusivo", desc: "Cuidado personalizado em cada detalhe", icon: <Sparkles className="w-4 h-4 text-[#c4b491]" /> },
               { title: "Especialistas LEV", desc: "Elisangela, Talitha e Nayara", icon: <Star className="w-4 h-4 text-[#c4b491]" /> },
-              { title: "Agendamento Online 24h", desc: "Sem filas e sem burocracia", icon: <Calendar className="w-4 h-4 text-[#c4b491]" /> },
+              { title: "Agendamento Online 24h", desc: "Agende quando quiser. Atendimentos até as 18h", icon: <Calendar className="w-4 h-4 text-[#c4b491]" /> },
               { title: "Espaço Glamour", desc: "Ambiente reservado e aconchegante", icon: <Heart className="w-4 h-4 text-[#c4b491]" /> }
             ].map((item, idx) => (
               <div key={idx} className="p-4 bg-[#0d0d0d]/80 backdrop-blur-md rounded-2xl border border-white/10 hover:border-[#c4b491]/40 text-left transition-all hover:shadow-[0_0_15px_rgba(196,180,145,0.1)]">
