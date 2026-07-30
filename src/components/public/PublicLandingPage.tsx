@@ -142,26 +142,26 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             Nosso Espaço
           </span>
           <h2 className="text-2xl font-serif text-white font-medium mt-1">
-            Conforto e Elegância em Cada Detalhe
+            Ambientes Individuais, Atendimento com Privacidade
           </h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
-              url: "https://images.unsplash.com/photo-1560066984-138dadb4c035?auto=format&fit=crop&q=80&w=800",
-              title: "Estação Unha Raiz & Gel",
-              desc: "Bancadas higienizadas e iluminação ideal"
+              url: "/spaces/private-nail-room.webp",
+              title: "Salas Individuais de Nail Design",
+              desc: "Elisangela e Nayara atendem em salas distintas, com privacidade e cuidado"
             },
             {
-              url: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?auto=format&fit=crop&q=80&w=800",
-              title: "Estúdio de Maquiagem",
-              desc: "Cadeiras reclináveis e espelho camarim"
+              url: "/spaces/private-makeup-room.webp",
+              title: "Sala Exclusiva de Maquiagem",
+              desc: "Atendimento personalizado com Talitha em um ambiente próprio e reservado"
             },
             {
-              url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=800",
+              url: "/spaces/reception-welcome.webp",
               title: "Recepção LEV Beauty",
-              desc: "Café especial e ambiente climatizado"
+              desc: "Um espaço acolhedor para receber você com atenção e cuidado"
             }
           ].map((img, i) => (
             <div key={i} className="group relative rounded-2xl overflow-hidden shadow-xs border border-white/10 h-60">
