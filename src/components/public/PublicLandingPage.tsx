@@ -90,7 +90,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           </h1>
 
           <p className="mt-5 max-w-3xl mx-auto text-sm sm:text-base text-white/80 leading-relaxed font-light">
-            Do cuidado impecável com <strong className="text-[#c4b491] font-semibold">Unhas de Gel e Designer de Cílios & Sobrancelhas</strong> ao dia dos seus sonhos com <strong className="text-[#c4b491] font-semibold">Maquiagem Social, Penteados e Dia de Noiva (Spa VIP)</strong>. Viva a experiência de ser atendida por nossas renomadas especialistas em um ambiente acolhedor, exclusivo e encantador.
+            Do cuidado impecável com <strong className="text-[#c4b491] font-semibold">unhas, cílios e sobrancelhas</strong> à produção completa para momentos especiais, com <strong className="text-[#c4b491] font-semibold">maquiagem, penteados e atendimento para noivas</strong>. Viva uma experiência personalizada com nossas especialistas, em ambientes acolhedores, reservados e cuidadosamente preparados para você.
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -190,23 +190,23 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             <div className="lg:col-span-7 space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c4b491]/20 border border-[#c4b491]/40 text-[#c4b491] text-xs font-semibold tracking-wider uppercase">
                 <Sparkles className="w-3.5 h-3.5 text-[#c4b491]" />
-                <span>Experiência Exclusiva LEV Spa</span>
+                <span>Experiência Exclusiva LEV</span>
               </div>
 
               <h2 className="text-2xl sm:text-4xl font-serif font-semibold text-white leading-tight">
-                Um Dia Inesquecível de <span className="text-[#c4b491] italic">Spa, Noivas & Transformação</span>
+                Beleza para <span className="text-[#c4b491] italic">Noivas & Momentos Especiais</span>
               </h2>
 
               <p className="text-sm text-white/80 leading-relaxed font-light">
-                Imagine ter um time de elite totalmente dedicado à sua beleza. Unas o talento de nossas renomadas especialistas e viva um dia de rainha com tudo o que você merece:
+                Conte com especialistas dedicadas a valorizar sua beleza em cada etapa. Reúna cuidados personalizados e uma produção completa para viver seu momento com tranquilidade, confiança e elegância:
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 {[
-                  { title: "Elisangela (Nail Expert)", desc: "Unhas de Gel, Blindagem e Designer de Mãos e Pés perfeitos." },
+                  { title: "Elisangela — Nail Designer", desc: "Manicure, pedicure e cuidados personalizados para mãos e pés impecáveis." },
                   { title: "Talitha — Maquiagem", desc: "Maquiagem personalizada para diferentes ocasiões, com atendimento em sala exclusiva." },
                   { title: "Nayara — Nail Designer", desc: "Cuidados com as unhas em atendimento individual, realizado em sua própria sala." },
-                  { title: "Pacotes Integrados VIP", desc: "Produções para Noivas, Formandas e Momentos Inesquecíveis." }
+                  { title: "Produções Integradas", desc: "Experiências personalizadas para noivas, formandas e ocasiões especiais." }
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.03] border border-white/10">
                     <CheckCircle2 className="w-4 h-4 text-[#c4b491] shrink-0 mt-0.5" />
@@ -224,7 +224,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                   className="px-7 py-3.5 rounded-xl bg-[#c4b491] hover:bg-[#b5a37f] text-[#050505] font-semibold text-xs transition-all shadow-md flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  Montar Meu Pacote Completo / Agendar
+                  Montar Minha Experiência / Agendar
                 </button>
 
                 <a
@@ -234,7 +234,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                   className="px-6 py-3.5 rounded-xl bg-white/[0.05] border border-white/15 hover:bg-white/10 text-white font-medium text-xs transition-all flex items-center gap-2"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-400" />
-                  Consultar Atendimento para Noivas
+                  Consultar Produção para Noivas
                 </a>
               </div>
             </div>
@@ -264,10 +264,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
               Profissionais do Coworking
             </span>
             <h2 className="text-2xl sm:text-3xl font-serif text-white font-medium mt-1">
-              Conheça nossas Especialistas
+              Conheça nossas especialistas
             </h2>
             <p className="text-xs sm:text-sm text-white/60 mt-1 max-w-xl mx-auto">
-              Cada profissional é autônoma, possui sua própria marca/MEI e traz excelência em sua especialidade.
+              Cada especialista oferece atendimento personalizado, com excelência, cuidado e dedicação em sua área.
             </p>
           </div>
 
@@ -515,7 +515,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             </p>
             <div className="flex items-center gap-2 text-xs text-white/70 mb-3">
               <CreditCard className="w-4 h-4 text-[#c4b491]" />
-              <span>Aceitamos Pix, Cartão de Crédito, Débito e Dinheiro.</span>
+              <span>Aceitamos Pix, cartão de crédito, cartão de débito e dinheiro.</span>
             </div>
           </div>
         </div>
