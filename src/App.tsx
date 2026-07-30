@@ -8,7 +8,6 @@ import { MobileNav } from './components/common/MobileNav';
 import { SplashScreen } from './components/common/SplashScreen';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
 import { PWAInstallerModal } from './components/common/PWAInstallerModal';
-import { AuthModal } from './components/auth/AuthModal';
 import { AdminLoginPage } from './components/auth/AdminLoginPage';
 import { AdminAuthService } from './services/adminAuth';
 import { ProfessionalLoginPage } from './components/auth/ProfessionalLoginPage';
@@ -17,7 +16,6 @@ import { ProfessionalAccessManager } from './components/professionals/Profession
 
 // Views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
-import { ClientPortalView } from './components/client/ClientPortalView';
 import { PublicBookingModal } from './components/booking/PublicBookingModal';
 import { DashboardOverview } from './components/dashboard/DashboardOverview';
 import { AgendaView } from './components/agenda/AgendaView';
@@ -41,8 +39,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('inicio');
 
   // Modals
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalMode, setAuthModalMode] = useState<'login' | 'register' | 'forgot' | 'changePassword'>('login');
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isPWAInstallerOpen, setIsPWAInstallerOpen] = useState(false);
   const [isBookingModalOpen, setIsBookingModalOpen] = useState(false);
@@ -62,11 +58,6 @@ export default function App() {
     setBookingProfId(profId);
     setBookingServiceId(serviceId);
     setIsBookingModalOpen(true);
-  };
-
-  const handleOpenAuthModal = (mode: 'login' | 'register' | 'forgot' | 'changePassword' = 'login') => {
-    setAuthModalMode(mode);
-    setIsAuthModalOpen(true);
   };
 
   const handleLogout = () => {
@@ -117,7 +108,6 @@ export default function App() {
       {/* Header */}
       <Header
         currentUser={currentUser}
-        onOpenAuthModal={handleOpenAuthModal}
         onLogout={handleLogout}
         onOpenNotifications={() => setIsNotificationsOpen(true)}
         onOpenPWAInstaller={() => setIsPWAInstallerOpen(true)}
@@ -129,19 +119,7 @@ export default function App() {
       <main className="flex-1 pb-24 md:pb-12">
         {isAdminRoute && currentUser.role === 'admin' && <ProfessionalAccessManager />}
         {/* Client or Guest Views */}
-        {isClientOrGuest && (
-          <>
-            {activeTab === 'cliente-portal' ? (
-              <ClientPortalView
-                currentUser={currentUser}
-                onOpenBooking={handleOpenBooking}
-                onOpenAuthModal={() => handleOpenAuthModal('login')}
-              />
-            ) : (
-              <PublicLandingPage onOpenBookingModal={handleOpenBooking} />
-            )}
-          </>
-        )}
+        {isClientOrGuest && <PublicLandingPage onOpenBookingModal={handleOpenBooking} />}
 
         {/* Staff/Admin/Professional Views */}
         {!isClientOrGuest && activeTab === 'publica' && (
@@ -202,7 +180,7 @@ export default function App() {
         activeTab={activeTab}
         onTabChange={tab => setActiveTab(tab)}
         onOpenNewBooking={() => handleOpenBooking()}
-        onOpenMoreMenu={() => setActiveTab('cliente-portal')}
+        onOpenMoreMenu={() => setActiveTab('inicio')}
       />
 
       {/* Global Modals */}
@@ -211,20 +189,6 @@ export default function App() {
         onClose={() => setIsBookingModalOpen(false)}
         initialProfId={bookingProfId}
         initialServiceId={bookingServiceId}
-      />
-
-      <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-        defaultMode={authModalMode}
-        onUserAuthenticated={u => {
-          setCurrentUser(u);
-          if (u.role === 'cliente') {
-            setActiveTab('cliente-portal');
-          } else {
-            setActiveTab('inicio');
-          }
-        }}
       />
 
       <NotificationDrawer
