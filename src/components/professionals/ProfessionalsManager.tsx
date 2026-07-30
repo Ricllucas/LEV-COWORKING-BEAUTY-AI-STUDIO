@@ -23,7 +23,7 @@ import {
 const PRESET_PHOTOS = [
   { label: "Foto Profissional 1 (Elegante)", url: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800" },
   { label: "Foto Profissional 2 (Executiva)", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800" },
-  { label: "Foto Profissional 3 (Studio)", url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800" },
+  { label: "Foto profissional 3 (estúdio)", url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800" },
   { label: "Foto Profissional 4 (Moderna)", url: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=800" },
   { label: "Foto Profissional 5 (Natural)", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800" }
 ];
@@ -381,7 +381,7 @@ export const ProfessionalsManager: React.FC = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
-              <label className="font-semibold text-white/70 block mb-1">Nome Profissional *</label>
+              <label className="font-semibold text-white/70 block mb-1">Nome da profissional *</label>
               <input
                 type="text"
                 required
@@ -405,7 +405,7 @@ export const ProfessionalsManager: React.FC = () => {
           </div>
 
           <div>
-            <label className="font-semibold text-white/70 block mb-1 text-xs">Apresentação / Bio para Clientes *</label>
+            <label className="font-semibold text-white/70 block mb-1 text-xs">Apresentação para clientes (bio) *</label>
             <textarea
               rows={3}
               required
@@ -444,7 +444,7 @@ export const ProfessionalsManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="font-semibold text-white/70 block mb-1">E-mail Profissional</label>
+              <label className="font-semibold text-white/70 block mb-1">E-mail profissional</label>
               <div className="relative">
                 <Mail className="w-3.5 h-3.5 text-white/40 absolute left-3 top-2.5" />
                 <input
