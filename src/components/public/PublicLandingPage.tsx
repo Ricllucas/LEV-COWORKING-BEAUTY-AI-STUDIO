@@ -116,7 +116,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           {/* Highlights Badges */}
           <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {[
-              { title: "Atendimento Exclusive", desc: "Profissionais MEI Independentes", icon: <Sparkles className="w-4 h-4 text-[#c4b491]" /> },
+              { title: "Atendimento Exclusivo", desc: "Cuidado personalizado em cada detalhe", icon: <Sparkles className="w-4 h-4 text-[#c4b491]" /> },
               { title: "Especialistas LEV", desc: "Elisangela, Talitha e Nayara", icon: <Star className="w-4 h-4 text-[#c4b491]" /> },
               { title: "Agendamento Online 24h", desc: "Sem filas e sem burocracia", icon: <Calendar className="w-4 h-4 text-[#c4b491]" /> },
               { title: "Espaço Glamour", desc: "Ambiente reservado e aconchegante", icon: <Heart className="w-4 h-4 text-[#c4b491]" /> }
