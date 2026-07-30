@@ -33,6 +33,7 @@ const STORAGE_KEYS = {
   REVIEWS: 'lev_coworking_reviews_v1',
   WAITLIST: 'lev_coworking_waitlist_v1',
   BLOCKS: 'lev_coworking_blocks_v1',
+  FUTURE_SCHEDULE_RESET: 'lev_future_schedule_reset_v1',
   PAYMENTS: 'lev_coworking_payments_v1',
   LOGS: 'lev_coworking_logs_v1',
   NOTIFICATIONS: 'lev_coworking_notifications_v1',
@@ -491,7 +492,33 @@ export class StorageService {
   }
 
   // Appointments
+  private static clearFutureScheduleOnce(): void {
+    try {
+      if (localStorage.getItem(STORAGE_KEYS.FUTURE_SCHEDULE_RESET)) return;
+
+      const now = new Date();
+      const today = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, '0'),
+        String(now.getDate()).padStart(2, '0')
+      ].join('-');
+
+      const appointments = getStored<Appointment[]>(STORAGE_KEYS.APPOINTMENTS, INITIAL_APPOINTMENTS);
+      const pastAndTodayAppointments = appointments.filter(appointment => appointment.date <= today);
+      setStored(STORAGE_KEYS.APPOINTMENTS, pastAndTodayAppointments);
+
+      const blocks = getStored<ScheduleBlock[]>(STORAGE_KEYS.BLOCKS, []);
+      const pastAndTodayBlocks = blocks.filter(block => block.date <= today);
+      setStored(STORAGE_KEYS.BLOCKS, pastAndTodayBlocks);
+
+      localStorage.setItem(STORAGE_KEYS.FUTURE_SCHEDULE_RESET, new Date().toISOString());
+    } catch (error) {
+      console.warn('Não foi possível limpar a agenda futura anterior:', error);
+    }
+  }
+
   static getAppointments(): Appointment[] {
+    this.clearFutureScheduleOnce();
     return getStored<Appointment[]>(STORAGE_KEYS.APPOINTMENTS, INITIAL_APPOINTMENTS);
   }
 
@@ -580,6 +607,7 @@ export class StorageService {
 
   // Schedule Blocks
   static getScheduleBlocks(): ScheduleBlock[] {
+    this.clearFutureScheduleOnce();
     return getStored<ScheduleBlock[]>(STORAGE_KEYS.BLOCKS, []);
   }
 
