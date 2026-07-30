@@ -93,23 +93,15 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             Do cuidado impecável com <strong className="text-[#c4b491] font-semibold">unhas, cílios e sobrancelhas</strong> à produção completa para momentos especiais, com <strong className="text-[#c4b491] font-semibold">maquiagem, penteados e atendimento para noivas</strong>. Viva uma experiência personalizada com nossas especialistas, em ambientes acolhedores, reservados e cuidadosamente preparados para você.
           </p>
 
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button
-              onClick={() => onOpenBookingModal()}
-              className="w-full sm:w-auto px-9 py-4 rounded-2xl bg-gradient-to-r from-[#c4b491] via-[#d6c7a7] to-[#b5a37f] hover:from-[#b5a37f] hover:to-[#a3926f] text-[#050505] font-semibold text-sm transition-all shadow-[0_0_25px_rgba(196,180,145,0.25)] flex items-center justify-center gap-2 group hover:scale-[1.02]"
-            >
-              <Sparkles className="w-4 h-4 text-[#050505] group-hover:rotate-12 transition-transform" />
-              Agendar Atendimento VIP
-            </button>
-
+          <div className="mt-8 flex items-center justify-center">
             <a
-              href={`https://wa.me/${settings.whatsapp}`}
+              href={`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent('Olá! Gostaria de agendar um atendimento no LEV Coworking Beauty.')}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full sm:w-auto px-7 py-4 rounded-2xl bg-white/[0.03] backdrop-blur-md border border-white/10 hover:border-[#c4b491]/60 text-white font-medium text-sm transition-all shadow-md hover:bg-white/[0.07] flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-[#c4b491] via-[#d6c7a7] to-[#b5a37f] hover:from-[#b5a37f] hover:to-[#a3926f] text-[#050505] font-semibold text-sm transition-all shadow-[0_0_25px_rgba(196,180,145,0.25)] flex items-center justify-center gap-2 group hover:scale-[1.02]"
             >
-              <MessageCircle className="w-4 h-4 text-emerald-400" />
-              Atendimento via WhatsApp
+              <MessageCircle className="w-5 h-5 text-[#050505] group-hover:scale-110 transition-transform" />
+              Agendar pelo WhatsApp
             </a>
           </div>
 
