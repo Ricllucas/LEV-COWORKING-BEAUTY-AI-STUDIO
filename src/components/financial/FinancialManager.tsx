@@ -66,7 +66,7 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
 
   // Export CSV Helper
   const handleExportCSV = () => {
-    const headers = ["ID", "Cliente", "Profissional", "Data", "Servicos", "Valor Total", "Sinal Pago", "Status Pagamento"];
+    const headers = ["ID", "Cliente", "Profissional", "Data", "Serviços", "Valor Total", "Sinal Pago", "Status Pagamento"];
     const rows = filteredApts.map(a => [
       a.id,
       `"${a.clientName}"`,
