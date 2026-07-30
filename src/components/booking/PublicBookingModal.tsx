@@ -351,7 +351,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                 <div className="p-3 rounded-xl bg-[#050505] border border-white/10 flex items-center justify-between text-xs">
                   <div>
                     <span className="text-white/60">Total selecionado:</span>
-                    <span className="font-bold text-white ml-1">{selectedServiceObjects.length} serviço(s)</span>
+                    <span className="font-bold text-white ml-1">{selectedServiceObjects.length} {selectedServiceObjects.length === 1 ? 'serviço' : 'serviços'}</span>
                     <span className="text-[#c4b491] ml-2">({totalDuration} min)</span>
                   </div>
                   <span className="font-serif font-bold text-sm text-[#c4b491]">
@@ -571,7 +571,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
 
                 {totalDeposit > 0 && (
                   <p className="text-[11px] text-[#c4b491] pt-1">
-                    * Sinal para garantia de horário (30%): <strong>{formatCurrency(totalDeposit)}</strong> via Pix para a chave da profissional ({currentProf?.pixKey}).
+                    Sinal para reserva do horário (30%): <strong>{formatCurrency(totalDeposit)}</strong> via Pix para a chave da profissional ({currentProf?.pixKey}).
                   </p>
                 )}
               </div>
