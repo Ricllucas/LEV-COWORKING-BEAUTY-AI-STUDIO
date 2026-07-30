@@ -149,7 +149,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
-              url: "/spaces/private-nail-room.webp?v=real-room-2",
+              url: "/spaces/sala-elisangela-nayara-real.webp",
               title: "Salas Individuais de Nail Design",
               desc: "Elisangela e Nayara atendem em salas distintas, com privacidade e cuidado"
             },
