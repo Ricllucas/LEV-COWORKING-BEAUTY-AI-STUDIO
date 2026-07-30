@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserRole } from '../../types';
-import { Home, Calendar, Plus, Users, Menu as MenuIcon, Sparkles, MessageSquare, User } from 'lucide-react';
+import { Home, Calendar, Plus, Users, Menu as MenuIcon, Sparkles } from 'lucide-react';
 
 interface MobileNavProps {
   role: UserRole;
@@ -51,25 +51,6 @@ export const MobileNav: React.FC<MobileNavProps> = ({
             <Plus className="w-6 h-6 stroke-[2.5]" />
           </button>
 
-          <button
-            onClick={() => onTabChange('meus_horarios')}
-            className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-              activeTab === 'meus_horarios' ? 'text-[#c4b491]' : 'text-white/50 hover:text-white'
-            }`}
-          >
-            <Calendar className="w-5 h-5" />
-            <span className="text-[10px] font-medium mt-0.5">Horários</span>
-          </button>
-
-          <button
-            onClick={onOpenMoreMenu}
-            className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-              activeTab === 'menu' ? 'text-[#c4b491]' : 'text-white/50 hover:text-white'
-            }`}
-          >
-            <MenuIcon className="w-5 h-5" />
-            <span className="text-[10px] font-medium mt-0.5">Menu</span>
-          </button>
         </div>
       </nav>
     );
