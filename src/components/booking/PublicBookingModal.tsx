@@ -53,7 +53,6 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
 
       // Auto-fill logged in user info
       const u = StorageService.getCurrentUser();
-      setCurrentUser(u);
       if (u && u.id !== 'visitor_guest') {
         if (u.name) setClientName(u.name);
         if (u.phone) setClientPhone(u.phone);
@@ -434,25 +433,10 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                 4. Confirmação dos Dados
               </h3>
 
-              {/* Status Banner */}
-              {currentUser && currentUser.id !== 'visitor_guest' ? (
-                <div className="p-3 rounded-xl bg-[#c4b491]/10 border border-[#c4b491]/30 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <UserCheck className="w-4 h-4 text-[#c4b491]" />
-                    <div>
-                      <span className="font-semibold text-white block">Cliente Identificada: {currentUser.name}</span>
-                      <span className="text-white/60 text-[11px]">{currentUser.email} {currentUser.phone ? `• ${currentUser.phone}` : ''}</span>
-                    </div>
-                  </div>
-                  <span className="text-[10px] text-[#c4b491] font-semibold bg-[#c4b491]/20 px-2 py-0.5 rounded-full shrink-0">
-                    Dados Preenchidos
-                  </span>
-                </div>
-              ) : (
-                <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-white/70">
-                  💡 Preencha seus dados abaixo. Após confirmar seu agendamento, você poderá cadastrar sua senha para acessar sua área exclusiva futuramente!
-                </div>
-              )}
+              {/* Orientação para clientes sem necessidade de cadastro */}
+              <div className="p-3 rounded-xl bg-white/[0.03] border border-white/10 text-xs text-white/70">
+                Preencha seu nome e telefone para concluir a solicitação. O e-mail é opcional e não é necessário criar uma conta.
+              </div>
 
               <div className="space-y-3">
                 <div>
