@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 const PRESET_PROFESSIONAL_PHOTOS = [
-  { label: "Talitha - Estúdio Profissional (Wavy Hair)", url: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800" },
+  { label: "Talitha — Estúdio profissional", url: "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&q=80&w=800" },
   { label: "Elisangela - Executiva (Sorridente)", url: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&q=80&w=800" },
   { label: "Nayara - Retrato Moderno (Studio)", url: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&q=80&w=800" },
   { label: "Estética Natural (Model 1)", url: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?auto=format&fit=crop&q=80&w=800" },
@@ -488,7 +488,7 @@ export const SettingsManager: React.FC = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <label className="font-semibold text-white/70 block mb-1">Nome Profissional *</label>
+                    <label className="font-semibold text-white/70 block mb-1">Nome da profissional *</label>
                     <input
                       type="text"
                       required
@@ -511,7 +511,7 @@ export const SettingsManager: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className="font-semibold text-white/70 block mb-1 text-xs">Apresentação para Clientes (Bio)</label>
+                  <label className="font-semibold text-white/70 block mb-1 text-xs">Apresentação para clientes (bio)</label>
                   <textarea
                     rows={3}
                     value={profFormData.bio || ''}
@@ -545,7 +545,7 @@ export const SettingsManager: React.FC = () => {
           {savedSettings && (
             <div className="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs font-medium flex items-center gap-2 shadow-sm animate-fadeIn">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-              <span>Imagens da marca do Studio salvas com sucesso!</span>
+              <span>Imagens da marca do estúdio salvas com sucesso!</span>
             </div>
           )}
 
