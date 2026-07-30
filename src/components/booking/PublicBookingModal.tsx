@@ -5,7 +5,7 @@ import { getAvailableSlots, SlotAvailability } from '../../utils/scheduleHelper'
 import { formatCurrency, formatDateBR, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
-import { X, Calendar, Clock, Check, Sparkles, MessageCircle, AlertCircle, ChevronRight, ChevronLeft, UserCheck } from 'lucide-react';
+import { X, Calendar, Clock, Check, Sparkles, MessageCircle, AlertCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 
 interface PublicBookingModalProps {
   isOpen: boolean;
@@ -36,12 +36,6 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
   const [clientEmail, setClientEmail] = useState<string>('');
   const [clientNotes, setClientNotes] = useState<string>('');
   const [acceptedPolicy, setAcceptedPolicy] = useState<boolean>(true);
-
-  // Quick account creation after guest booking
-  const [registerPass, setRegisterPass] = useState<string>('');
-  const [regError, setRegError] = useState<string>('');
-  const [accountCreated, setAccountCreated] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState(StorageService.getCurrentUser());
 
   // Results
   const [availableSlots, setAvailableSlots] = useState<SlotAvailability[]>([]);
@@ -173,38 +167,10 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     setStep(5); // Final Success Step
   };
 
-  const handleQuickRegister = () => {
-    setRegError('');
-    if (!registerPass || registerPass.length < 3) {
-      setRegError('A senha deve ter pelo menos 3 caracteres.');
-      return;
-    }
-
-    const emailToUse = clientEmail.trim() || `${clientPhone.replace(/\D/g, '')}@cliente.com`;
-
-    const res = StorageService.registerClientUser({
-      name: clientName,
-      email: emailToUse,
-      phone: clientPhone,
-      password: registerPass
-    });
-
-    if (!res.success || !res.user) {
-      setRegError(res.error || 'Erro ao criar conta.');
-      return;
-    }
-
-    setAccountCreated(true);
-    setCurrentUser(res.user);
-  };
-
   const resetModal = () => {
     setStep(1);
     setConfirmedApt(null);
     setSelectedTime('');
-    setRegisterPass('');
-    setRegError('');
-    setAccountCreated(false);
     onClose();
   };
 
@@ -634,73 +600,6 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                   <p className="text-[11px] text-amber-400 pt-1">
                     Envie o comprovante pelo WhatsApp para confirmação definitiva.
                   </p>
-                </div>
-              )}
-
-              {/* Guest Quick Registration Banner */}
-              {currentUser?.id === 'visitor_guest' && !accountCreated && (
-                <div className="p-5 rounded-2xl bg-gradient-to-br from-[#121212] via-[#0d0d0d] to-[#0a0a0a] border border-[#c4b491]/40 text-left space-y-3 max-w-md mx-auto shadow-xl">
-                  <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-                    <Sparkles className="w-5 h-5 text-[#c4b491]" />
-                    <div>
-                      <h4 className="font-serif font-semibold text-sm text-white">
-                        Crie sua senha de acesso exclusivo
-                      </h4>
-                      <span className="text-[11px] text-[#c4b491]">Acesse seus horários facilmente no futuro</span>
-                    </div>
-                  </div>
-                  <p className="text-xs text-white/70 leading-relaxed">
-                    Cadastre uma senha rápida para ter seu login ativado e visualizar todos os seus agendamentos na Área do Cliente.
-                  </p>
-
-                  <div className="space-y-2.5 pt-1">
-                    <div>
-                      <label className="text-[10px] uppercase font-semibold text-white/50 block mb-1">
-                        Identificação de Login (E-mail ou Celular)
-                      </label>
-                      <input
-                        type="text"
-                        disabled
-                        value={clientEmail || clientPhone || 'Aguardando dados'}
-                        className="w-full px-3 py-2 rounded-xl border border-white/10 bg-[#050505] text-xs text-white/60 font-mono"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] uppercase font-semibold text-white/50 block mb-1">
-                        Crie uma Senha
-                      </label>
-                      <input
-                        type="password"
-                        placeholder="Digite sua nova senha"
-                        value={registerPass}
-                        onChange={e => setRegisterPass(e.target.value)}
-                        className="w-full px-3.5 py-2 rounded-xl border border-white/10 bg-[#050505] text-xs text-white focus:outline-hidden focus:border-[#c4b491]"
-                      />
-                    </div>
-
-                    {regError && (
-                      <p className="text-xs text-rose-400 bg-rose-950/40 p-2 rounded-lg border border-rose-800">{regError}</p>
-                    )}
-
-                    <button
-                      onClick={handleQuickRegister}
-                      disabled={!registerPass}
-                      className="w-full py-3 rounded-xl bg-[#c4b491] hover:bg-[#b5a37f] disabled:opacity-50 text-[#050505] font-semibold text-xs transition-colors shadow-md flex items-center justify-center gap-2"
-                    >
-                      <UserCheck className="w-4 h-4" />
-                      Cadastrar Conta & Ativar Login Automático
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {accountCreated && (
-                <div className="p-4 rounded-xl bg-emerald-950/60 border border-emerald-500/40 text-center max-w-md mx-auto text-xs space-y-1">
-                  <p className="font-semibold text-emerald-300 flex items-center justify-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-emerald-300" /> Conta Criada e Conectada!
-                  </p>
-                  <p className="text-emerald-200/80">Sua senha foi salva. Agora você já está logada e pode acessar a Área da Cliente.</p>
                 </div>
               )}
 
