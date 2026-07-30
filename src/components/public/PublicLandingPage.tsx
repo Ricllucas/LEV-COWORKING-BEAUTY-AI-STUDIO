@@ -513,25 +513,18 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
         </div>
       </footer>
 
-      {/* Floating Agendar & WhatsApp Contact Launcher */}
-      <div className="fixed bottom-20 right-4 z-20 flex flex-col gap-2">
+      {/* Floating WhatsApp booking launcher */}
+      <div className="fixed bottom-20 right-4 z-20">
         <a
-          href={`https://wa.me/${settings.whatsapp}`}
+          href={`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent('Olá! Gostaria de agendar um atendimento no LEV Coworking Beauty.')}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="w-12 h-12 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center shadow-lg transition-transform hover:scale-110"
-          title="Atendimento no WhatsApp"
-        >
-          <MessageCircle className="w-6 h-6" />
-        </a>
-
-        <button
-          onClick={() => onOpenBookingModal()}
           className="px-4 py-3 rounded-full bg-[#c4b491] hover:bg-[#b5a37f] text-[#050505] font-semibold text-xs shadow-xl flex items-center gap-2 transition-transform hover:scale-105"
+          title="Agendar pelo WhatsApp"
         >
-          <Sparkles className="w-4 h-4" />
-          <span className="hidden sm:inline font-semibold">Agendar Agora</span>
-        </button>
+          <MessageCircle className="w-4 h-4" />
+          <span className="font-semibold">Agendar pelo WhatsApp</span>
+        </a>
       </div>
     </div>
   );
