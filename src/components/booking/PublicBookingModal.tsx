@@ -49,7 +49,13 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       setServices(srvs);
 
       if (initialProfId) setSelectedProfId(initialProfId);
-      if (initialServiceId) setSelectedServiceIds([initialServiceId]);
+      if (initialServiceId) {
+        setSelectedServiceIds([initialServiceId]);
+        setSelectedTime('');
+        setStep(3);
+      } else {
+        setStep(1);
+      }
 
       // Auto-fill logged in user info
       const u = StorageService.getCurrentUser();
