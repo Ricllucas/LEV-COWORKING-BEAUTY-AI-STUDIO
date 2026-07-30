@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Logo } from '../brand/Logo';
 import { User } from '../../types';
 import { StorageService } from '../../services/storage';
-import { Bell, Smartphone, User as UserIcon, Globe, Calendar, LogOut, KeyRound, UserPlus } from 'lucide-react';
+import { Bell, Smartphone, User as UserIcon, LogOut } from 'lucide-react';
 
 interface HeaderProps {
   currentUser: User;
-  onOpenAuthModal: (mode?: 'login' | 'register' | 'forgot' | 'changePassword') => void;
   onLogout: () => void;
   onOpenNotifications: () => void;
   onOpenPWAInstaller: () => void;
@@ -16,7 +15,6 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({
   currentUser,
-  onOpenAuthModal,
   onLogout,
   onOpenNotifications,
   onOpenPWAInstaller,
@@ -86,28 +84,6 @@ export const Header: React.FC<HeaderProps> = ({
             </nav>
           )}
 
-          {/* Desktop Navigation Links for Client Portal */}
-          {(currentUser.role === 'cliente' || isGuest) && (
-            <nav className="hidden md:flex items-center gap-1 bg-[#050505] p-1 rounded-xl border border-white/10">
-              {[
-                { id: 'publica', label: 'Início & Agendar' },
-                { id: 'cliente-portal', label: 'Minha Área & Agendamentos' }
-              ].map(item => (
-                <button
-                  key={item.id}
-                  onClick={() => onTabChange(item.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                    activeTab === item.id
-                      ? 'bg-[#c4b491]/20 text-[#c4b491] border border-[#c4b491]/30 font-semibold'
-                      : 'text-white/60 hover:text-white hover:bg-white/[0.05]'
-                  }`}
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          )}
-
           {/* User Controls & Actions */}
           <div className="flex items-center gap-2 sm:gap-3">
             {/* PWA Install Guide */}
@@ -134,55 +110,18 @@ export const Header: React.FC<HeaderProps> = ({
               )}
             </button>
 
-            {/* Auth Action Buttons: Login / Cadastrar or Logged User badge */}
-            {isGuest ? (
-              <div className="flex items-center gap-1.5">
-                <button
-                  onClick={() => onOpenAuthModal('login')}
-                  className="px-3 py-1.5 rounded-xl border border-[#c4b491] bg-[#c4b491] text-[#050505] font-semibold text-xs hover:bg-[#b5a37f] transition-all flex items-center gap-1.5"
-                >
-                  <KeyRound className="w-3.5 h-3.5" />
-                  <span>Entrar</span>
-                </button>
-                <button
-                  onClick={() => onOpenAuthModal('register')}
-                  className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 bg-white/[0.03] text-white hover:bg-white/[0.08] text-xs font-medium transition-all"
-                >
-                  <UserPlus className="w-3.5 h-3.5 text-[#c4b491]" />
-                  <span>Cadastrar</span>
-                </button>
-              </div>
-            ) : (
+            {/* Staff authentication controls stay restricted to protected routes */}
+            {!isGuest && currentUser.role !== 'cliente' && (
               <div className="flex items-center gap-1">
-                {/* Active User Badge (Click to open Demo Switcher) */}
-                <button
-                  onClick={() => onTabChange('cliente-portal')}
-                  className="flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-xl border border-[#c4b491]/30 bg-[#0a0a0a] hover:border-[#c4b491] transition-all shadow-2xs text-left"
-                  title="Abrir minha área de cliente"
-                >
+                <div className="flex items-center gap-2 pl-2.5 pr-3 py-1.5 rounded-xl border border-[#c4b491]/30 bg-[#0a0a0a] shadow-2xs">
                   <div className="w-6 h-6 rounded-full bg-[#c4b491]/20 border border-[#c4b491]/50 flex items-center justify-center shrink-0">
                     <UserIcon className="w-3.5 h-3.5 text-[#c4b491]" />
                   </div>
                   <div className="hidden sm:flex flex-col leading-none">
-                    <span className="text-[11px] font-semibold text-white max-w-[110px] truncate">
-                      {currentUser.name}
-                    </span>
-                    <span className="text-[9px] text-[#c4b491] font-medium tracking-wide uppercase">
-                      {getRoleLabel()}
-                    </span>
+                    <span className="text-[11px] font-semibold text-white max-w-[110px] truncate">{currentUser.name}</span>
+                    <span className="text-[9px] text-[#c4b491] font-medium tracking-wide uppercase">{getRoleLabel()}</span>
                   </div>
-                </button>
-
-                {/* Change Password Button */}
-                <button
-                  onClick={() => onOpenAuthModal('changePassword')}
-                  className="p-2 rounded-xl border border-white/10 bg-white/[0.03] text-white/70 hover:text-[#c4b491] hover:border-[#c4b491]/40 hover:bg-white/[0.08] transition-colors"
-                  title="Alterar Senha da Conta"
-                >
-                  <KeyRound className="w-4 h-4 text-[#c4b491]" />
-                </button>
-
-                {/* Logout Button */}
+                </div>
                 <button
                   onClick={onLogout}
                   className="p-2 rounded-xl border border-rose-500/30 bg-rose-950/20 text-rose-400 hover:bg-rose-900/40 transition-colors"
