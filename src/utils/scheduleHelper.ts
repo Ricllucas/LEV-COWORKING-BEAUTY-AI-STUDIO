@@ -66,9 +66,6 @@ export function getAvailableSlots(
   const dayStartMinutes = timeToMinutes(workConfig.startTime);
   const dayEndMinutes = timeToMinutes(workConfig.endTime);
 
-  const lunchStartMinutes = workConfig.lunchStart ? timeToMinutes(workConfig.lunchStart) : null;
-  const lunchEndMinutes = workConfig.lunchEnd ? timeToMinutes(workConfig.lunchEnd) : null;
-
   // Existing appointments for this professional on this date that aren't canceled
   const dayAppointments = existingAppointments.filter(apt => {
     return (
@@ -94,16 +91,7 @@ export function getAvailableSlots(
     let available = true;
     let reason = "";
 
-    // 1. Check Lunch Break
-    if (lunchStartMinutes !== null && lunchEndMinutes !== null) {
-      // Overlaps with lunch
-      if (current < lunchEndMinutes && slotEndMinutes > lunchStartMinutes) {
-        available = false;
-        reason = "Horário de almoço / intervalo";
-      }
-    }
-
-    // 2. Check Existing Appointments
+    // 1. Check Existing Appointments
     if (available) {
       for (const apt of dayAppointments) {
         const aptStart = timeToMinutes(apt.startTime);
@@ -118,7 +106,7 @@ export function getAvailableSlots(
       }
     }
 
-    // 3. Check Blocks
+    // 2. Check Blocks
     if (available) {
       for (const blk of dayBlocks) {
         const blkStart = timeToMinutes(blk.startTime);
