@@ -78,8 +78,8 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </h1>
           <p className="text-xs text-white/60 mt-1">
             {currentUser.role === 'admin'
-              ? 'Visão consolidada das três profissionais (Elisangela, Talitha e Nayara) com controle financeiro individual por MEI.'
-              : `Atendimento profissional individual - ${currentUser.name}`}
+              ? 'Visão consolidada das agendas de Elisangela, Talitha e Nayara, com acompanhamento financeiro individual.'
+              : `Ambiente profissional exclusivo de ${currentUser.name}`}
           </p>
         </div>
 
@@ -123,7 +123,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
             {todayApts.length}
           </span>
           <span className="text-[11px] text-white/60 mt-1 block">
-            {todayApts.filter(a => a.status === 'concluido').length} concluído(s)
+            {todayApts.filter(a => a.status === 'concluido').length} {todayApts.filter(a => a.status === 'concluido').length === 1 ? 'concluído' : 'concluídos'}
           </span>
         </div>
 
