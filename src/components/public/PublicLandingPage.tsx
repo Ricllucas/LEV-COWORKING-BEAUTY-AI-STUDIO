@@ -204,8 +204,8 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 {[
                   { title: "Elisangela (Nail Expert)", desc: "Unhas de Gel, Blindagem e Designer de Mãos e Pés perfeitos." },
-                  { title: "Talitha Kum Studio Beauty", desc: "Micropigmentação Nanobrow, Brow Lamination, Lash Lifting, Cílios & Hydra Gloss Lips." },
-                  { title: "Nayara (Beauty Artist)", desc: "Maquiagens Glamourosas & Penteados de Alta Durabilidade." },
+                  { title: "Talitha — Maquiagem", desc: "Maquiagem personalizada para diferentes ocasiões, com atendimento em sala exclusiva." },
+                  { title: "Nayara — Nail Designer", desc: "Cuidados com as unhas em atendimento individual, realizado em sua própria sala." },
                   { title: "Pacotes Integrados VIP", desc: "Produções para Noivas, Formandas e Momentos Inesquecíveis." }
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-white/[0.03] border border-white/10">
