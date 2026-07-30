@@ -211,15 +211,13 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
               </div>
 
               <div className="pt-4 flex flex-wrap items-center gap-3">
-                <a
-                  href={`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent('Olá! Gostaria de montar uma experiência de beleza personalizada no LEV Coworking Beauty.')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  onClick={() => onOpenBookingModal()}
                   className="px-7 py-3.5 rounded-xl bg-[#c4b491] hover:bg-[#b5a37f] text-[#050505] font-semibold text-xs transition-all shadow-md flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
                   Montar Minha Experiência / Agendar
-                </a>
+                </button>
 
                 <a
                   href={`https://wa.me/${settings.whatsapp}?text=${encodeURIComponent('Olá! Gostaria de informações sobre o Spa de Noivas e Pacote Completo de Beleza no LEV Beauty!')}`}
