@@ -242,7 +242,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             <div className="lg:col-span-5 relative">
               <div className="relative rounded-2xl overflow-hidden border border-[#c4b491]/30 shadow-2xl group">
                 <img
-                  src="https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&q=80&w=800"
+                  src="/spaces/producao-integrada-lev.jpg"
                   alt="Dia de Noiva e Spa no LEV Beauty"
                   className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-700"
                 />
