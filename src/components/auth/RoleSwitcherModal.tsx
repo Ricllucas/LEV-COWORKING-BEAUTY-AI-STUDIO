@@ -45,7 +45,7 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
       name: 'Administração Geral',
       email: 'admin@levcoworkingbeauty.com.br',
       role: 'admin',
-      description: 'Acesso restrito total: gestão de todas as agendas, financeiro consolidado de todas as MEIs e configurações.',
+      description: 'Acesso administrativo completo: gestão das agendas, visão financeira consolidada e configurações.',
       icon: <AdminShieldIcon className="w-5 h-5 text-[#c4b491]" />,
       badgeColor: 'bg-[#c4b491]/15 text-[#c4b491] border-[#c4b491]/30'
     },
@@ -94,7 +94,7 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
       email: 'camila@gmail.com',
       role: 'cliente',
       clientId: 'cli_1',
-      description: 'Portal de Cliente: realiza agendamentos, acompanha horários marcados e histórico. Sem acesso a áreas internas.',
+      description: 'Portal da cliente: permite realizar agendamentos e acompanhar horários e histórico, sem acesso às áreas internas.',
       icon: <UserCheck className="w-5 h-5 text-emerald-400" />,
       badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
     }
