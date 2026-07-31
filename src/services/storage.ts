@@ -30,6 +30,7 @@ const STORAGE_KEYS = {
   SETTINGS: 'lev_coworking_settings_v1',
   PROFESSIONALS: 'lev_coworking_professionals_v10',
   SERVICES: 'lev_coworking_services_v2',
+  TALITHA_CATALOG_VERSION: 'lev_talitha_catalog_2026_07_31',
   CLIENTS: 'lev_coworking_clients_v1',
   APPOINTMENTS: 'lev_coworking_appointments_v1',
   REVIEWS: 'lev_coworking_reviews_v1',
@@ -457,7 +458,25 @@ export class StorageService {
 
   // Services
   static getServices(): Service[] {
-    return getStored<Service[]>(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
+    const current = getStored<Service[]>(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
+
+    try {
+      if (!localStorage.getItem(STORAGE_KEYS.TALITHA_CATALOG_VERSION)) {
+        const otherProfessionals = current.filter(service => service.professionalId !== 'prof_talitha');
+        const officialTalithaCatalog = INITIAL_SERVICES.filter(
+          service => service.professionalId === 'prof_talitha'
+        );
+        const updatedCatalog = [...otherProfessionals, ...officialTalithaCatalog];
+
+        setStored(STORAGE_KEYS.SERVICES, updatedCatalog);
+        localStorage.setItem(STORAGE_KEYS.TALITHA_CATALOG_VERSION, new Date().toISOString());
+        return updatedCatalog;
+      }
+    } catch (error) {
+      console.warn('Não foi possível aplicar a atualização do catálogo da Talitha:', error);
+    }
+
+    return current;
   }
 
   static saveService(service: Service): void {
