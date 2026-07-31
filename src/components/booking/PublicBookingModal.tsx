@@ -40,6 +40,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
   // Results
   const [availableSlots, setAvailableSlots] = useState<SlotAvailability[]>([]);
   const [confirmedApt, setConfirmedApt] = useState<Appointment | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -105,7 +106,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     }
   };
 
-  const handleConfirmBooking = () => {
+  const handleConfirmBooking = async () => {
     if (!currentProf || selectedServiceIds.length === 0 || !selectedDate || !selectedTime || !clientName || !clientPhone) {
       alert("Por favor, preencha todos os campos obrigatórios.");
       return;
@@ -167,9 +168,17 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       createdBy: client.fullName
     };
 
-    StorageService.saveAppointment(newApt);
-    setConfirmedApt(newApt);
-    setStep(5); // Final Success Step
+    try {
+      setIsSubmitting(true);
+      await StorageService.saveAppointmentToCloud(newApt);
+      StorageService.saveAppointment(newApt, false);
+      setConfirmedApt(newApt);
+      setStep(5); // Final Success Step
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível concluir o agendamento.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetModal = () => {
@@ -258,7 +267,6 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                   );
                 })}
               </div>
-
               {selectedProfId && (
                 <div className="pt-4 flex justify-end">
                   <button
@@ -517,8 +525,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                   <span className="text-right">{selectedServiceObjects.map(s => s.name).join(', ')}</span>
                 </div>
                 <div className="flex justify-between text-white/60">
-                  <span>Duração Estimada:</span>
-                  <span>{totalDuration} minutos</span>
+                  <span>Duração Estimada:</span>                  <span>{totalDuration} minutos</span>
                 </div>
                 <div className="pt-2 border-t border-white/10 flex justify-between font-bold text-sm text-[#c4b491]">
                   <span>Valor Total:</span>
@@ -555,10 +562,10 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
 
                 <button
                   onClick={handleConfirmBooking}
-                  disabled={!clientName || !clientPhone || !acceptedPolicy}
+                  disabled={!clientName || !clientPhone || !acceptedPolicy || isSubmitting}
                   className="px-6 py-2.5 rounded-xl bg-[#c4b491] hover:bg-[#b5a37f] disabled:opacity-50 text-[#050505] font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-md"
                 >
-                  Confirmar Agendamento <Check className="w-4 h-4" />
+                  {isSubmitting ? 'Salvando...' : 'Confirmar Agendamento'} <Check className="w-4 h-4" />
                 </button>
               </div>
             </div>
