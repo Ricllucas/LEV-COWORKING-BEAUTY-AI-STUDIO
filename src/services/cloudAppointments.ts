@@ -7,13 +7,21 @@ type StoredSession = { accessToken?: string };
 
 const getAccessToken = (role?: User['role']): string | undefined => {
   if (typeof sessionStorage === 'undefined') return undefined;
-  const key = role === 'admin' ? 'lev_admin_session_v1' : role === 'profissional' ? 'lev_professional_session_v1' : '';
-  if (!key) return undefined;
-  try {
-    return (JSON.parse(sessionStorage.getItem(key) || '{}') as StoredSession).accessToken;
-  } catch {
-    return undefined;
+  const keys = role === 'admin'
+    ? ['lev_admin_session_v1']
+    : role === 'profissional'
+      ? ['lev_professional_session_v1']
+      : ['lev_admin_session_v1', 'lev_professional_session_v1'];
+
+  for (const key of keys) {
+    try {
+      const token = (JSON.parse(sessionStorage.getItem(key) || '{}') as StoredSession).accessToken;
+      if (token) return token;
+    } catch {
+      // Continue checking the other active staff session.
+    }
   }
+  return undefined;
 };
 
 const config = () => {
