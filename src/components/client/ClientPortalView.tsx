@@ -211,7 +211,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
 
                       <div className="text-right shrink-0">
                         <span className="text-base font-serif font-bold text-[#c4b491]">
-                          {formatCurrency(service.promotionalPrice || service.price)}
+                          {service.price <= 0 ? 'Sob consulta' : formatCurrency(service.promotionalPrice || service.price)}
                         </span>
                         {service.promotionalPrice && (
                           <span className="text-xs text-white/40 line-through block">
