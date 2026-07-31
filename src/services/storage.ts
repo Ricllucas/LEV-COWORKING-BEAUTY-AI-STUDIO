@@ -13,6 +13,8 @@ import {
   User
 } from '../types';
 
+import { CloudAppointmentService } from './cloudAppointments';
+
 import {
   INITIAL_SETTINGS,
   INITIAL_PROFESSIONALS,
@@ -217,8 +219,7 @@ export class StorageService {
 
     const generatedEmail = cleanEmail || `${digitsPhone || Date.now()}@cliente.com`;
 
-    // Create client entry first
-    const newClientId = `cli_${Date.now()}`;
+    // Create client entry first    const newClientId = `cli_${Date.now()}`;
     const newClientObj: Client = {
       id: newClientId,
       fullName: data.name,
@@ -437,7 +438,6 @@ export class StorageService {
       list.push(prof);
     }
     setStored(STORAGE_KEYS.PROFESSIONALS, list);
-
     // Also update matching User avatarUrl if present
     const users = this.getUsers();
     let updatedUsers = false;
@@ -535,7 +535,25 @@ export class StorageService {
     return this.getAppointments().find(a => a.id === id);
   }
 
-  static saveAppointment(apt: Appointment): void {
+  static async saveAppointmentToCloud(apt: Appointment): Promise<void> {
+    await CloudAppointmentService.save(apt);
+  }
+
+  static async syncAppointmentsFromCloud(user: User): Promise<void> {
+    if (!CloudAppointmentService.isConfigured() || (user.role !== 'admin' && user.role !== 'profissional')) return;
+    const cloudAppointments = await CloudAppointmentService.list(user);
+    const localAppointments = this.getAppointments();
+    const merged = new Map(localAppointments.map(appointment => [appointment.id, appointment]));
+    cloudAppointments.forEach(appointment => merged.set(appointment.id, appointment));
+    setStored(
+      STORAGE_KEYS.APPOINTMENTS,
+      Array.from(merged.values()).sort((a, b) =>
+        `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)
+      )
+    );
+  }
+
+  static saveAppointment(apt: Appointment, syncCloud: boolean = true): void {
     const list = this.getAppointments();
     const index = list.findIndex(a => a.id === apt.id);
     if (index >= 0) {
@@ -544,6 +562,12 @@ export class StorageService {
       list.unshift(apt);
     }
     setStored(STORAGE_KEYS.APPOINTMENTS, list);
+
+    if (syncCloud && CloudAppointmentService.isConfigured()) {
+      void CloudAppointmentService.save(apt, this.getCurrentUser()).catch(error => {
+        console.error('Erro ao sincronizar agendamento:', error);
+      });
+    }
 
     // Notify
     this.addNotification({
@@ -617,8 +641,7 @@ export class StorageService {
   // Schedule Blocks
   static getScheduleBlocks(): ScheduleBlock[] {
     this.clearFutureScheduleOnce();
-    return getStored<ScheduleBlock[]>(STORAGE_KEYS.BLOCKS, []);
-  }
+    return getStored<ScheduleBlock[]>(STORAGE_KEYS.BLOCKS, []);  }
 
   static saveScheduleBlock(block: ScheduleBlock): void {
     const list = this.getScheduleBlocks();
