@@ -368,8 +368,17 @@ export class StorageService {
   // Settings
   static getSettings(): CoworkingSettings {
     const settings = getStored<CoworkingSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
+    let updated = false;
     if (!settings.address || settings.address.includes('Rua das Flores') || settings.address.includes('São Paulo')) {
       settings.address = INITIAL_SETTINGS.address;
+      updated = true;
+    }
+    if (settings.phone !== INITIAL_SETTINGS.phone || settings.whatsapp !== INITIAL_SETTINGS.whatsapp) {
+      settings.phone = INITIAL_SETTINGS.phone;
+      settings.whatsapp = INITIAL_SETTINGS.whatsapp;
+      updated = true;
+    }
+    if (updated) {
       setStored(STORAGE_KEYS.SETTINGS, settings);
     }
     return settings;
