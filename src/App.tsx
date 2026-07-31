@@ -54,6 +54,26 @@ export default function App() {
     return StorageService.subscribeStorage(handleUserChange);
   }, []);
 
+  useEffect(() => {
+    if (currentUser.role !== 'admin' && currentUser.role !== 'profissional') return;
+
+    let active = true;
+    const syncSharedAgenda = async () => {
+      try {
+        await StorageService.syncAppointmentsFromCloud(currentUser);
+      } catch (error) {
+        if (active) console.error('Erro ao atualizar agenda compartilhada:', error);
+      }
+    };
+
+    void syncSharedAgenda();
+    const intervalId = window.setInterval(syncSharedAgenda, 10000);
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, [currentUser.id, currentUser.role]);
+
   const handleOpenBooking = (profId?: string, serviceId?: string) => {
     setBookingProfId(profId);
     setBookingServiceId(serviceId);
