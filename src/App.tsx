@@ -181,7 +181,7 @@ export default function App() {
 
             {activeTab === 'relatorios' && <ReportsView />}
 
-            {activeTab === 'whatsapp' && <WhatsAppCenter />}
+            {activeTab === 'whatsapp' && <WhatsAppCenter currentUser={currentUser} />}
 
             {activeTab === 'espera' && <WaitlistManager />}
 
