@@ -62,6 +62,7 @@ export const Header: React.FC<HeaderProps> = ({
               {[
                 { id: 'inicio', label: 'Início' },
                 { id: 'agenda', label: 'Agenda' },
+                { id: 'whatsapp', label: 'WhatsApp' },
                 { id: 'servicos', label: 'Serviços & Preços' },
                 { id: 'clientes', label: 'Clientes' },
                 { id: 'financeiro', label: 'Financeiro (MEI)' },
