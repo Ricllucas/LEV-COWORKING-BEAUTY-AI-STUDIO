@@ -18,6 +18,8 @@ export type CategoryType =
   | 'Sobrancelhas & Cílios' 
   | 'Micropigmentação' 
   | 'Estética Labial' 
+  | 'Produções'
+  | 'Brows'
   | 'Outros';
 
 export interface Professional {
@@ -277,4 +279,38 @@ export interface AuditLog {
   oldValue?: string;
   newValue?: string;
   timestamp: string;
+}
+
+export type WhatsAppConversationStatus = 'bot' | 'aguardando' | 'em_atendimento' | 'encerrada';
+
+export interface WhatsAppConversation {
+  id: string;
+  waContactId: string;
+  clientPhone: string;
+  clientName: string;
+  assignedProfessionalId?: string;
+  assignedProfessionalName?: string;
+  appointmentId?: string;
+  status: WhatsAppConversationStatus;
+  botEnabled: boolean;
+  unreadCount: number;
+  lastMessage?: string;
+  lastMessageAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type WhatsAppMessageDirection = 'entrada' | 'saida';
+
+export interface WhatsAppMessage {
+  id: string;
+  conversationId: string;
+  whatsappMessageId?: string;
+  direction: WhatsAppMessageDirection;
+  senderType: 'cliente' | 'bot' | 'profissional' | 'admin' | 'sistema';
+  senderName: string;
+  body: string;
+  messageType: 'text' | 'image' | 'audio' | 'video' | 'document' | 'interactive' | 'unknown';
+  status: 'recebida' | 'pendente' | 'enviada' | 'entregue' | 'lida' | 'falhou';
+  sentAt: string;
 }
