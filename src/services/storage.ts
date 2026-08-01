@@ -220,7 +220,8 @@ export class StorageService {
 
     const generatedEmail = cleanEmail || `${digitsPhone || Date.now()}@cliente.com`;
 
-    // Create client entry first    const newClientId = `cli_${Date.now()}`;
+    // Create client entry first
+    const newClientId = `cli_${Date.now()}`;
     const newClientObj: Client = {
       id: newClientId,
       fullName: data.name,
