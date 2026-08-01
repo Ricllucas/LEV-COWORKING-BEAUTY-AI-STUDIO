@@ -31,49 +31,23 @@ const config = () => {
   return { url: SUPABASE_URL.replace(/\/$/, ''), key: SUPABASE_KEY };
 };
 
-const rowFromAppointment = (appointment: Appointment) => ({
-  id: appointment.id,
-  professional_id: appointment.professionalId,
-  appointment_date: appointment.date,
-  start_time: appointment.startTime,
-  status: appointment.status,
-  payload: appointment,
-  updated_at: new Date().toISOString()
-});
-
 export const CloudAppointmentService = {
   isConfigured: () => Boolean(SUPABASE_URL && SUPABASE_KEY),
 
-  async save(appointment: Appointment, user?: User): Promise<void> {
-    const { url, key } = config();
-    const token = getAccessToken(user?.role);
-    const response = await fetch(`${url}/rest/v1/appointments?on_conflict=id`, {
+  async save(appointment: Appointment, _user?: User): Promise<void> {
+    config();
+    const response = await fetch('/api/appointments/create', {
       method: 'POST',
-      headers: {
-        apikey: key,
-        Authorization: `Bearer ${token || key}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=merge-duplicates,return=minimal'
-      },
-      body: JSON.stringify(rowFromAppointment(appointment))
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(appointment)
     });
 
     if (!response.ok) {
+      const result = await response.json().catch(() => ({})) as { error?: string };
       if (response.status === 409) {
-        throw new Error('Este horário acabou de ser reservado. Escolha outro horário disponível.');
+        throw new Error(result.error || 'Este horário acabou de ser reservado. Escolha outro horário disponível.');
       }
-      throw new Error('Não foi possível salvar o agendamento no servidor. Tente novamente.');
-    }
-
-    // Sincroniza somente depois que a agenda interna confirmar o salvamento.
-    // As credenciais do Google permanecem protegidas na função da Vercel.
-    const calendarResponse = await fetch('/api/calendar/appointment', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id: appointment.id })
-    });
-    if (!calendarResponse.ok) {
-      console.error('Agendamento salvo, mas a sincronização com o Google Agenda falhou.');
+      throw new Error(result.error || 'Não foi possível salvar o agendamento no servidor. Tente novamente.');
     }
   },
 
