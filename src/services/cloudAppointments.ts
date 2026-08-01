@@ -64,6 +64,17 @@ export const CloudAppointmentService = {
       }
       throw new Error('Não foi possível salvar o agendamento no servidor. Tente novamente.');
     }
+
+    // Sincroniza somente depois que a agenda interna confirmar o salvamento.
+    // As credenciais do Google permanecem protegidas na função da Vercel.
+    const calendarResponse = await fetch('/api/calendar/appointment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: appointment.id })
+    });
+    if (!calendarResponse.ok) {
+      console.error('Agendamento salvo, mas a sincronização com o Google Agenda falhou.');
+    }
   },
 
   async list(user: User): Promise<Appointment[]> {
