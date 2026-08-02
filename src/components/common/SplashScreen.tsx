@@ -21,7 +21,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinished }) => {
       clearTimeout(timer1);
       clearTimeout(timer2);
     };
-  }, [onFinished]);
+  }, []);
 
   return (
     <div

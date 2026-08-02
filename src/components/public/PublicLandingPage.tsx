@@ -27,11 +27,11 @@ interface PublicLandingPageProps {
 }
 
 export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBookingModal }) => {
-  const [currentUser, setCurrentUser] = useState(StorageService.getCurrentUser());
-  const [settings, setSettings] = useState<CoworkingSettings>(StorageService.getSettings());
-  const [professionals, setProfessionals] = useState<Professional[]>(StorageService.getProfessionals());
-  const [services, setServices] = useState<Service[]>(StorageService.getServices());
-  const [reviews, setReviews] = useState<Review[]>(StorageService.getReviews().filter(r => r.approved));
+  const [currentUser, setCurrentUser] = useState(() => StorageService.getCurrentUser());
+  const [settings, setSettings] = useState<CoworkingSettings>(() => StorageService.getSettings());
+  const [professionals, setProfessionals] = useState<Professional[]>(() => StorageService.getProfessionals());
+  const [services, setServices] = useState<Service[]>(() => StorageService.getServices());
+  const [reviews, setReviews] = useState<Review[]>(() => StorageService.getReviews().filter(r => r.approved));
   const [selectedProfCategory, setSelectedProfCategory] = useState<string>('todas');
 
   const isAdmin = currentUser?.role === 'admin';
@@ -56,15 +56,24 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
   };
 
   useEffect(() => {
+    let isMounted = true;
     const refreshData = () => {
-      setCurrentUser(StorageService.getCurrentUser());
-      setSettings(StorageService.getSettings());
-      setProfessionals(StorageService.getProfessionals());
-      setServices(StorageService.getServices());
-      setReviews(StorageService.getReviews().filter(r => r.approved));
+      if (!isMounted) return;
+      Promise.resolve().then(() => {
+        if (isMounted) {
+          setCurrentUser(StorageService.getCurrentUser());
+          setSettings(StorageService.getSettings());
+          setProfessionals(StorageService.getProfessionals());
+          setServices(StorageService.getServices());
+          setReviews(StorageService.getReviews().filter(r => r.approved));
+        }
+      });
     };
-    refreshData();
-    return StorageService.subscribeStorage(refreshData);
+    const unsubscribe = StorageService.subscribeStorage(refreshData);
+    return () => {
+      isMounted = false;
+      unsubscribe?.();
+    };
   }, []);
 
   const filteredServices = selectedProfCategory === 'todas'

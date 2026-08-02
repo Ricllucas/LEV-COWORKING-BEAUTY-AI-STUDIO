@@ -8,6 +8,7 @@ import { MobileNav } from './components/common/MobileNav';
 import { SplashScreen } from './components/common/SplashScreen';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
 import { PWAInstallerModal } from './components/common/PWAInstallerModal';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { AdminLoginPage } from './components/auth/AdminLoginPage';
 import { AdminAuthService } from './services/adminAuth';
 import { ProfessionalLoginPage } from './components/auth/ProfessionalLoginPage';
@@ -35,7 +36,7 @@ export default function App() {
   const isAdminRoute = cleanPath === '/admin';
   const isProfessionalRoute = cleanPath === '/profissional';
   const [showSplash, setShowSplash] = useState(true);
-  const [currentUser, setCurrentUser] = useState<User>(StorageService.getCurrentUser());
+  const [currentUser, setCurrentUser] = useState<User>(() => StorageService.getCurrentUser());
   const [activeTab, setActiveTab] = useState<string>('inicio');
 
   // Modals
@@ -47,11 +48,21 @@ export default function App() {
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
     const handleUserChange = () => {
-      const u = StorageService.getCurrentUser();
-      setCurrentUser(u);
+      if (!isMounted) return;
+      Promise.resolve().then(() => {
+        if (isMounted) {
+          const u = StorageService.getCurrentUser();
+          setCurrentUser(u);
+        }
+      });
     };
-    return StorageService.subscribeStorage(handleUserChange);
+    const unsubscribe = StorageService.subscribeStorage(handleUserChange);
+    return () => {
+      isMounted = false;
+      unsubscribe?.();
+    };
   }, []);
 
   useEffect(() => {
@@ -124,7 +135,8 @@ export default function App() {
   const isClientOrGuest = currentUser.role === 'cliente' || currentUser.id === 'visitor_guest';
 
   return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans flex flex-col selection:bg-[#c4b491]/30 selection:text-white">
+    <ErrorBoundary>
+      <div className="min-h-screen bg-[#050505] text-white font-sans flex flex-col selection:bg-[#c4b491]/30 selection:text-white">
       {/* Header */}
       <Header
         currentUser={currentUser}
@@ -221,6 +233,7 @@ export default function App() {
         isOpen={isPWAInstallerOpen}
         onClose={() => setIsPWAInstallerOpen(false)}
       />
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 }
