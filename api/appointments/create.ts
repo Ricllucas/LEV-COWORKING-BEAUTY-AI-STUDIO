@@ -1,4 +1,5 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
+import { notificationService } from '../_lib/notificationService.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 
@@ -36,7 +37,23 @@ export default async function handler(req: any, res: any) {
     }
 
     try {
-      return json(res, 201, { saved: true, calendar: await syncGoogleCalendarEvent(appointment) });
+      const calendarResult = await syncGoogleCalendarEvent(appointment);
+
+      notificationService.notifyNewAppointment({
+        appointmentId: appointment.id,
+        clientName: appointment.clientName,
+        clientPhone: appointment.clientPhone,
+        professionalName: appointment.professionalName,
+        serviceNames: appointment.serviceNames || [],
+        date: appointment.date,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        status: appointment.status
+      }, appointment.professionalId).catch(err =>
+        console.error('Notification send error (non-blocking):', err)
+      );
+
+      return json(res, 201, { saved: true, calendar: calendarResult });
     } catch (calendarError) {
       console.error('Appointment saved, Google Calendar sync error:', calendarError);
       return json(res, 201, { saved: true, calendar: { synced: false } });

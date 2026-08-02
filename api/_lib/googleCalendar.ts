@@ -38,6 +38,28 @@ const getAccessToken = async () => {
 export const calendarEventId = (appointmentId: string) =>
   `lev${createHash('sha256').update(appointmentId).digest('hex').slice(0, 40)}`;
 
+const getProfessionalColor = (professionalId: string): string => {
+  const colors: Record<string, string> = {
+    'prof_elisangela': '5',  // Banana (Amarelo Ouro)
+    'prof_talitha': '6',     // Tangerine (Laranja)
+    'prof_nayara': '8'       // Graphite (Marrom)
+  };
+  return colors[professionalId] || '0';
+};
+
+const getStatusNotifications = (status: string): { method: string; minutes: number }[] => {
+  const statusMap: Record<string, { method: string; minutes: number }[]> = {
+    'confirmado': [
+      { method: 'email', minutes: 1440 },
+      { method: 'popup', minutes: 60 }
+    ],
+    'pendente': [
+      { method: 'popup', minutes: 120 }
+    ]
+  };
+  return statusMap[status] || [];
+};
+
 export const syncGoogleCalendarEvent = async (appointment: any) => {
   const calendarId = requireEnv('GOOGLE_CALENDAR_ID');
   const token = await getAccessToken();
@@ -52,22 +74,54 @@ export const syncGoogleCalendarEvent = async (appointment: any) => {
   }
 
   const services = Array.isArray(appointment.serviceNames) ? appointment.serviceNames.join(', ') : 'Atendimento LEV';
+
+  const statusLabel: Record<string, string> = {
+    'confirmado': '✅ Confirmado',
+    'pendente': '⏳ Pendente',
+    'concluido': '✔️ Concluído',
+    'cancelado_cliente': '❌ Cancelado (Cliente)',
+    'cancelado_coworking': '❌ Cancelado (LEV)'
+  };
+
   const event = {
     id: eventId,
-    summary: `${appointment.professionalName} — ${services}`,
+    summary: `${appointment.professionalName} — ${services} ${statusLabel[appointment.status] || ''}`,
     description: [
-      `Cliente: ${appointment.clientName}`,
-      `Telefone: ${appointment.clientPhone}`,
-      appointment.clientEmail ? `E-mail: ${appointment.clientEmail}` : '',
-      `Serviço: ${services}`,
-      `Status: ${appointment.status}`,
-      appointment.notes ? `Observações: ${appointment.notes}` : '',
-      `Agendamento LEV: ${appointment.id}`
+      `👩‍💼 Profissional: ${appointment.professionalName}`,
+      `👤 Cliente: ${appointment.clientName}`,
+      `📱 Telefone: ${appointment.clientPhone}`,
+      appointment.clientEmail ? `📧 E-mail: ${appointment.clientEmail}` : '',
+      `💅 Serviço: ${services}`,
+      appointment.duration ? `⏱️ Duração: ${appointment.duration} min` : '',
+      `💰 Valor: R$ ${appointment.value?.toFixed(2) || '0,00'}`,
+      appointment.depositValue ? `💳 Sinal: R$ ${appointment.depositValue.toFixed(2)}` : '',
+      `📊 Status: ${statusLabel[appointment.status] || appointment.status}`,
+      appointment.notes ? `📝 Observações: ${appointment.notes}` : '',
+      '',
+      `🔗 Agendamento LEV: ${appointment.id}`,
+      `🔄 Última atualização: ${new Date().toLocaleString('pt-BR')}`
     ].filter(Boolean).join('\n'),
     start: { dateTime: `${appointment.date}T${appointment.startTime}:00`, timeZone: 'America/Sao_Paulo' },
     end: { dateTime: `${appointment.date}T${appointment.endTime}:00`, timeZone: 'America/Sao_Paulo' },
-    extendedProperties: { private: { levAppointmentId: appointment.id, professionalId: appointment.professionalId } }
+    colorId: getProfessionalColor(appointment.professionalId),
+    transparency: appointment.status === 'confirmado' ? 'opaque' : 'transparent',
+    reminders: {
+      useDefault: false,
+      overrides: getStatusNotifications(appointment.status).map(n => ({
+        method: n.method,
+        minutes: n.minutes
+      }))
+    },
+    extendedProperties: {
+      private: {
+        levAppointmentId: appointment.id,
+        professionalId: appointment.professionalId,
+        clientPhone: appointment.clientPhone,
+        status: appointment.status
+      }
+    }
   };
+
   const existing = await fetch(`${baseUrl}/${eventId}`, { headers });
   const response = await fetch(existing.ok ? `${baseUrl}/${eventId}` : baseUrl, {
     method: existing.ok ? 'PUT' : 'POST', headers, body: JSON.stringify(event)
