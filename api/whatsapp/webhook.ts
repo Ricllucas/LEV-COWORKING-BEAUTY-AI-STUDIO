@@ -52,6 +52,70 @@ const processStatuses = async (statuses: Array<Record<string, any>>) => {
   }
 };
 
+// Processar mensagens de cliente com inteligência
+const processClientMessage = async (clientPhone: string, clientName: string, text: string): Promise<string> => {
+  const lowerText = text.toLowerCase();
+
+  // Cancelamento de agendamento
+  if (lowerText.includes('cancelar') || lowerText.includes('desmarcar') || lowerText.includes('remover')) {
+    return `Entendi que você gostaria de cancelar seu agendamento. 💔
+
+Para cancelar com segurança, você precisa:
+1. Nos avisar com *no mínimo 24 horas* de antecedência
+2. Fazer isso por aqui via WhatsApp
+
+Qual é o agendamento que você gostaria de cancelar? Envie a data e horário, por favor!
+
+Estamos aqui para te ajudar! ✨`;
+  }
+
+  // Remarcar agendamento
+  if (lowerText.includes('remarcar') || lowerText.includes('mudar') || lowerText.includes('outro horário')) {
+    return `Legal! Podemos sim remarcar seu agendamento! 📅
+
+Para remarcar:
+1. Me fala qual agendamento você quer mudar (data e horário atual)
+2. Me fala o novo dia e horário que você prefere
+3. Verifique a disponibilidade com a gente!
+
+Qual agendamento você gostaria de remarcar? 😊`;
+  }
+
+  // Dúvidas sobre serviços
+  if (lowerText.includes('dúvida') || lowerText.includes('pergunta') || lowerText.includes('como') || lowerText.includes('quanto')) {
+    return `Ótimo ter você aqui com dúvidas! Vou te ajudar! 😊
+
+Para perguntas sobre:
+- 💅 *Serviços e preços:* Me conta que tipo de serviço você quer
+- ⏰ *Disponibilidade:* Me fala a data que você quer e vejo com a gente
+- 💰 *Formas de pagamento:* Aceitamos PIX, dinheiro e cartão na hora!
+- 👩‍💼 *Qual profissional:* Elisangela, Talitha ou Nayara - cada uma tem sua especialidade!
+
+Qual sua dúvida? 💕`;
+  }
+
+  // Feedback positivo
+  if (lowerText.includes('obrigada') || lowerText.includes('obrigado') || lowerText.includes('muito bom') || lowerText.includes('perfeito')) {
+    return `Que alegria ouvir isso! 💕 Sua satisfação é nosso melhor prêmio!
+
+Volta sempre, tá? Estamos sempre aqui para deixar você mais linda ainda! ✨
+
+Beijos! 💋`;
+  }
+
+  // Mensagem genérica
+  return `Oi, ${clientName}! 👋 Recebi sua mensagem com carinho!
+
+*Como posso te ajudar?*
+- 📅 Marcar um agendamento
+- 💅 Conhecer nossos serviços
+- ⏰ Ver disponibilidade
+- ❓ Tirar uma dúvida
+- ⚠️ Cancelar ou remarcar
+
+Me fala aí! Estou aqui pra deixar você linda! ✨`;
+};
+
 export default async function handler(req: any, res: any) {
   if (req.method === 'GET') {
     if (req.query?.['hub.mode'] === 'subscribe' && req.query?.['hub.verify_token'] === process.env.WHATSAPP_VERIFY_TOKEN) {
@@ -127,11 +191,65 @@ export default async function handler(req: any, res: any) {
             })
           });
 
+          // Enviar resposta automática (bot + profissional)
           if (!existing && conversationRow.bot_enabled) {
-            const automaticText = selectedProfessional
-              ? `Olá, ${clientName}! Seu atendimento foi direcionado para ${professionalName(selectedProfessional)}. Ela continuará a conversa por aqui assim que estiver disponível.`
-              : `Olá, ${clientName}! Bem-vinda ao LEV Coworking Beauty.\n\nCom quem você deseja falar?\n1 — Elisangela\n2 — Talitha\n3 — Nayara\n\nResponda com o número ou com o nome da profissional.`;
+            let automaticText: string;
+
+            if (selectedProfessional) {
+              // Cliente selecionou profissional
+              const profName = professionalName(selectedProfessional);
+              automaticText = `Oi, ${clientName}! 👋 Que alegria saber que você quer falar com ${profName}!
+
+${profName} continuará a conversa por aqui assim que estiver disponível. Enquanto isso, você pode me tirar qualquer dúvida! 😊
+
+Estamos aqui para deixar você linda! ✨`;
+
+              // Notificar profissional sobre novo cliente
+              const professionalPhones: Record<string, string> = {
+                'prof_elisangela': process.env.ELISANGELA_PHONE || '',
+                'prof_talitha': process.env.TALITHA_PHONE || '',
+                'prof_nayara': process.env.NAYARA_PHONE || ''
+              };
+
+              const profPhone = professionalPhones[selectedProfessional];
+              if (profPhone) {
+                await sendWhatsAppText(
+                  profPhone,
+                  `📱 *Novo cliente esperando!*\n\n👤 ${clientName}\n💬 "${text}"\n\nResponda por aqui quando estiver disponível! ✨`
+                );
+              }
+            } else {
+              // Cliente não selecionou - mostrar opções
+              automaticText = `Oi, ${clientName}! Bem-vinda ao LEV Coworking Beauty! 💅✨
+
+*Com quem você deseja conversar?*
+1️⃣ *Elisangela* — Unhas impecáveis (Manicure, Pedicure, SPA)
+2️⃣ *Talitha* — Maquiagem, Penteados & Sobrancelhas
+3️⃣ *Nayara* — Unhas em Gel Lindíssimas
+
+Responda com o número ou com o nome! 😊`;
+            }
+
             const sent = await sendWhatsAppText(waContactId, automaticText);
+            await supabaseRequest('whatsapp_messages', {
+              method: 'POST',
+              headers: { Prefer: 'return=minimal' },
+              body: JSON.stringify({
+                conversation_id: conversation.id,
+                whatsapp_message_id: sent.messages?.[0]?.id || null,
+                direction: 'saida',
+                sender_type: selectedProfessional ? 'bot' : 'bot',
+                sender_name: selectedProfessional ? professionalName(selectedProfessional) : 'Assistente LEV',
+                body: automaticText,
+                message_type: 'text',
+                status: 'enviada',
+                sent_at: now
+              })
+            });
+          } else if (existing && conversationRow.bot_enabled && !selectedProfessional) {
+            // Cliente já foi convertido, responder inteligentemente
+            const botResponse = await processClientMessage(waContactId, clientName, text);
+            const sent = await sendWhatsAppText(waContactId, botResponse);
             await supabaseRequest('whatsapp_messages', {
               method: 'POST',
               headers: { Prefer: 'return=minimal' },
@@ -141,7 +259,7 @@ export default async function handler(req: any, res: any) {
                 direction: 'saida',
                 sender_type: 'bot',
                 sender_name: 'Assistente LEV',
-                body: automaticText,
+                body: botResponse,
                 message_type: 'text',
                 status: 'enviada',
                 sent_at: now
