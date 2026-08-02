@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { User } from './types';
 import { StorageService } from './services/storage';
 
@@ -9,27 +9,30 @@ import { SplashScreen } from './components/common/SplashScreen';
 import { NotificationDrawer } from './components/common/NotificationDrawer';
 import { PWAInstallerModal } from './components/common/PWAInstallerModal';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { LoadingSpinner } from './components/common/LoadingSpinner';
 import { AdminLoginPage } from './components/auth/AdminLoginPage';
 import { AdminAuthService } from './services/adminAuth';
 import { ProfessionalLoginPage } from './components/auth/ProfessionalLoginPage';
 import { ProfessionalAuthService } from './services/professionalAuth';
 import { ProfessionalAccessManager } from './components/professionals/ProfessionalAccessManager';
 
-// Views
+// Views - eager load only essential views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
 import { PublicBookingModal } from './components/booking/PublicBookingModal';
-import { DashboardOverview } from './components/dashboard/DashboardOverview';
-import { AgendaView } from './components/agenda/AgendaView';
-import { ClientsManager } from './components/clients/ClientsManager';
-import { FinancialManager } from './components/financial/FinancialManager';
-import { ServicesManager } from './components/services/ServicesManager';
-import { ProfessionalsManager } from './components/professionals/ProfessionalsManager';
-import { ReportsView } from './components/reports/ReportsView';
-import { WhatsAppCenter } from './components/whatsapp/WhatsAppCenter';
-import { WaitlistManager } from './components/waitlist/WaitlistManager';
-import { PromotionsManager } from './components/promotions/PromotionsManager';
-import { SettingsManager } from './components/settings/SettingsManager';
-import { AuditLogsView } from './components/audit/AuditLogsView';
+
+// Views - lazy load to reduce initial bundle
+const DashboardOverview = lazy(() => import('./components/dashboard/DashboardOverview').then(m => ({ default: m.DashboardOverview })));
+const AgendaView = lazy(() => import('./components/agenda/AgendaView').then(m => ({ default: m.AgendaView })));
+const ClientsManager = lazy(() => import('./components/clients/ClientsManager').then(m => ({ default: m.ClientsManager })));
+const FinancialManager = lazy(() => import('./components/financial/FinancialManager').then(m => ({ default: m.FinancialManager })));
+const ServicesManager = lazy(() => import('./components/services/ServicesManager').then(m => ({ default: m.ServicesManager })));
+const ProfessionalsManager = lazy(() => import('./components/professionals/ProfessionalsManager').then(m => ({ default: m.ProfessionalsManager })));
+const ReportsView = lazy(() => import('./components/reports/ReportsView').then(m => ({ default: m.ReportsView })));
+const WhatsAppCenter = lazy(() => import('./components/whatsapp/WhatsAppCenter').then(m => ({ default: m.WhatsAppCenter })));
+const WaitlistManager = lazy(() => import('./components/waitlist/WaitlistManager').then(m => ({ default: m.WaitlistManager })));
+const PromotionsManager = lazy(() => import('./components/promotions/PromotionsManager').then(m => ({ default: m.PromotionsManager })));
+const SettingsManager = lazy(() => import('./components/settings/SettingsManager').then(m => ({ default: m.SettingsManager })));
+const AuditLogsView = lazy(() => import('./components/audit/AuditLogsView').then(m => ({ default: m.AuditLogsView })));
 
 export default function App() {
   const cleanPath = window.location.pathname.replace(/\/+$/, '');
@@ -161,47 +164,87 @@ export default function App() {
         {!isClientOrGuest && activeTab !== 'publica' && (
           <>
             {activeTab === 'inicio' && (
-              <DashboardOverview
-                currentUser={currentUser}
-                onNavigateTab={tab => setActiveTab(tab)}
-                onOpenNewBooking={() => handleOpenBooking()}
-                onOpenNewClient={() => setIsNewClientModalOpen(true)}
-              />
+              <Suspense fallback={<LoadingSpinner message="Carregando dashboard..." />}>
+                <DashboardOverview
+                  currentUser={currentUser}
+                  onNavigateTab={tab => setActiveTab(tab)}
+                  onOpenNewBooking={() => handleOpenBooking()}
+                  onOpenNewClient={() => setIsNewClientModalOpen(true)}
+                />
+              </Suspense>
             )}
 
             {activeTab === 'agenda' && (
-              <AgendaView
-                currentUser={currentUser}
-                onOpenNewBooking={() => handleOpenBooking()}
-              />
+              <Suspense fallback={<LoadingSpinner message="Carregando agenda..." />}>
+                <AgendaView
+                  currentUser={currentUser}
+                  onOpenNewBooking={() => handleOpenBooking()}
+                />
+              </Suspense>
             )}
 
             {activeTab === 'clientes' && (
-              <ClientsManager
-                isNewModalOpen={isNewClientModalOpen}
-                onCloseNewModal={() => setIsNewClientModalOpen(false)}
-              />
+              <Suspense fallback={<LoadingSpinner message="Carregando clientes..." />}>
+                <ClientsManager
+                  isNewModalOpen={isNewClientModalOpen}
+                  onCloseNewModal={() => setIsNewClientModalOpen(false)}
+                />
+              </Suspense>
             )}
 
             {activeTab === 'financeiro' && (
-              <FinancialManager currentUser={currentUser} />
+              <Suspense fallback={<LoadingSpinner message="Carregando financeiro..." />}>
+                <FinancialManager currentUser={currentUser} />
+              </Suspense>
             )}
 
-            {activeTab === 'servicos' && <ServicesManager />}
+            {activeTab === 'servicos' && (
+              <Suspense fallback={<LoadingSpinner message="Carregando serviços..." />}>
+                <ServicesManager />
+              </Suspense>
+            )}
 
-            {activeTab === 'profissionais' && <ProfessionalsManager />}
+            {activeTab === 'profissionais' && (
+              <Suspense fallback={<LoadingSpinner message="Carregando profissionais..." />}>
+                <ProfessionalsManager />
+              </Suspense>
+            )}
 
-            {activeTab === 'relatorios' && <ReportsView />}
+            {activeTab === 'relatorios' && (
+              <Suspense fallback={<LoadingSpinner message="Carregando relatórios..." />}>
+                <ReportsView />
+              </Suspense>
+            )}
 
-            {activeTab === 'whatsapp' && <WhatsAppCenter currentUser={currentUser} />}
+            {activeTab === 'whatsapp' && (
+              <Suspense fallback={<LoadingSpinner message="Carregando WhatsApp..." />}>
+                <WhatsAppCenter currentUser={currentUser} />
+              </Suspense>
+            )}
 
-            {activeTab === 'espera' && <WaitlistManager />}
+            {activeTab === 'espera' && (
+              <Suspense fallback={<LoadingSpinner message="Carregando lista de espera..." />}>
+                <WaitlistManager />
+              </Suspense>
+            )}
 
-            {activeTab === 'promocoes' && <PromotionsManager />}
+            {activeTab === 'promocoes' && (
+              <Suspense fallback={<LoadingSpinner message="Carregando promoções..." />}>
+                <PromotionsManager />
+              </Suspense>
+            )}
 
-            {activeTab === 'configuracoes' && <SettingsManager />}
+            {activeTab === 'configuracoes' && (
+              <Suspense fallback={<LoadingSpinner message="Carregando configurações..." />}>
+                <SettingsManager />
+              </Suspense>
+            )}
 
-            {activeTab === 'logs' && <AuditLogsView />}
+            {activeTab === 'logs' && (
+              <Suspense fallback={<LoadingSpinner message="Carregando logs..." />}>
+                <AuditLogsView />
+              </Suspense>
+            )}
           </>
         )}
       </main>

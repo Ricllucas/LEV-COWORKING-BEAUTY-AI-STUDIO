@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Logo } from '../brand/Logo';
 import { Professional, Service, CoworkingSettings, Review } from '../../types';
 import { StorageService } from '../../services/storage';
@@ -76,9 +76,12 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
     };
   }, []);
 
-  const filteredServices = selectedProfCategory === 'todas'
-    ? services.filter(s => s.active && s.onlineBookingEnabled)
-    : services.filter(s => s.active && s.onlineBookingEnabled && s.professionalId === selectedProfCategory);
+  const filteredServices = useMemo(() => {
+    if (selectedProfCategory === 'todas') {
+      return services.filter(s => s.active && s.onlineBookingEnabled);
+    }
+    return services.filter(s => s.active && s.onlineBookingEnabled && s.professionalId === selectedProfCategory);
+  }, [services, selectedProfCategory]);
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pb-20">
@@ -170,6 +173,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                 src={img.url}
                 alt={img.title}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                loading="lazy"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent flex flex-col justify-end p-4 text-white">
                 <span className="font-medium text-sm font-serif">{img.title}</span>
@@ -246,6 +250,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                   src="/spaces/producao-integrada-lev.jpg"
                   alt="Dia de Noiva e Spa no LEV Beauty"
                   className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-700"
+                  loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent flex flex-col justify-end p-5">
                   <span className="text-xs font-serif text-[#c4b491] font-semibold">Produção Integrada LEV Beauty</span>
