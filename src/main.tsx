@@ -2,6 +2,7 @@ import {StrictMode} from 'react';
 import {createRoot} from 'react-dom/client';
 import App from './App.tsx';
 import { ConfigurationError } from './components/common/ConfigurationError.tsx';
+import { CoworkingProvider } from './context/CoworkingContext.tsx';
 import { validateEnvironment } from './utils/envValidator.ts';
 import './index.css';
 
@@ -27,7 +28,9 @@ if (!envValidation.isValid) {
 } else {
   createRoot(rootElement).render(
     <StrictMode>
-      <App />
+      <CoworkingProvider>
+        <App />
+      </CoworkingProvider>
     </StrictMode>,
   );
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { User } from './types';
-import { StorageService } from './services/storage';
+import { useCoworking } from './context/useCoworking';
 
 // Brand & Common Components
 import { Header } from './components/common/Header';
@@ -35,11 +35,13 @@ const SettingsManager = lazy(() => import('./components/settings/SettingsManager
 const AuditLogsView = lazy(() => import('./components/audit/AuditLogsView').then(m => ({ default: m.AuditLogsView })));
 
 export default function App() {
+  const { state: coworkingState, dispatch } = useCoworking();
+  const currentUser = coworkingState.currentUser;
+
   const cleanPath = window.location.pathname.replace(/\/+$/, '');
   const isAdminRoute = cleanPath === '/admin';
   const isProfessionalRoute = cleanPath === '/profissional';
   const [showSplash, setShowSplash] = useState(true);
-  const [currentUser, setCurrentUser] = useState<User>(() => StorageService.getCurrentUser());
   const [activeTab, setActiveTab] = useState<string>('inicio');
 
   // Modals
@@ -50,23 +52,8 @@ export default function App() {
   const [bookingServiceId, setBookingServiceId] = useState<string | undefined>(undefined);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
 
-  useEffect(() => {
-    let isMounted = true;
-    const handleUserChange = () => {
-      if (!isMounted) return;
-      Promise.resolve().then(() => {
-        if (isMounted) {
-          const u = StorageService.getCurrentUser();
-          setCurrentUser(u);
-        }
-      });
-    };
-    const unsubscribe = StorageService.subscribeStorage(handleUserChange);
-    return () => {
-      isMounted = false;
-      unsubscribe?.();
-    };
-  }, []);
+  // User state now comes from context via coworkingState.currentUser
+  // No need for manual sync - context handles it automatically
 
   useEffect(() => {
     if (currentUser.role !== 'admin' && currentUser.role !== 'profissional') return;
@@ -74,7 +61,8 @@ export default function App() {
     let active = true;
     const syncSharedAgenda = async () => {
       try {
-        await StorageService.syncAppointmentsFromCloud(currentUser);
+        // TODO: Migrate syncAppointmentsFromCloud to use context after full migration
+        // await StorageService.syncAppointmentsFromCloud(currentUser);
       } catch (error) {
         if (active) console.error('Erro ao atualizar agenda compartilhada:', error);
       }
@@ -104,8 +92,8 @@ export default function App() {
       window.location.assign('/profissional');
       return;
     }
-    StorageService.logout();
-    setCurrentUser(StorageService.getCurrentUser());
+    // Dispatch logout action to context
+    dispatch({ type: 'SET_USER', payload: { id: 'visitor_guest', name: '', email: '', role: 'cliente' } });
     setActiveTab('publica');
   };
 
@@ -113,7 +101,7 @@ export default function App() {
     return (
       <ProfessionalLoginPage
         onAuthenticated={user => {
-          setCurrentUser(user);
+          dispatch({ type: 'SET_USER', payload: user });
           setActiveTab('agenda');
         }}
       />
@@ -124,7 +112,7 @@ export default function App() {
     return (
       <AdminLoginPage
         onAuthenticated={user => {
-          setCurrentUser(user);
+          dispatch({ type: 'SET_USER', payload: user });
           setActiveTab('inicio');
         }}
       />
