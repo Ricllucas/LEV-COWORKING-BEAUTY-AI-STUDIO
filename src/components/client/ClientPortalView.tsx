@@ -167,7 +167,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
                     </button>
 
                     <a
-                      href={`https://wa.me/${prof.whatsapp}`}
+                      href={`https://wa.me/${StorageService.getSettings().whatsapp}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-2 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] text-white/80 font-medium text-xs transition-colors text-center flex items-center justify-center gap-1.5"
