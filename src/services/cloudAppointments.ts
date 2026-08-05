@@ -51,6 +51,13 @@ export const CloudAppointmentService = {
     }
   },
 
+  async listPublicByDate(date: string): Promise<Appointment[]> {
+    const response = await fetch(`/api/appointments/availability?date=${encodeURIComponent(date)}`);
+    if (!response.ok) throw new Error('Não foi possível consultar os horários disponíveis.');
+    const result = await response.json() as { appointments?: Appointment[] };
+    return result.appointments || [];
+  },
+
   async list(user: User): Promise<Appointment[]> {
     const { url, key } = config();
     const token = getAccessToken(user.role);
