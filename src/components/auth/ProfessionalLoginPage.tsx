@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle2, Loader2, Scissors } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Logo } from '../brand/Logo';
 import { ProfessionalAuthService, ProfessionalProfileId, ProfessionalSession } from '../../services/professionalAuth';
 import { User } from '../../types';
 
@@ -60,7 +61,7 @@ export const ProfessionalLoginPage: React.FC<{ onAuthenticated: (user: User) => 
   return (
     <main className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-4">
       <section className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0a0a0a] p-7 shadow-2xl">
-        <Scissors className="mx-auto h-9 w-9 text-[#c4b491]" />
+        <Logo size="lg" variant="symbol" className="mx-auto" />
         <h1 className="mt-3 text-center font-serif text-3xl">Portal da Profissional</h1>
         <p className="mt-2 text-center text-sm text-white/55">Acesso individual à sua agenda e ao seu ambiente.</p>
         <div className="mt-6 flex rounded-xl border border-white/10 bg-black p-1">
