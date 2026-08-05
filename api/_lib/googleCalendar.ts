@@ -6,6 +6,16 @@ const requireEnv = (name: string) => {
   return value;
 };
 
+const getCalendarId = (professionalId: string) => {
+  const calendarEnvByProfessional: Record<string, string> = {
+    prof_elisangela: 'GOOGLE_CALENDAR_ID_ELISANGELA',
+    prof_talitha: 'GOOGLE_CALENDAR_ID_TALITHA',
+    prof_nayara: 'GOOGLE_CALENDAR_ID_NAYARA'
+  };
+  const professionalCalendar = process.env[calendarEnvByProfessional[professionalId]];
+  return professionalCalendar || requireEnv('GOOGLE_CALENDAR_ID');
+};
+
 const base64Url = (value: string | Buffer) => Buffer.from(value)
   .toString('base64').replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
@@ -61,7 +71,7 @@ const getStatusNotifications = (status: string): { method: string; minutes: numb
 };
 
 export const syncGoogleCalendarEvent = async (appointment: any) => {
-  const calendarId = requireEnv('GOOGLE_CALENDAR_ID');
+  const calendarId = getCalendarId(appointment.professionalId);
   const token = await getAccessToken();
   const eventId = calendarEventId(appointment.id);
   const baseUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
