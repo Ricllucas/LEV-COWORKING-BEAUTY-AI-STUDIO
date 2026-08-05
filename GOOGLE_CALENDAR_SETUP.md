@@ -8,5 +8,14 @@
 6. Na Vercel, cadastre `GOOGLE_CALENDAR_ID`, `GOOGLE_SERVICE_ACCOUNT_EMAIL` e `GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY`.
 7. Faça uma nova implantação.
 
-Novos agendamentos criam eventos; reagendamentos atualizam o mesmo evento; cancelamentos o removem.
+Para manter cores distintas com acesso somente de leitura, crie tambem as agendas
+`LEV - Elisangela`, `LEV - Talitha` e `LEV - Nayara`. Compartilhe cada uma com
+as profissionais usando **Ver todos os detalhes dos eventos** e com a conta de
+servico usando **Fazer alteracoes nos eventos**. Cadastre os respectivos IDs na
+Vercel como `GOOGLE_CALENDAR_ID_ELISANGELA`, `GOOGLE_CALENDAR_ID_TALITHA` e
+`GOOGLE_CALENDAR_ID_NAYARA`. A variavel `GOOGLE_CALENDAR_ID` continua sendo o
+calendario de contingencia.
+
+Novos agendamentos criam eventos na agenda da profissional; reagendamentos
+atualizam o mesmo evento; cancelamentos o removem.
 
