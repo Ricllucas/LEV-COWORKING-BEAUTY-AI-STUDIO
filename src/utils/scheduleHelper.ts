@@ -66,7 +66,8 @@ export function getAvailableSlots(
   const dayStartMinutes = timeToMinutes(workConfig.startTime);
   const dayEndMinutes = timeToMinutes(workConfig.endTime);
 
-  // O Studio LEV realiza apenas um atendimento por vez. Qualquer agendamento\n  // ativo nesta data bloqueia o intervalo para todas as profissionais.
+  // O Studio LEV realiza apenas um atendimento por vez. Qualquer agendamento
+  // ativo nesta data bloqueia o intervalo para todas as profissionais.
   const dayAppointments = existingAppointments.filter(apt => {
     return (
       apt.date === dateStr &&
