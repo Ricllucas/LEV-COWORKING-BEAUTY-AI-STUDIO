@@ -69,7 +69,6 @@ export function getAvailableSlots(
   // O Studio LEV realiza apenas um atendimento por vez. Qualquer agendamento\n  // ativo nesta data bloqueia o intervalo para todas as profissionais.
   const dayAppointments = existingAppointments.filter(apt => {
     return (
-      apt.professionalId === professional.id &&
       apt.date === dateStr &&
       apt.status !== 'cancelado_cliente' &&
       apt.status !== 'cancelado_coworking'
