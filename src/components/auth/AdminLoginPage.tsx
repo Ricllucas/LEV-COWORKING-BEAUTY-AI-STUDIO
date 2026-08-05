@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, Loader2, LockKeyhole, ShieldCheck } from 'lucide-react';
+import { AlertCircle, Loader2, LockKeyhole } from 'lucide-react';
+import { Logo } from '../brand/Logo';
 import { AdminAuthService, AdminSession } from '../../services/adminAuth';
 import { User } from '../../types';
 
@@ -52,9 +53,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onAuthenticated 
   return (
     <main className="min-h-screen bg-[#050505] text-white flex items-center justify-center px-4">
       <section className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0a0a0a] p-7 shadow-2xl">
-        <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full border border-[#c4b491]/40 bg-[#c4b491]/10">
-          <ShieldCheck className="h-7 w-7 text-[#c4b491]" />
-        </div>
+        <Logo size="lg" variant="symbol" className="mx-auto mb-5" />
         <p className="text-center text-[10px] font-semibold uppercase tracking-[0.24em] text-[#c4b491]">
           LEV Coworking Beauty
         </p>
