@@ -32,6 +32,7 @@ const STORAGE_KEYS = {
   BRAND_ASSETS_VERSION: 'lev_brand_logo_2026_08_05_v2',
   PROFESSIONALS: 'lev_coworking_professionals_v10',
   PIX_KEYS_VERSION: 'lev_pix_keys_2026_08_04',
+  PROFESSIONAL_CONTACT_VERSION: 'lev_professional_contact_2026_08_05',
   SERVICES: 'lev_coworking_services_v2',
   TALITHA_CATALOG_VERSION: 'lev_talitha_catalog_2026_07_31',
   CLIENTS: 'lev_coworking_clients_v1',
@@ -416,6 +417,7 @@ export class StorageService {
       prof_nayara: '(41)996556742'
     };
     const shouldMigratePixKeys = !localStorage.getItem(STORAGE_KEYS.PIX_KEYS_VERSION);
+    const shouldMigrateContact = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_CONTACT_VERSION);
 
     let updated = false;
     const sanitized = list.map(p => {
@@ -431,10 +433,12 @@ export class StorageService {
 
       const avatarUrl = shouldUseOfficialAvatar ? officialAvatar : p.avatarUrl;
       const pixKey = shouldMigratePixKeys && officialPixKey ? officialPixKey : p.pixKey;
+      const phone = shouldMigrateContact ? INITIAL_SETTINGS.phone : p.phone;
+      const whatsapp = shouldMigrateContact ? INITIAL_SETTINGS.whatsapp : p.whatsapp;
 
-      if (avatarUrl !== p.avatarUrl || pixKey !== p.pixKey) {
+      if (avatarUrl !== p.avatarUrl || pixKey !== p.pixKey || phone !== p.phone || whatsapp !== p.whatsapp) {
         updated = true;
-        return { ...p, avatarUrl, pixKey };
+        return { ...p, avatarUrl, pixKey, phone, whatsapp };
       }
 
       return p;
@@ -445,6 +449,9 @@ export class StorageService {
     }
     if (shouldMigratePixKeys) {
       localStorage.setItem(STORAGE_KEYS.PIX_KEYS_VERSION, new Date().toISOString());
+    }
+    if (shouldMigrateContact) {
+      localStorage.setItem(STORAGE_KEYS.PROFESSIONAL_CONTACT_VERSION, new Date().toISOString());
     }
 
     return sanitized;
