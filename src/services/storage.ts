@@ -1,3 +1,4 @@
+import { LEV_BANNER_DATA_URL, LEV_LOGO_DATA_URL } from '../assets/brandImages';
 import {
   Professional,
   Service,
@@ -28,6 +29,7 @@ import {
 
 const STORAGE_KEYS = {
   SETTINGS: 'lev_coworking_settings_v1',
+  BRAND_ASSETS_VERSION: 'lev_brand_assets_2026_08_05',
   PROFESSIONALS: 'lev_coworking_professionals_v10',
   PIX_KEYS_VERSION: 'lev_pix_keys_2026_08_04',
   SERVICES: 'lev_coworking_services_v2',
@@ -373,6 +375,12 @@ export class StorageService {
   static getSettings(): CoworkingSettings {
     const settings = getStored<CoworkingSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
     let updated = false;
+    if (!localStorage.getItem(STORAGE_KEYS.BRAND_ASSETS_VERSION)) {
+      settings.logoUrl = LEV_LOGO_DATA_URL;
+      settings.heroBannerUrl = LEV_BANNER_DATA_URL;
+      localStorage.setItem(STORAGE_KEYS.BRAND_ASSETS_VERSION, new Date().toISOString());
+      updated = true;
+    }
     if (!settings.address || settings.address.includes('Rua das Flores') || settings.address.includes('São Paulo')) {
       settings.address = INITIAL_SETTINGS.address;
       updated = true;
