@@ -9,6 +9,13 @@ const isValidAppointment = (appointment: any) => Boolean(
   /^\d{2}:\d{2}$/.test(appointment?.startTime || '') && /^\d{2}:\d{2}$/.test(appointment?.endTime || '')
 );
 
+const timeToMinutes = (time: string) => {
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours * 60 + minutes;
+};
+
+const isActive = (status: string) => !['cancelado_cliente', 'cancelado_coworking'].includes(status);
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Método não permitido.' });
   try {
