@@ -4,7 +4,7 @@ import { StorageService } from '../../services/storage';
 import { getAvailableSlots, SlotAvailability } from '../../utils/scheduleHelper';
 import { formatCurrency, formatDateBR, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
-import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
+import { ProfessionalAvatar } from '../common/ProfessionalAvatar';\nimport { CloudAppointmentService } from '../../services/cloudAppointments';
 import { X, Calendar, Clock, Check, Sparkles, MessageCircle, AlertCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 
 interface PublicBookingModalProps {
@@ -38,7 +38,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
   const [acceptedPolicy, setAcceptedPolicy] = useState<boolean>(true);
 
   // Results
-  const [availableSlots, setAvailableSlots] = useState<SlotAvailability[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<SlotAvailability[]>([]);\n  const [onlineAppointments, setOnlineAppointments] = useState<Appointment[]>([]);
   const [confirmedApt, setConfirmedApt] = useState<Appointment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -68,13 +68,25 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     }
   }, [isOpen, initialProfId, initialServiceId]);
 
+  useEffect(() => {
+    if (!isOpen || !selectedDate) return;
+    let active = true;
+    CloudAppointmentService.listPublicByDate(selectedDate)
+      .then(items => { if (active) setOnlineAppointments(items); })
+      .catch(() => { if (active) setOnlineAppointments([]); });
+    return () => { active = false; };
+  }, [isOpen, selectedDate]);
+
   // Recalculate available time slots
   useEffect(() => {
     if (selectedProfId && selectedDate && selectedServiceIds.length > 0) {
       const prof = StorageService.getProfessionalById(selectedProfId);
       const allSrvs = StorageService.getServices();
       const selSrvs = allSrvs.filter(s => selectedServiceIds.includes(s.id));
-      const existingApts = StorageService.getAppointments();
+      const localApts = StorageService.getAppointments();
+      const existingApts = [...localApts, ...onlineAppointments].filter(
+        (apt, index, all) => all.findIndex(item => item.id === apt.id) === index
+      );
       const blocks = StorageService.getScheduleBlocks();
 
       if (prof) {
@@ -84,7 +96,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     } else {
       setAvailableSlots([]);
     }
-  }, [selectedProfId, selectedDate, selectedServiceIds]);
+  }, [selectedProfId, selectedDate, selectedServiceIds, onlineAppointments]);
 
   if (!isOpen) return null;
 
