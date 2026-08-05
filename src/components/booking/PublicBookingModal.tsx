@@ -4,7 +4,8 @@ import { StorageService } from '../../services/storage';
 import { getAvailableSlots, SlotAvailability } from '../../utils/scheduleHelper';
 import { formatCurrency, formatDateBR, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
-import { ProfessionalAvatar } from '../common/ProfessionalAvatar';\nimport { CloudAppointmentService } from '../../services/cloudAppointments';
+import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
+import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { X, Calendar, Clock, Check, Sparkles, MessageCircle, AlertCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 
 interface PublicBookingModalProps {
@@ -38,7 +39,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
   const [acceptedPolicy, setAcceptedPolicy] = useState<boolean>(true);
 
   // Results
-  const [availableSlots, setAvailableSlots] = useState<SlotAvailability[]>([]);\n  const [onlineAppointments, setOnlineAppointments] = useState<Appointment[]>([]);
+  const [availableSlots, setAvailableSlots] = useState<SlotAvailability[]>([]);
+  const [onlineAppointments, setOnlineAppointments] = useState<Appointment[]>([]);
   const [confirmedApt, setConfirmedApt] = useState<Appointment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
