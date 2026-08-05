@@ -617,7 +617,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
               <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <a
                   href={buildWhatsAppLink(
-                    currentProf?.whatsapp || StorageService.getSettings().whatsapp,
+                    StorageService.getSettings().whatsapp,
                     generateWhatsAppMessage('confirmacao', {
                       clientName: confirmedApt.clientName,
                       professionalName: confirmedApt.professionalName,
