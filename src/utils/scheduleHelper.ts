@@ -66,7 +66,7 @@ export function getAvailableSlots(
   const dayStartMinutes = timeToMinutes(workConfig.startTime);
   const dayEndMinutes = timeToMinutes(workConfig.endTime);
 
-  // Existing appointments for this professional on this date that aren't canceled
+  // O Studio LEV realiza apenas um atendimento por vez. Qualquer agendamento\n  // ativo nesta data bloqueia o intervalo para todas as profissionais.
   const dayAppointments = existingAppointments.filter(apt => {
     return (
       apt.professionalId === professional.id &&
@@ -95,12 +95,12 @@ export function getAvailableSlots(
     if (available) {
       for (const apt of dayAppointments) {
         const aptStart = timeToMinutes(apt.startTime);
-        const aptEnd = timeToMinutes(apt.endTime) + (professional.slotBufferMinutes || 10);
+        const aptEnd = timeToMinutes(apt.endTime);
 
         // Overlap condition: (StartA < EndB) and (EndA > StartB)
         if (current < aptEnd && slotEndMinutes > aptStart) {
           available = false;
-          reason = `Ocupado: ${apt.serviceNames.join(', ')}`;
+          reason = 'Horário já reservado no Studio LEV';
           break;
         }
       }
