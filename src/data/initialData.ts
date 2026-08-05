@@ -26,7 +26,7 @@ export const INITIAL_SETTINGS: CoworkingSettings = {
   privacyPolicy: "O LEV Coworking Beauty protege os dados das clientes conforme as diretrizes da LGPD (Lei Geral de Proteção de Dados). As informações de saúde fornecidas pela cliente são tratadas com confidencialidade e permanecem sob responsabilidade de quem as declarou.",
   termsOfService: "Ao agendar um serviço no LEV Coworking Beauty, você concorda com nossas políticas de cancelamento e pontualidade.",
   logoUrl: LEV_LOGO_DATA_URL,
-  heroBannerUrl: LEV_BANNER_DATA_URL
+  heroBannerUrl: LEV_LOGO_DATA_URL
 };
 
 export const INITIAL_PROFESSIONALS: Professional[] = [
