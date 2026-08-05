@@ -3,10 +3,10 @@ const json = (res: any, status: number, body: unknown) => res.status(status).jso
 export default async function handler(req: any, res: any) {
   if (req.method !== 'GET') return json(res, 405, { error: 'Método não permitido.' });
   const date = String(req.query?.date || '');
-  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) return json(res, 400, { error: 'Data inválida.' });
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json(res, 400, { error: 'Data inválida.' });
 
   try {
-    const supabaseUrl = process.env.SUPABASE_URL?.replace(/\\/$/, '');
+    const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceKey) throw new Error('Servidor de agendamentos não configurado.');
     const response = await fetch(
