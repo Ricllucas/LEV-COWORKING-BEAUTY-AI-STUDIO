@@ -19,6 +19,23 @@ export default async function handler(req: any, res: any) {
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceKey) throw new Error('Servidor de agendamentos não configurado.');
 
+    const occupiedResponse = await fetch(
+      `${supabaseUrl}/rest/v1/appointments?appointment_date=eq.${encodeURIComponent(appointment.date)}&select=id,payload`,
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+    );
+    if (!occupiedResponse.ok) throw new Error('Não foi possível verificar a disponibilidade do horário.');
+    const occupiedRows = await occupiedResponse.json() as Array<{ id: string; payload: any }>;
+    const requestedStart = timeToMinutes(appointment.startTime);
+    const requestedEnd = timeToMinutes(appointment.endTime);
+    const hasConflict = occupiedRows.some(row => {
+      const current = row.payload;
+      if (!current || row.id === appointment.id || !isActive(current.status)) return false;
+      return requestedStart < timeToMinutes(current.endTime) && requestedEnd > timeToMinutes(current.startTime);
+    });
+    if (hasConflict) {
+      return json(res, 409, { error: 'Este horário já está reservado no Studio LEV. Escolha outro horário disponível.' });
+    }
+
     const saveResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?on_conflict=id`, {
       method: 'POST',
       headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
