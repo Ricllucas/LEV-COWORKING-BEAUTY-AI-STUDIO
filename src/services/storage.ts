@@ -29,7 +29,7 @@ import {
 
 const STORAGE_KEYS = {
   SETTINGS: 'lev_coworking_settings_v1',
-  BRAND_ASSETS_VERSION: 'lev_brand_assets_2026_08_05',
+  BRAND_ASSETS_VERSION: 'lev_brand_logo_2026_08_05_v2',
   PROFESSIONALS: 'lev_coworking_professionals_v10',
   PIX_KEYS_VERSION: 'lev_pix_keys_2026_08_04',
   SERVICES: 'lev_coworking_services_v2',
@@ -377,7 +377,7 @@ export class StorageService {
     let updated = false;
     if (!localStorage.getItem(STORAGE_KEYS.BRAND_ASSETS_VERSION)) {
       settings.logoUrl = LEV_LOGO_DATA_URL;
-      settings.heroBannerUrl = LEV_BANNER_DATA_URL;
+      settings.heroBannerUrl = LEV_LOGO_DATA_URL;
       localStorage.setItem(STORAGE_KEYS.BRAND_ASSETS_VERSION, new Date().toISOString());
       updated = true;
     }
