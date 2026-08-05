@@ -18,9 +18,9 @@ interface NotificationData {
 
 const getProfessionalPhone = (professionalId: string): string => {
   const phones: Record<string, string> = {
-    'prof_elisangela': '5511971112233',
-    'prof_talitha': '5511972223344',
-    'prof_nayara': '5511973334455'
+    'prof_elisangela': '5541984979940',
+    'prof_talitha': '5541984979940',
+    'prof_nayara': '5541984979940'
   };
   return phones[professionalId] || '';
 };
