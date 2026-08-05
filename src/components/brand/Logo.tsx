@@ -1,5 +1,5 @@
 import React from 'react';
-import { LEV_BANNER_DATA_URL, LEV_LOGO_DATA_URL } from '../../assets/brandImages';
+import { LEV_LOGO_DATA_URL } from '../../assets/brandImages';
 
 interface LogoProps {
   variant?: 'horizontal' | 'symbol' | 'monochrome' | 'stacked';
@@ -9,29 +9,22 @@ interface LogoProps {
   showSubtitle?: boolean;
 }
 
-export const Logo: React.FC<LogoProps> = ({ variant = 'horizontal', size = 'md', className = '' }) => {
-  const isSymbol = variant === 'symbol' || variant === 'stacked';
-  const horizontalSizes = {
-    sm: 'h-8 w-[112px]',
-    md: 'h-11 w-[168px] sm:w-[190px]',
-    lg: 'h-16 w-[250px] sm:h-20 sm:w-[340px]',
-    xl: 'h-20 w-[310px] sm:h-28 sm:w-[470px]'
-  };
-  const symbolSizes = {
+export const Logo: React.FC<LogoProps> = ({ size = 'md', className = '' }) => {
+  const sizes = {
     sm: 'h-9 w-9',
     md: 'h-12 w-12',
-    lg: 'h-20 w-20',
-    xl: 'h-28 w-28 sm:h-36 sm:w-36'
+    lg: 'h-32 w-32 sm:h-40 sm:w-40',
+    xl: 'h-44 w-44 sm:h-56 sm:w-56'
   };
 
   return (
-    <span className={`inline-flex items-center justify-center overflow-hidden rounded-lg bg-[#f8f4ec] ${className}`}>
+    <span className={`inline-flex items-center justify-center overflow-hidden rounded-xl bg-[#f8f4ec] shadow-[0_12px_40px_rgba(196,180,145,0.18)] ${className}`}>
       <img
-        src={isSymbol ? LEV_LOGO_DATA_URL : LEV_BANNER_DATA_URL}
+        src={LEV_LOGO_DATA_URL}
         alt="LEV Coworking Beauty"
-        className={`${isSymbol ? symbolSizes[size] : horizontalSizes[size]} block object-contain`}
-        width={isSymbol ? 512 : 1088}
-        height={isSymbol ? 512 : 500}
+        className={`${sizes[size]} block object-contain`}
+        width={512}
+        height={512}
         loading="eager"
         decoding="async"
       />
