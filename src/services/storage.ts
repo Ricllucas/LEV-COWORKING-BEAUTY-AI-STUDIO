@@ -29,6 +29,7 @@ import {
 const STORAGE_KEYS = {
   SETTINGS: 'lev_coworking_settings_v1',
   PROFESSIONALS: 'lev_coworking_professionals_v10',
+  PIX_KEYS_VERSION: 'lev_pix_keys_2026_08_04',
   SERVICES: 'lev_coworking_services_v2',
   TALITHA_CATALOG_VERSION: 'lev_talitha_catalog_2026_07_31',
   CLIENTS: 'lev_coworking_clients_v1',
@@ -401,9 +402,17 @@ export class StorageService {
       prof_nayara: '/profiles/nayara.webp'
     };
 
+    const officialPixKeys: Record<string, string> = {
+      prof_elisangela: '(41)992461203',
+      prof_talitha: '(41)999983228',
+      prof_nayara: '(41)996556742'
+    };
+    const shouldMigratePixKeys = !localStorage.getItem(STORAGE_KEYS.PIX_KEYS_VERSION);
+
     let updated = false;
     const sanitized = list.map(p => {
       const officialAvatar = officialAvatars[p.id];
+      const officialPixKey = officialPixKeys[p.id];
       const shouldUseOfficialAvatar = Boolean(
         officialAvatar && (
           !p.avatarUrl ||
@@ -412,9 +421,12 @@ export class StorageService {
         )
       );
 
-      if (shouldUseOfficialAvatar && p.avatarUrl !== officialAvatar) {
+      const avatarUrl = shouldUseOfficialAvatar ? officialAvatar : p.avatarUrl;
+      const pixKey = shouldMigratePixKeys && officialPixKey ? officialPixKey : p.pixKey;
+
+      if (avatarUrl !== p.avatarUrl || pixKey !== p.pixKey) {
         updated = true;
-        return { ...p, avatarUrl: officialAvatar };
+        return { ...p, avatarUrl, pixKey };
       }
 
       return p;
@@ -422,6 +434,9 @@ export class StorageService {
 
     if (updated) {
       setStored(STORAGE_KEYS.PROFESSIONALS, sanitized);
+    }
+    if (shouldMigratePixKeys) {
+      localStorage.setItem(STORAGE_KEYS.PIX_KEYS_VERSION, new Date().toISOString());
     }
 
     return sanitized;
