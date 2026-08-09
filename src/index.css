@@ -4,7 +4,19 @@
   body {
     background-color: #050505;
     color: #ffffff;
-    font-family: 'Helvetica Neue', Arial, sans-serif;
+    font-family: 'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-variant-ligatures: none;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Mantém títulos elegantes sem substituir caracteres acentuados no celular. */
+  .font-serif {
+    font-family: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    font-variant-ligatures: none;
+    font-synthesis: none;
   }
 
   /* Dark mode form control defaults */
@@ -34,3 +46,4 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #c4b491;
 }
+
