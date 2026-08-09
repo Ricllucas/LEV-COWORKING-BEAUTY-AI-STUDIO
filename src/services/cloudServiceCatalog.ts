@@ -37,7 +37,11 @@ const upsert = async (items: CatalogRecord[], role: User['role']) => {
     headers: { ...headers(token), Prefer: 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(items.map(item => ({ ...item, updated_at: new Date().toISOString() })))
   });
-  if (!response.ok) throw new Error('Não foi possível publicar o catálogo para as clientes.');
+  if (!response.ok) {
+    const details = await response.text().catch(() => '');
+    console.error('Falha ao publicar catálogo:', response.status, details);
+    throw new Error(`Não foi possível publicar o catálogo para as clientes (erro ${response.status}).`);
+  }
 };
 
 export const CloudServiceCatalog = {
@@ -46,7 +50,10 @@ export const CloudServiceCatalog = {
   async load(): Promise<Service[]> {
     if (!this.isConfigured()) return INITIAL_SERVICES;
     const { url } = config();
-    const response = await fetch(`${url}/rest/v1/catalog_services?select=id,professional_id,payload,deleted`, { headers: headers() });
+    const response = await fetch(`${url}/rest/v1/catalog_services?select=id,professional_id,payload,deleted`, {
+      headers: headers(),
+      cache: 'no-store'
+    });
     if (!response.ok) throw new Error('Não foi possível atualizar o catálogo de serviços.');
     const cloud = await response.json() as CatalogRecord[];
     const merged = new Map(INITIAL_SERVICES.map(service => [service.id, service]));
@@ -64,6 +71,19 @@ export const CloudServiceCatalog = {
       .filter(service => service.professionalId === professionalId && !currentIds.has(service.id))
       .map(service => ({ id: service.id, professional_id: professionalId, payload: null, deleted: true }));
     await upsert([...records(own), ...deletedDefaults], role);
+  },
+
+  async syncAll(localServices: Service[], role: User['role']) {
+    const currentIds = new Set(localServices.map(service => service.id));
+    const deletedDefaults: CatalogRecord[] = INITIAL_SERVICES
+      .filter(service => !currentIds.has(service.id))
+      .map(service => ({
+        id: service.id,
+        professional_id: service.professionalId,
+        payload: null,
+        deleted: true
+      }));
+    await upsert([...records(localServices), ...deletedDefaults], role);
   },
 
   save: (service: Service, role: User['role']) => upsert(records([service]), role),
