@@ -1,4 +1,3 @@
-import { LEV_BANNER_DATA_URL, LEV_LOGO_DATA_URL } from '../assets/brandImages';
 import {
   Professional,
   Service,
@@ -103,7 +102,7 @@ export const DEFAULT_CURRENT_USER: User = {
 export const INITIAL_USERS: (User & { password?: string })[] = [
   {
     id: "admin_1",
-    name: "Administração LEV",
+    name: "AdministraÃ§Ã£o LEV",
     email: "admin@levcoworkingbeauty.com.br",
     role: "admin",
     password: "123"
@@ -134,7 +133,7 @@ export const INITIAL_USERS: (User & { password?: string })[] = [
   },
   {
     id: "recepcao_1",
-    name: "Recepção LEV",
+    name: "RecepÃ§Ã£o LEV",
     email: "recepcao@levcoworkingbeauty.com.br",
     role: "recepcao",
     password: "123"
@@ -174,11 +173,11 @@ export class StorageService {
     });
 
     if (!found) {
-      return { success: false, error: 'Usuário não encontrado com este E-mail ou Celular. Verifique os dados ou cadastre-se.' };
+      return { success: false, error: 'UsuÃ¡rio nÃ£o encontrado com este E-mail ou Celular. Verifique os dados ou cadastre-se.' };
     }
 
     if (found.role !== 'cliente') {
-      return { success: false, error: 'Este acesso é exclusivo para clientes cadastrados.' };
+      return { success: false, error: 'Este acesso Ã© exclusivo para clientes cadastrados.' };
     }
 
     if (found.password && found.password !== cleanPass) {
@@ -198,7 +197,7 @@ export class StorageService {
     };
 
     this.setCurrentUser(activeUser);
-    this.addAuditLog("LOGIN_USUARIO", activeUser.name, `Usuário ${activeUser.name} (${activeUser.role}) efetuou login no sistema.`);
+    this.addAuditLog("LOGIN_USUARIO", activeUser.name, `UsuÃ¡rio ${activeUser.name} (${activeUser.role}) efetuou login no sistema.`);
     return { success: true, user: activeUser };
   }
 
@@ -214,12 +213,12 @@ export class StorageService {
 
     // Check duplicate email
     if (cleanEmail && users.some(u => u.email && u.email.toLowerCase() === cleanEmail)) {
-      return { success: false, error: 'Este e-mail já está cadastrado no sistema. Faça login com ele para continuar.' };
+      return { success: false, error: 'Este e-mail jÃ¡ estÃ¡ cadastrado no sistema. FaÃ§a login com ele para continuar.' };
     }
 
     // Check duplicate phone
     if (digitsPhone.length >= 8 && users.some(u => u.phone && u.phone.replace(/\D/g, '') === digitsPhone)) {
-      return { success: false, error: 'Este número de celular já está cadastrado no sistema. Faça login para continuar.' };
+      return { success: false, error: 'Este nÃºmero de celular jÃ¡ estÃ¡ cadastrado no sistema. FaÃ§a login para continuar.' };
     }
 
     const generatedEmail = cleanEmail || `${digitsPhone || Date.now()}@cliente.com`;
@@ -284,12 +283,12 @@ export class StorageService {
 
     const userIndex = users.findIndex(u => u.id === userId || u.email === userId);
     if (userIndex === -1) {
-      return { success: false, error: 'Usuário não encontrado.' };
+      return { success: false, error: 'UsuÃ¡rio nÃ£o encontrado.' };
     }
 
     const user = users[userIndex];
     if (user.password && user.password !== cleanCurrent) {
-      return { success: false, error: 'A senha atual informada está incorreta.' };
+      return { success: false, error: 'A senha atual informada estÃ¡ incorreta.' };
     }
 
     users[userIndex].password = cleanNew;
@@ -326,7 +325,7 @@ export class StorageService {
     }
 
     if (users[userIndex].role !== 'cliente') {
-      return { success: false, error: 'A recuperação pública de senha é exclusiva para clientes.' };
+      return { success: false, error: 'A recuperaÃ§Ã£o pÃºblica de senha Ã© exclusiva para clientes.' };
     }
 
     users[userIndex].password = cleanNew;
@@ -343,7 +342,7 @@ export class StorageService {
       phone: updatedUser.phone
     };
 
-    this.addAuditLog("RECUPERACAO_SENHA", updatedUser.name, `Senha redefinida com sucesso para o usuário ${updatedUser.name}.`);
+    this.addAuditLog("RECUPERACAO_SENHA", updatedUser.name, `Senha redefinida com sucesso para o usuÃ¡rio ${updatedUser.name}.`);
 
     return { success: true, user: activeUser };
   }
@@ -377,12 +376,12 @@ export class StorageService {
     const settings = getStored<CoworkingSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
     let updated = false;
     if (!localStorage.getItem(STORAGE_KEYS.BRAND_ASSETS_VERSION)) {
-      settings.logoUrl = LEV_LOGO_DATA_URL;
-      settings.heroBannerUrl = LEV_LOGO_DATA_URL;
+      settings.logoUrl = '/branding/lev-logo.jpeg';
+      settings.heroBannerUrl = '/branding/lev-logo.jpeg';
       localStorage.setItem(STORAGE_KEYS.BRAND_ASSETS_VERSION, new Date().toISOString());
       updated = true;
     }
-    if (!settings.address || settings.address.includes('Rua das Flores') || settings.address.includes('São Paulo')) {
+    if (!settings.address || settings.address.includes('Rua das Flores') || settings.address.includes('SÃ£o Paulo')) {
       settings.address = INITIAL_SETTINGS.address;
       updated = true;
     }
@@ -399,7 +398,7 @@ export class StorageService {
 
   static saveSettings(settings: CoworkingSettings): void {
     setStored(STORAGE_KEYS.SETTINGS, settings);
-    this.addAuditLog("CONFIG_ATUALIZADA", "Configurações Gerais", "Atualização das configurações do coworking.");
+    this.addAuditLog("CONFIG_ATUALIZADA", "ConfiguraÃ§Ãµes Gerais", "AtualizaÃ§Ã£o das configuraÃ§Ãµes do coworking.");
   }
 
   // Professionals
@@ -504,7 +503,7 @@ export class StorageService {
         return updatedCatalog;
       }
     } catch (error) {
-      console.warn('Não foi possível aplicar a atualização do catálogo da Talitha:', error);
+      console.warn('NÃ£o foi possÃ­vel aplicar a atualizaÃ§Ã£o do catÃ¡logo da Talitha:', error);
     }
 
     return current;
@@ -519,13 +518,17 @@ export class StorageService {
       list.push(service);
     }
     setStored(STORAGE_KEYS.SERVICES, list);
-    this.addAuditLog("SERVICO_SALVO", service.name, `Serviço ${service.name} (${service.professionalName}) atualizado/criado.`);
+    this.addAuditLog("SERVICO_SALVO", service.name, `ServiÃ§o ${service.name} (${service.professionalName}) atualizado/criado.`);
   }
 
   static deleteService(id: string): void {
     const list = this.getServices().filter(s => s.id !== id);
     setStored(STORAGE_KEYS.SERVICES, list);
-    this.addAuditLog("SERVICO_EXCLUIDO", id, "Serviço removido do sistema.");
+    this.addAuditLog("SERVICO_EXCLUIDO", id, "ServiÃ§o removido do sistema.");
+  }
+
+  static replaceServices(services: Service[]): void {
+    setStored(STORAGE_KEYS.SERVICES, services);
   }
 
   // Clients
@@ -572,7 +575,7 @@ export class StorageService {
 
       localStorage.setItem(STORAGE_KEYS.FUTURE_SCHEDULE_RESET, new Date().toISOString());
     } catch (error) {
-      console.warn('Não foi possível limpar a agenda futura anterior:', error);
+      console.warn('NÃ£o foi possÃ­vel limpar a agenda futura anterior:', error);
     }
   }
 
@@ -622,7 +625,7 @@ export class StorageService {
     // Notify
     this.addNotification({
       title: "Agendamento Salvo/Atualizado",
-      message: `${apt.clientName} - ${apt.serviceNames.join(', ')} com ${apt.professionalName} em ${apt.date} às ${apt.startTime}.`,
+      message: `${apt.clientName} - ${apt.serviceNames.join(', ')} com ${apt.professionalName} em ${apt.date} Ã s ${apt.startTime}.`,
       type: "booking",
       read: false,
       createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
@@ -697,7 +700,7 @@ export class StorageService {
     const list = this.getScheduleBlocks();
     list.push(block);
     setStored(STORAGE_KEYS.BLOCKS, list);
-    this.addAuditLog("BLOQUEIO_AGENDA", block.professionalId, `Horário bloqueado em ${block.date} das ${block.startTime} às ${block.endTime}.`);
+    this.addAuditLog("BLOQUEIO_AGENDA", block.professionalId, `HorÃ¡rio bloqueado em ${block.date} das ${block.startTime} Ã s ${block.endTime}.`);
   }
 
   static deleteScheduleBlock(id: string): void {
@@ -820,3 +823,4 @@ export class StorageService {
     setStored(STORAGE_KEYS.NOTIFICATIONS, []);
   }
 }
+
