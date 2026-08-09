@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Service, Professional, CategoryType } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudServiceCatalog } from '../../services/cloudServiceCatalog';
+import { INITIAL_SERVICES } from '../../data/initialData';
 import { formatCurrency } from '../../utils/formatters';
 import { Plus, Edit2, Trash2, Clock, DollarSign, Check, X } from 'lucide-react';
 
@@ -35,10 +36,20 @@ export const ServicesManager: React.FC = () => {
     load();
     const user = StorageService.getCurrentUser();
     if (CloudServiceCatalog.isConfigured()) {
-      const publish = user.role === 'profissional' && user.professionalId
-        ? CloudServiceCatalog.syncProfessional(StorageService.getServices(), user.professionalId, user.role)
-        : Promise.resolve();
+      const localServices = StorageService.getServices();
+      const hasLocalAdminChanges = JSON.stringify(localServices) !== JSON.stringify(INITIAL_SERVICES);
+      const needsAdminMigration = user.role === 'admin'
+        && hasLocalAdminChanges
+        && localStorage.getItem('lev_catalog_admin_migrated_v1') !== 'done';
+      const publish = needsAdminMigration
+        ? CloudServiceCatalog.syncAll(localServices, user.role)
+        : user.role === 'profissional' && user.professionalId
+          ? CloudServiceCatalog.syncProfessional(localServices, user.professionalId, user.role)
+          : Promise.resolve();
       publish
+        .then(() => {
+          if (needsAdminMigration) localStorage.setItem('lev_catalog_admin_migrated_v1', 'done');
+        })
         .then(() => CloudServiceCatalog.load())
         .then(items => {
           StorageService.replaceServices(items);
@@ -109,6 +120,9 @@ export const ServicesManager: React.FC = () => {
     StorageService.saveService(serviceObj);
     try {
       await CloudServiceCatalog.save(serviceObj, StorageService.getCurrentUser().role);
+      const published = await CloudServiceCatalog.load();
+      StorageService.replaceServices(published);
+      setServices(published);
       setIsFormOpen(false);
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível publicar o serviço.');
