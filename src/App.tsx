@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 1.1 seconds
-Output:
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { User } from './types';
 import { useCoworking } from './context/useCoworking';
@@ -50,11 +47,7 @@ export default function App() {
   // Modals
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isPWAInstallerOpen, setIsPWAInstallerOpen] = useState(false);
-  // Public visitors enter directly through the booking flow. Staff routes keep
-  // their dedicated login/dashboard as the first screen.
-  const [isBookingModalOpen, setIsBookingModalOpen] = useState(
-    !isAdminRoute && !isProfessionalRoute
-  );
+  // Public visitors enter directly through the booking flow. Staff routes keep\n  // their dedicated login/dashboard as the first screen.\n  const [isBookingModalOpen, setIsBookingModalOpen] = useState(\n    !isAdminRoute && !isProfessionalRoute\n  );
   const [bookingProfId, setBookingProfId] = useState<string | undefined>(undefined);
   const [bookingServiceId, setBookingServiceId] = useState<string | undefined>(undefined);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
@@ -194,7 +187,7 @@ export default function App() {
             )}
 
             {activeTab === 'servicos' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando serviÃ§os..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando serviços..." />}>
                 <ServicesManager />
               </Suspense>
             )}
@@ -206,7 +199,7 @@ export default function App() {
             )}
 
             {activeTab === 'relatorios' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando relatÃ³rios..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando relatórios..." />}>
                 <ReportsView />
               </Suspense>
             )}
@@ -224,13 +217,13 @@ export default function App() {
             )}
 
             {activeTab === 'promocoes' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando promoÃ§Ãµes..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando promoções..." />}>
                 <PromotionsManager />
               </Suspense>
             )}
 
             {activeTab === 'configuracoes' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando configuraÃ§Ãµes..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando configurações..." />}>
                 <SettingsManager />
               </Suspense>
             )}
@@ -275,4 +268,3 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-
