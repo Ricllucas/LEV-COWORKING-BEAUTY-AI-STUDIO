@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { normalizePhone, professionalName, sendWhatsAppText, supabaseRequest } from '../_lib/whatsapp.js';
+import { processWhatsAppBooking } from '../_lib/whatsappBooking.js';
 
 export const config = { api: { bodyParser: false } };
 
@@ -190,6 +191,32 @@ export default async function handler(req: any, res: any) {
               sent_at: message.timestamp ? new Date(Number(message.timestamp) * 1000).toISOString() : now
             })
           });
+
+          const bookingReply = await processWhatsAppBooking({
+            conversation: conversation as any,
+            text,
+            clientName,
+            clientPhone: waContactId
+          });
+          if (bookingReply) {
+            const sent = await sendWhatsAppText(waContactId, bookingReply);
+            await supabaseRequest('whatsapp_messages', {
+              method: 'POST',
+              headers: { Prefer: 'return=minimal' },
+              body: JSON.stringify({
+                conversation_id: conversation.id,
+                whatsapp_message_id: sent.messages?.[0]?.id || null,
+                direction: 'saida',
+                sender_type: 'bot',
+                sender_name: 'Agenda LEV',
+                body: bookingReply,
+                message_type: 'text',
+                status: 'enviada',
+                sent_at: now
+              })
+            });
+            continue;
+          }
 
           // Enviar resposta automática (bot + profissional)
           if (!existing && conversationRow.bot_enabled) {
