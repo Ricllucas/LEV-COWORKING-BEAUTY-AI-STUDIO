@@ -7,7 +7,7 @@ const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | u
 type CatalogRecord = { id: string; professional_id: string; payload: Service | null; deleted: boolean };
 
 const config = () => {
-  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('O catÃ¡logo online ainda nÃ£o estÃ¡ configurado.');
+  if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('O catálogo online ainda não está configurado.');
   return { url: SUPABASE_URL.replace(/\/$/, ''), key: SUPABASE_KEY };
 };
 
@@ -31,13 +31,13 @@ const upsert = async (items: CatalogRecord[], role: User['role']) => {
   if (!items.length) return;
   const { url } = config();
   const token = accessToken(role);
-  if (!token) throw new Error('Sua sessÃ£o expirou. Entre novamente para publicar as alteraÃ§Ãµes.');
+  if (!token) throw new Error('Sua sessão expirou. Entre novamente para publicar as alterações.');
   const response = await fetch(`${url}/rest/v1/catalog_services?on_conflict=id`, {
     method: 'POST',
     headers: { ...headers(token), Prefer: 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(items.map(item => ({ ...item, updated_at: new Date().toISOString() })))
   });
-  if (!response.ok) throw new Error('NÃ£o foi possÃ­vel publicar o catÃ¡logo para as clientes.');
+  if (!response.ok) throw new Error('Não foi possível publicar o catálogo para as clientes.');
 };
 
 export const CloudServiceCatalog = {
@@ -47,7 +47,7 @@ export const CloudServiceCatalog = {
     if (!this.isConfigured()) return INITIAL_SERVICES;
     const { url } = config();
     const response = await fetch(`${url}/rest/v1/catalog_services?select=id,professional_id,payload,deleted`, { headers: headers() });
-    if (!response.ok) throw new Error('NÃ£o foi possÃ­vel atualizar o catÃ¡logo de serviÃ§os.');
+    if (!response.ok) throw new Error('Não foi possível atualizar o catálogo de serviços.');
     const cloud = await response.json() as CatalogRecord[];
     const merged = new Map(INITIAL_SERVICES.map(service => [service.id, service]));
     cloud.forEach(item => {
@@ -71,4 +71,3 @@ export const CloudServiceCatalog = {
     { id: service.id, professional_id: service.professionalId, payload: null, deleted: true }
   ], role)
 };
-
