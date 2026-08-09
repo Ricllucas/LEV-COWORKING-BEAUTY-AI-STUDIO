@@ -44,7 +44,7 @@ export const ServicesManager: React.FC = () => {
           StorageService.replaceServices(items);
           setServices(items);
         })
-        .catch(error => console.error('Erro ao sincronizar catÃ¡logo:', error));
+        .catch(error => console.error('Erro ao sincronizar catálogo:', error));
     }
     return StorageService.subscribeStorage(load);
   }, []);
@@ -80,7 +80,7 @@ export const ServicesManager: React.FC = () => {
   const handleSaveService = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !professionalId || price <= 0) {
-      alert("Preencha todos os campos obrigatÃ³rios.");
+      alert("Preencha todos os campos obrigatórios.");
       return;
     }
 
@@ -111,12 +111,12 @@ export const ServicesManager: React.FC = () => {
       await CloudServiceCatalog.save(serviceObj, StorageService.getCurrentUser().role);
       setIsFormOpen(false);
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel publicar o serviÃ§o.');
+      alert(error instanceof Error ? error.message : 'Não foi possível publicar o serviço.');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Tem certeza que deseja remover este serviÃ§o?")) {
+    if (confirm("Tem certeza que deseja remover este serviço?")) {
       const service = services.find(item => item.id === id);
       if (!service) return;
       StorageService.deleteService(id);
@@ -124,7 +124,7 @@ export const ServicesManager: React.FC = () => {
         await CloudServiceCatalog.remove(service, StorageService.getCurrentUser().role);
       } catch (error) {
         StorageService.saveService(service);
-        alert(error instanceof Error ? error.message : 'NÃ£o foi possÃ­vel remover o serviÃ§o do catÃ¡logo pÃºblico.');
+        alert(error instanceof Error ? error.message : 'Não foi possível remover o serviço do catálogo público.');
       }
     }
   };
@@ -134,10 +134,10 @@ export const ServicesManager: React.FC = () => {
       <div className="p-5 bg-[#0a0a0a] rounded-2xl border border-white/10 shadow-2xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <span className="text-[10px] font-semibold text-[#c4b491] uppercase tracking-widest block">
-            CatÃ¡logo de Procedimentos
+            Catálogo de Procedimentos
           </span>
           <h1 className="text-2xl font-serif font-medium text-white mt-1">
-            Cadastro de ServiÃ§os
+            Cadastro de Serviços
           </h1>
         </div>
 
@@ -146,7 +146,7 @@ export const ServicesManager: React.FC = () => {
           className="px-4 py-2.5 rounded-xl bg-[#c4b491] hover:bg-[#b5a37f] text-[#050505] font-semibold text-xs transition-colors shadow-2xs flex items-center gap-1.5"
         >
           <Plus className="w-4 h-4" />
-          Cadastrar Novo ServiÃ§o
+          Cadastrar Novo Serviço
         </button>
       </div>
 
@@ -160,7 +160,7 @@ export const ServicesManager: React.FC = () => {
               : 'bg-[#0a0a0a] text-white/70 border border-white/10 hover:border-white/20'
           }`}
         >
-          Todos os ServiÃ§os
+          Todos os Serviços
         </button>
         {professionals.map(p => (
           <button
@@ -188,7 +188,7 @@ export const ServicesManager: React.FC = () => {
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <span className="text-[10px] font-semibold text-[#c4b491] uppercase tracking-wider block">
-                    {srv.professionalName} â€¢ {srv.category}
+                    {srv.professionalName} • {srv.category}
                   </span>
                   <h3 className="font-serif font-semibold text-base text-white mt-0.5">
                     {srv.name}
@@ -240,7 +240,7 @@ export const ServicesManager: React.FC = () => {
           <form onSubmit={handleSaveService} className="bg-[#0a0a0a] rounded-2xl max-w-md w-full border border-white/10 p-6 shadow-2xl space-y-4 text-white">
             <div className="flex items-center justify-between">
               <h3 className="font-serif text-lg font-semibold text-white">
-                {editingService ? 'Editar ServiÃ§o' : 'Novo ServiÃ§o'}
+                {editingService ? 'Editar Serviço' : 'Novo Serviço'}
               </h3>
               <button
                 type="button"
@@ -252,7 +252,7 @@ export const ServicesManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-white/60 block mb-1">Nome do ServiÃ§o *</label>
+              <label className="text-xs font-semibold text-white/60 block mb-1">Nome do Serviço *</label>
               <input
                 type="text"
                 required
@@ -290,9 +290,9 @@ export const ServicesManager: React.FC = () => {
                   onChange={e => setCategory(e.target.value as CategoryType)}
                   className="w-full px-3 py-2 rounded-xl border border-white/10 bg-[#050505] text-xs text-white"
                 >
-                  <option value="Sobrancelhas & CÃ­lios">Sobrancelhas & CÃ­lios</option>
-                  <option value="MicropigmentaÃ§Ã£o">MicropigmentaÃ§Ã£o</option>
-                  <option value="EstÃ©tica Labial">EstÃ©tica Labial</option>
+                  <option value="Sobrancelhas & Cílios">Sobrancelhas & Cílios</option>
+                  <option value="Micropigmentação">Micropigmentação</option>
+                  <option value="Estética Labial">Estética Labial</option>
                   <option value="Unha Raiz">Unha Raiz</option>
                   <option value="Maquiagem e Sobrancelhas">Maquiagem e Sobrancelhas</option>
                   <option value="Unhas em Gel">Unhas em Gel</option>
@@ -303,7 +303,7 @@ export const ServicesManager: React.FC = () => {
 
             <div className="grid grid-cols-3 gap-2">
               <div>
-                <label className="text-xs font-semibold text-white/60 block mb-1">DuraÃ§Ã£o (min) *</label>
+                <label className="text-xs font-semibold text-white/60 block mb-1">Duração (min) *</label>
                 <input
                   type="number"
                   required
@@ -315,7 +315,7 @@ export const ServicesManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-white/60 block mb-1">PreÃ§o (R$) *</label>
+                <label className="text-xs font-semibold text-white/60 block mb-1">Preço (R$) *</label>
                 <input
                   type="number"
                   required
@@ -340,7 +340,7 @@ export const ServicesManager: React.FC = () => {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-white/60 block mb-1">DescriÃ§Ã£o</label>
+              <label className="text-xs font-semibold text-white/60 block mb-1">Descrição</label>
               <textarea
                 rows={2}
                 value={description}
@@ -361,7 +361,7 @@ export const ServicesManager: React.FC = () => {
                 type="submit"
                 className="px-4 py-2 rounded-xl text-xs bg-[#c4b491] hover:bg-[#b5a37f] text-[#050505] font-semibold"
               >
-                Salvar ServiÃ§o
+                Salvar Serviço
               </button>
             </div>
           </form>
@@ -370,4 +370,3 @@ export const ServicesManager: React.FC = () => {
     </div>
   );
 };
-
