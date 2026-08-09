@@ -11,6 +11,8 @@ create table if not exists public.whatsapp_conversations (
   assigned_professional_id text,
   assigned_professional_name text,
   appointment_id text,
+  booking_step text,
+  booking_draft jsonb not null default '{}'::jsonb,
   status text not null default 'bot' check (status in ('bot', 'aguardando', 'em_atendimento', 'encerrada')),
   bot_enabled boolean not null default true,
   unread_count integer not null default 0 check (unread_count >= 0),
@@ -19,6 +21,9 @@ create table if not exists public.whatsapp_conversations (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.whatsapp_conversations add column if not exists booking_step text;
+alter table public.whatsapp_conversations add column if not exists booking_draft jsonb not null default '{}'::jsonb;
 
 create table if not exists public.whatsapp_messages (
   id uuid primary key default gen_random_uuid(),
