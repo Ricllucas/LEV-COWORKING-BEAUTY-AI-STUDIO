@@ -33,4 +33,3 @@ with check (
   exists (select 1 from public.admin_users a where a.user_id = auth.uid())
   or exists (select 1 from public.professional_access p where p.user_id = auth.uid() and p.status = 'approved' and p.professional_id = catalog_services.professional_id)
 );
-
