@@ -10,7 +10,21 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="LEV Beauty" />
-    <link rel="manifest" href="/manifest.json" />
+    <script>
+      (() => {
+        const path = window.location.pathname.replace(/\/+$/, '');
+        const isProfessional = path === '/profissional';
+        const manifest = document.createElement('link');
+        manifest.rel = 'manifest';
+        manifest.href = isProfessional ? '/manifest-profissional.json' : '/manifest.json';
+        document.head.appendChild(manifest);
+
+        if (isProfessional) {
+          document.querySelector('meta[name="apple-mobile-web-app-title"]')
+            ?.setAttribute('content', 'LEV Profissional');
+        }
+      })();
+    </script>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
