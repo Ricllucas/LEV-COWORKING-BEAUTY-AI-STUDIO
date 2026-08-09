@@ -49,7 +49,7 @@ Status: ${appointmentData.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pend
     `.trim();
 
     const response = await fetch(
-      `https://graph.instagram.com/v18.0/${phoneNumberId}/messages`,
+      `https://graph.facebook.com/v23.0/${phoneNumberId}/messages`,
       {
         method: 'POST',
         headers: {
