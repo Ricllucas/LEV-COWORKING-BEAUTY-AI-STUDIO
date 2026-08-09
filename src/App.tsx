@@ -86,7 +86,7 @@ export default function App() {
     if (isAdminRoute || isProfessionalRoute) return;
     CloudServiceCatalog.load()
       .then(services => StorageService.replaceServices(services))
-      .catch(error => console.error('Erro ao atualizar catÃ¡logo pÃºblico:', error));
+      .catch(error => console.error('Erro ao atualizar catálogo público:', error));
   }, [isAdminRoute, isProfessionalRoute]);
 
   const handleOpenBooking = (profId?: string, serviceId?: string) => {
@@ -200,7 +200,7 @@ export default function App() {
             )}
 
             {activeTab === 'servicos' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando serviÃ§os..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando serviços..." />}>
                 <ServicesManager />
               </Suspense>
             )}
@@ -212,7 +212,7 @@ export default function App() {
             )}
 
             {activeTab === 'relatorios' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando relatÃ³rios..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando relatórios..." />}>
                 <ReportsView />
               </Suspense>
             )}
@@ -230,13 +230,13 @@ export default function App() {
             )}
 
             {activeTab === 'promocoes' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando promoÃ§Ãµes..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando promoções..." />}>
                 <PromotionsManager />
               </Suspense>
             )}
 
             {activeTab === 'configuracoes' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando configuraÃ§Ãµes..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando configurações..." />}>
                 <SettingsManager />
               </Suspense>
             )}
@@ -281,4 +281,3 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-
