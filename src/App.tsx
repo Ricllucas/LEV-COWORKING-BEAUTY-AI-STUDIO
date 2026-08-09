@@ -47,7 +47,11 @@ export default function App() {
   // Modals
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isPWAInstallerOpen, setIsPWAInstallerOpen] = useState(false);
-  // Public visitors enter directly through the booking flow. Staff routes keep\n  // their dedicated login/dashboard as the first screen.\n  const [isBookingModalOpen, setIsBookingModalOpen] = useState(\n    !isAdminRoute && !isProfessionalRoute\n  );
+  // Public visitors enter directly through the booking flow. Staff routes keep
+  // their dedicated login/dashboard as the first screen.
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(
+    !isAdminRoute && !isProfessionalRoute
+  );
   const [bookingProfId, setBookingProfId] = useState<string | undefined>(undefined);
   const [bookingServiceId, setBookingServiceId] = useState<string | undefined>(undefined);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
