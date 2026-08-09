@@ -1,89 +1,14 @@
-import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
-import { notificationService } from '../_lib/notificationService.js';
-
+import { createUnifiedAppointment } from '../_lib/appointmentService.js';
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
-
-const isValidAppointment = (appointment: any) => Boolean(
-  appointment?.id && appointment?.professionalId && appointment?.clientName &&
-  appointment?.clientPhone && /^\d{4}-\d{2}-\d{2}$/.test(appointment?.date || '') &&
-  /^\d{2}:\d{2}$/.test(appointment?.startTime || '') && /^\d{2}:\d{2}$/.test(appointment?.endTime || '')
-);
-
-const timeToMinutes = (time: string) => {
-  const [hours, minutes] = time.split(':').map(Number);
-  return hours * 60 + minutes;
-};
-
-const isActive = (status: string) => !['cancelado_cliente', 'cancelado_coworking'].includes(status);
-
+const valid = (a: any) => Boolean(a?.id && a?.professionalId && a?.clientName && a?.clientPhone && /^\d{4}-\d{2}-\d{2}$/.test(a?.date || '') && /^\d{2}:\d{2}$/.test(a?.startTime || '') && /^\d{2}:\d{2}$/.test(a?.endTime || ''));
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Método não permitido.' });
   try {
     const appointment = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    if (!isValidAppointment(appointment)) return json(res, 400, { error: 'Dados do agendamento incompletos.' });
-
-    const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!supabaseUrl || !serviceKey) throw new Error('Servidor de agendamentos não configurado.');
-
-    const occupiedResponse = await fetch(
-      `${supabaseUrl}/rest/v1/appointments?appointment_date=eq.${encodeURIComponent(appointment.date)}&select=id,payload`,
-      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
-    );
-    if (!occupiedResponse.ok) throw new Error('Não foi possível verificar a disponibilidade do horário.');
-    const occupiedRows = await occupiedResponse.json() as Array<{ id: string; payload: any }>;
-    const requestedStart = timeToMinutes(appointment.startTime);
-    const requestedEnd = timeToMinutes(appointment.endTime);
-    const hasConflict = occupiedRows.some(row => {
-      const current = row.payload;
-      if (!current || row.id === appointment.id || !isActive(current.status)) return false;
-      return requestedStart < timeToMinutes(current.endTime) && requestedEnd > timeToMinutes(current.startTime);
-    });
-    if (hasConflict) {
-      return json(res, 409, { error: 'Este horário já está reservado no Studio LEV. Escolha outro horário disponível.' });
-    }
-
-    const saveResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?on_conflict=id`, {
-      method: 'POST',
-      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify({
-        id: appointment.id, professional_id: appointment.professionalId,
-        appointment_date: appointment.date, start_time: appointment.startTime,
-        status: appointment.status, payload: appointment, updated_at: new Date().toISOString()
-      })
-    });
-
-    if (!saveResponse.ok) {
-      const details = await saveResponse.text();
-      console.error('Supabase appointment save error:', saveResponse.status, details);
-      if (saveResponse.status === 409) return json(res, 409, { error: 'Este horário acabou de ser reservado. Escolha outro horário disponível.' });
-      throw new Error(`O servidor recusou o agendamento (${saveResponse.status}).`);
-    }
-
-    try {
-      const calendarResult = await syncGoogleCalendarEvent(appointment);
-
-      notificationService.notifyNewAppointment({
-        appointmentId: appointment.id,
-        clientName: appointment.clientName,
-        clientPhone: appointment.clientPhone,
-        professionalName: appointment.professionalName,
-        serviceNames: appointment.serviceNames || [],
-        date: appointment.date,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
-        status: appointment.status
-      }, appointment.professionalId).catch(err =>
-        console.error('Notification send error (non-blocking):', err)
-      );
-
-      return json(res, 201, { saved: true, calendar: calendarResult });
-    } catch (calendarError) {
-      console.error('Appointment saved, Google Calendar sync error:', calendarError);
-      return json(res, 201, { saved: true, calendar: { synced: false } });
-    }
+    if (!valid(appointment)) return json(res, 400, { error: 'Dados do agendamento incompletos.' });
+    return json(res, 201, await createUnifiedAppointment({ ...appointment, source: appointment.source || 'site' }));
   } catch (error) {
-    console.error('Appointment creation error:', error);
-    return json(res, 500, { error: error instanceof Error ? error.message : 'Não foi possível salvar o agendamento no servidor.' });
+    const status = Number((error as Error & { status?: number })?.status || 500);
+    return json(res, status, { error: error instanceof Error ? error.message : 'Não foi possível salvar o agendamento.' });
   }
 }
