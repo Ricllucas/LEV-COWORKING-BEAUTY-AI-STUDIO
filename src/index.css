@@ -19,6 +19,14 @@
     font-synthesis: none;
   }
 
+  /* O fluxo de agendamento prioriza leitura rápida, inclusive em telas pequenas. */
+  .booking-modal,
+  .booking-modal .font-serif {
+    font-family: 'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif;
+    font-variant-ligatures: none;
+    letter-spacing: normal;
+  }
+
   /* Dark mode form control defaults */
   input, select, textarea {
     background-color: #050505;
@@ -46,4 +54,3 @@
 ::-webkit-scrollbar-thumb:hover {
   background: #c4b491;
 }
-
