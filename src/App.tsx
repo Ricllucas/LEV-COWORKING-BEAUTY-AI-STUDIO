@@ -15,6 +15,8 @@ import { AdminAuthService } from './services/adminAuth';
 import { ProfessionalLoginPage } from './components/auth/ProfessionalLoginPage';
 import { ProfessionalAuthService } from './services/professionalAuth';
 import { ProfessionalAccessManager } from './components/professionals/ProfessionalAccessManager';
+import { CloudServiceCatalog } from './services/cloudServiceCatalog';
+import { StorageService } from './services/storage';
 
 // Views - eager load only essential views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
@@ -79,6 +81,13 @@ export default function App() {
       window.clearInterval(intervalId);
     };
   }, [currentUser.id, currentUser.role]);
+
+  useEffect(() => {
+    if (isAdminRoute || isProfessionalRoute) return;
+    CloudServiceCatalog.load()
+      .then(services => StorageService.replaceServices(services))
+      .catch(error => console.error('Erro ao atualizar catÃ¡logo pÃºblico:', error));
+  }, [isAdminRoute, isProfessionalRoute]);
 
   const handleOpenBooking = (profId?: string, serviceId?: string) => {
     setBookingProfId(profId);
@@ -191,7 +200,7 @@ export default function App() {
             )}
 
             {activeTab === 'servicos' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando serviços..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando serviÃ§os..." />}>
                 <ServicesManager />
               </Suspense>
             )}
@@ -203,7 +212,7 @@ export default function App() {
             )}
 
             {activeTab === 'relatorios' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando relatórios..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando relatÃ³rios..." />}>
                 <ReportsView />
               </Suspense>
             )}
@@ -221,13 +230,13 @@ export default function App() {
             )}
 
             {activeTab === 'promocoes' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando promoções..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando promoÃ§Ãµes..." />}>
                 <PromotionsManager />
               </Suspense>
             )}
 
             {activeTab === 'configuracoes' && (
-              <Suspense fallback={<LoadingSpinner message="Carregando configurações..." />}>
+              <Suspense fallback={<LoadingSpinner message="Carregando configuraÃ§Ãµes..." />}>
                 <SettingsManager />
               </Suspense>
             )}
@@ -272,3 +281,4 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+
