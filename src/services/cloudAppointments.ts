@@ -58,6 +58,17 @@ export const CloudAppointmentService = {
     return result.appointments || [];
   },
 
+  async cancel(appointmentId: string, clientPhone: string, reason?: string): Promise<Appointment> {
+    const response = await fetch('/api/appointments/cancel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ appointmentId, clientPhone, reason })
+    });
+    const result = await response.json().catch(() => ({})) as { appointment?: Appointment; error?: string };
+    if (!response.ok || !result.appointment) throw new Error(result.error || 'Não foi possível cancelar o agendamento.');
+    return result.appointment;
+  },
+
   async list(user: User): Promise<Appointment[]> {
     const { url, key } = config();
     const token = getAccessToken(user.role);
