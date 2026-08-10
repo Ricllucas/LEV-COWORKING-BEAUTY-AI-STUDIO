@@ -7,7 +7,7 @@ import { getSpecialtyIcon } from '../common/SpecialtyIcons';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { CloudServiceCatalog } from '../../services/cloudServiceCatalog';
-import { X, Calendar, Clock, Check, Sparkles, MessageCircle, AlertCircle, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Calendar, Clock, Check, Sparkles, MessageCircle, AlertCircle, ChevronRight, ChevronLeft, XCircle } from 'lucide-react';
 
 interface PublicBookingModalProps {
   isOpen: boolean;
@@ -198,6 +198,21 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       setStep(5); // Final Success Step
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível concluir o agendamento.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCancelConfirmedAppointment = async () => {
+    if (!confirmedApt || !window.confirm('Tem certeza de que deseja cancelar este agendamento?')) return;
+    setIsSubmitting(true);
+    try {
+      await CloudAppointmentService.cancel(confirmedApt.id, confirmedApt.clientPhone, 'Cancelado pela cliente pelo site');
+      StorageService.cancelAppointment(confirmedApt.id, 'Cancelado pela cliente pelo site', true);
+      alert('Agendamento cancelado. O horário foi liberado e o Google Agenda foi atualizado.');
+      resetModal();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível cancelar o agendamento.');
     } finally {
       setIsSubmitting(false);
     }
@@ -649,6 +664,15 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                   className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/[0.03] text-white border border-white/10 hover:bg-white/[0.08] transition-colors"
                 >
                   Concluir
+                </button>
+
+                <button
+                  onClick={handleCancelConfirmedAppointment}
+                  disabled={isSubmitting}
+                  className="w-full sm:w-auto px-5 py-3 rounded-xl border border-rose-500/35 bg-rose-950/30 text-rose-300 hover:bg-rose-950/50 disabled:opacity-50 transition-colors flex items-center justify-center gap-2 text-xs font-semibold"
+                >
+                  <XCircle className="w-4 h-4" />
+                  {isSubmitting ? 'Cancelando...' : 'Cancelar Agendamento'}
                 </button>
               </div>
             </div>
