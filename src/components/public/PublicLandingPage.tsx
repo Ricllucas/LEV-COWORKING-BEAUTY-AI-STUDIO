@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Logo } from '../brand/Logo';
-import { Professional, Service, CoworkingSettings, Review } from '../../types';
+import { Professional, Service, CoworkingSettings, Review, Appointment } from '../../types';
 import { StorageService } from '../../services/storage';
+import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { formatCurrency } from '../../utils/formatters';
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
@@ -19,7 +20,8 @@ import {
   ChevronRight,
   MessageCircle,
   CreditCard,
-  Camera
+  Camera,
+  XCircle
 } from 'lucide-react';
 
 interface PublicLandingPageProps {
@@ -33,6 +35,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
   const [services, setServices] = useState<Service[]>(() => StorageService.getServices());
   const [reviews, setReviews] = useState<Review[]>(() => StorageService.getReviews().filter(r => r.approved));
   const [selectedProfCategory, setSelectedProfCategory] = useState<string>('todas');
+  const [localAppointments, setLocalAppointments] = useState<Appointment[]>(() =>
+    StorageService.getAppointments().filter(item => !['cancelado_cliente', 'cancelado_coworking', 'concluido'].includes(item.status))
+  );
+  const [cancellingId, setCancellingId] = useState<string>('');
 
   const isAdmin = currentUser?.role === 'admin';
 
@@ -66,6 +72,9 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           setProfessionals(StorageService.getProfessionals());
           setServices(StorageService.getServices());
           setReviews(StorageService.getReviews().filter(r => r.approved));
+          setLocalAppointments(StorageService.getAppointments().filter(item =>
+            !['cancelado_cliente', 'cancelado_coworking', 'concluido'].includes(item.status)
+          ));
         }
       });
     };
@@ -82,6 +91,21 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
     }
     return services.filter(s => s.active && s.onlineBookingEnabled && s.professionalId === selectedProfCategory);
   }, [services, selectedProfCategory]);
+
+  const handleClientCancellation = async (appointment: Appointment) => {
+    if (!window.confirm(`Cancelar o atendimento de ${appointment.serviceNames.join(', ')} em ${appointment.date} às ${appointment.startTime}?`)) return;
+    setCancellingId(appointment.id);
+    try {
+      await CloudAppointmentService.cancel(appointment.id, appointment.clientPhone, 'Cancelado pela cliente pelo site');
+      StorageService.cancelAppointment(appointment.id, 'Cancelado pela cliente pelo site', true);
+      setLocalAppointments(items => items.filter(item => item.id !== appointment.id));
+      alert('Agendamento cancelado. O horário foi liberado e o Google Agenda foi atualizado.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível cancelar o agendamento.');
+    } finally {
+      setCancellingId('');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#050505] text-white pb-20">
@@ -138,6 +162,35 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           </div>
         </div>
       </section>
+
+      {localAppointments.length > 0 && (
+        <section className="px-4 -mt-8 relative z-20">
+          <div className="max-w-4xl mx-auto rounded-2xl border border-[#c4b491]/30 bg-[#0a0a0a] p-4 shadow-xl">
+            <div className="mb-3">
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#c4b491]">Neste dispositivo</span>
+              <h2 className="text-base font-semibold text-white">Meus agendamentos</h2>
+            </div>
+            <div className="space-y-2">
+              {localAppointments.map(appointment => (
+                <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-white/10 bg-black/40 p-3">
+                  <div className="text-xs">
+                    <p className="font-semibold text-white">{appointment.serviceNames.join(', ')} — {appointment.professionalName}</p>
+                    <p className="text-white/55">{appointment.date.split('-').reverse().join('/')} às {appointment.startTime}</p>
+                  </div>
+                  <button
+                    onClick={() => handleClientCancellation(appointment)}
+                    disabled={cancellingId === appointment.id}
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-500/35 bg-rose-950/30 px-4 py-2 text-xs font-semibold text-rose-300 hover:bg-rose-950/50 disabled:opacity-50"
+                  >
+                    <XCircle className="h-4 w-4" />
+                    {cancellingId === appointment.id ? 'Cancelando...' : 'Cancelar agendamento'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Ambiance Gallery */}
       <section className="py-12 px-4 max-w-6xl mx-auto">
