@@ -34,8 +34,9 @@ const sendWhatsAppNotification = async (
     const accessToken = requireEnv('WHATSAPP_ACCESS_TOKEN');
     const phoneNumberId = requireEnv('WHATSAPP_PHONE_NUMBER_ID');
 
+    const cancelled = appointmentData.status === 'cancelado_cliente' || appointmentData.status === 'cancelado_coworking';
     const message = `
-🔔 *Novo Agendamento!*
+${cancelled ? '❌ *Agendamento Cancelado*' : '🔔 *Novo Agendamento!*'}
 
 📅 Data: ${appointmentData.date}
 ⏰ Horário: ${appointmentData.startTime} - ${appointmentData.endTime}
@@ -43,9 +44,9 @@ const sendWhatsAppNotification = async (
 📱 Telefone: ${appointmentData.clientPhone}
 💅 Serviço: ${appointmentData.serviceNames.join(', ')}
 
-Status: ${appointmentData.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}
+Status: ${cancelled ? '❌ Cancelado pela cliente' : appointmentData.status === 'confirmado' ? '✅ Confirmado' : '⏳ Pendente'}
 
-*Confira na agenda do LEV para mais detalhes.*
+*${cancelled ? 'O horário já foi liberado no sistema e no Google Agenda.' : 'Confira na agenda do LEV para mais detalhes.'}*
     `.trim();
 
     const response = await fetch(
