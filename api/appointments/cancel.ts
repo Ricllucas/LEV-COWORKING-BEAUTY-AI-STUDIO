@@ -6,7 +6,7 @@ const json = (res: any, status: number, body: unknown) => res.status(status).jso
 const digits = (value: string) => String(value || '').replace(/\D/g, '');
 const samePhone = (left: string, right: string) => {
   const a = digits(left); const b = digits(right);
-  return Boolean(a && b && (a === b || a.endsWith(b) || b.endsWith(a)));
+  return Boolean(a.length >= 8 && b.length >= 8 && (a === b || a.endsWith(b) || b.endsWith(a)));
 };
 
 export default async function handler(req: any, res: any) {
