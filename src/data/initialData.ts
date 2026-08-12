@@ -45,7 +45,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     categories: ["Unha Raiz"],
     color: "#D4AF37", // Warm Gold
     workingHours: {
-      1: { active: false, startTime: "08:00", endTime: "18:00" }, // Seg
+      1: { active: true, startTime: "08:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Seg
       2: { active: true, startTime: "08:00", endTime: "19:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Ter
       3: { active: true, startTime: "08:00", endTime: "19:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Qua
       4: { active: true, startTime: "08:00", endTime: "19:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Qui
@@ -74,7 +74,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     categories: ["Produções", "Brows"],
     color: "#B8860B", // Dark Goldenrod
     workingHours: {
-      1: { active: false, startTime: "08:00", endTime: "18:00" },
+      1: { active: false, startTime: "08:00", endTime: "18:00" }, // Segunda-feira: não atende
       2: { active: true, startTime: "09:00", endTime: "19:00", lunchStart: "12:30", lunchEnd: "13:30" },
       3: { active: true, startTime: "09:00", endTime: "19:00", lunchStart: "12:30", lunchEnd: "13:30" },
       4: { active: true, startTime: "09:00", endTime: "19:00", lunchStart: "12:30", lunchEnd: "13:30" },
@@ -103,7 +103,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     categories: ["Unhas em Gel"],
     color: "#996515", // Warm Bronze Gold
     workingHours: {
-      1: { active: false, startTime: "08:00", endTime: "18:00" },
+      1: { active: true, startTime: "08:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Seg
       2: { active: true, startTime: "08:30", endTime: "18:30", lunchStart: "12:00", lunchEnd: "13:00" },
       3: { active: true, startTime: "08:30", endTime: "18:30", lunchStart: "12:00", lunchEnd: "13:00" },
       4: { active: true, startTime: "08:30", endTime: "18:30", lunchStart: "12:00", lunchEnd: "13:00" },
@@ -119,15 +119,16 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
 ];
 
 export const INITIAL_SERVICES: Service[] = [
-  // Elisangela - Unha Raiz
+  // Elisangela - catálogo oficial (12/08/2026)
   {
     id: "srv_eli_1",
-    name: "Manicure Tradicional",
+    catalogVersion: 20260812,
+    name: "Mão — Esmaltação Tradicional",
     category: "Unha Raiz",
-    description: "Cutilagem cuidadosa, esmaltação tradicional com acabamento uniforme e hidratação das cutículas.",
+    description: "Esmaltação tradicional das mãos, com acabamento delicado e cuidadoso.",
     professionalId: "prof_elisangela",
     professionalName: "Elisangela",
-    durationMinutes: 60,
+    durationMinutes: 40,
     bufferAfterMinutes: 10,
     price: 45.00,
     depositRequired: true,
@@ -137,16 +138,17 @@ export const INITIAL_SERVICES: Service[] = [
     onlineBookingEnabled: true,
     minNoticeHours: 2,
     maxCancellationNoticeHours: 24,
-    preInstructions: "Recomendamos vir com as unhas limpas de esmaltes muito escuros de preferência."
+    preInstructions: "Caso esteja usando esmaltação em gel, selecione o serviço correspondente."
   },
   {
     id: "srv_eli_2",
-    name: "Pedicure Tradicional",
+    catalogVersion: 20260812,
+    name: "Pé — Esmaltação Tradicional",
     category: "Unha Raiz",
-    description: "Cuidado completo para os pés, lixamento, remoção de asperezas, cutilagem e esmaltação.",
+    description: "Esmaltação tradicional dos pés, realizada com atenção e acabamento uniforme.",
     professionalId: "prof_elisangela",
     professionalName: "Elisangela",
-    durationMinutes: 60,
+    durationMinutes: 45,
     bufferAfterMinutes: 10,
     price: 55.00,
     depositRequired: true,
@@ -159,40 +161,69 @@ export const INITIAL_SERVICES: Service[] = [
   },
   {
     id: "srv_eli_3",
-    name: "Combo Mão e Pé Tradicional",
+    catalogVersion: 20260812,
+    name: "Francesinha — Adicional Mão",
     category: "Unha Raiz",
-    description: "Atendimento completo de manicure e pedicure tradicional no mesmo horário.",
+    description: "Acabamento francesinha adicionado ao serviço de esmaltação das mãos.",
     professionalId: "prof_elisangela",
     professionalName: "Elisangela",
-    durationMinutes: 120,
-    bufferAfterMinutes: 15,
-    price: 90.00,
-    promotionalPrice: 85.00,
-    depositRequired: true,
-    depositValue: 25.00,
-    color: "#D4AF37",
-    active: true,
-    onlineBookingEnabled: true,
-    minNoticeHours: 4,
-    maxCancellationNoticeHours: 24
-  },
-  {
-    id: "srv_eli_4",
-    name: "Spa dos Pés",
-    category: "Unha Raiz",
-    description: "Esfoliação profunda, escalda-pés relaxante com óleos essenciais, massagem e hidratação intensa.",
-    professionalId: "prof_elisangela",
-    professionalName: "Elisangela",
-    durationMinutes: 50,
-    bufferAfterMinutes: 10,
-    price: 70.00,
-    depositRequired: true,
-    depositValue: 20.00,
+    durationMinutes: 10,
+    bufferAfterMinutes: 0,
+    price: 0,
+    depositRequired: false,
+    depositValue: 0,
     color: "#D4AF37",
     active: true,
     onlineBookingEnabled: true,
     minNoticeHours: 2,
     maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_eli_4",
+    catalogVersion: 20260812,
+    name: "Francesinha — Adicional Pé",
+    category: "Unha Raiz",
+    description: "Acabamento francesinha adicionado ao serviço de esmaltação dos pés.",
+    professionalId: "prof_elisangela",
+    professionalName: "Elisangela",
+    durationMinutes: 15,
+    bufferAfterMinutes: 0,
+    price: 0,
+    depositRequired: false,
+    depositValue: 0,
+    color: "#D4AF37",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 2,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_eli_5", catalogVersion: 20260812, name: "Esmaltação em Gel — Mão", category: "Unha Raiz",
+    description: "Esmaltação em gel para as mãos, com brilho intenso e maior durabilidade.",
+    professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 50,
+    bufferAfterMinutes: 10, price: 0, depositRequired: false, depositValue: 0, color: "#D4AF37",
+    active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_eli_6", catalogVersion: 20260812, name: "Esmaltação em Gel — Pé", category: "Unha Raiz",
+    description: "Esmaltação em gel para os pés, com acabamento uniforme e maior durabilidade.",
+    professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 60,
+    bufferAfterMinutes: 10, price: 0, depositRequired: false, depositValue: 0, color: "#D4AF37",
+    active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_eli_7", catalogVersion: 20260812, name: "SPA dos Pés", category: "Unha Raiz",
+    description: "Experiência completa com escalda-pés, esfoliação, hidratação e massagem relaxante.",
+    professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 60,
+    bufferAfterMinutes: 10, price: 65, depositRequired: true, depositValue: 20, color: "#D4AF37",
+    active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_eli_8", catalogVersion: 20260812, name: "Combo Pé Tradicional + SPA dos Pés", category: "Unha Raiz",
+    description: "Esmaltação tradicional dos pés combinada ao SPA dos Pés para uma experiência completa de cuidado e relaxamento.",
+    professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 105,
+    bufferAfterMinutes: 10, price: 105, depositRequired: true, depositValue: 30, color: "#D4AF37",
+    active: true, onlineBookingEnabled: true, minNoticeHours: 4, maxCancellationNoticeHours: 24
   },
 
   // Talitha - catálogo oficial (31/07/2026)

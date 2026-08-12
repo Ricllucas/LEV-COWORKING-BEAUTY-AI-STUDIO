@@ -32,8 +32,10 @@ const STORAGE_KEYS = {
   PROFESSIONALS: 'lev_coworking_professionals_v10',
   PIX_KEYS_VERSION: 'lev_pix_keys_2026_08_04',
   PROFESSIONAL_CONTACT_VERSION: 'lev_professional_contact_2026_08_05',
+  PROFESSIONAL_WORKDAYS_VERSION: 'lev_professional_workdays_2026_08_10',
   SERVICES: 'lev_coworking_services_v2',
   TALITHA_CATALOG_VERSION: 'lev_talitha_catalog_2026_07_31',
+  ELISANGELA_CATALOG_VERSION: 'lev_elisangela_catalog_2026_08_12_v1',
   CLIENTS: 'lev_coworking_clients_v1',
   APPOINTMENTS: 'lev_coworking_appointments_v1',
   REVIEWS: 'lev_coworking_reviews_v1',
@@ -417,6 +419,7 @@ export class StorageService {
     };
     const shouldMigratePixKeys = !localStorage.getItem(STORAGE_KEYS.PIX_KEYS_VERSION);
     const shouldMigrateContact = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_CONTACT_VERSION);
+    const shouldMigrateWorkdays = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_WORKDAYS_VERSION);
 
     let updated = false;
     const sanitized = list.map(p => {
@@ -434,10 +437,22 @@ export class StorageService {
       const pixKey = shouldMigratePixKeys && officialPixKey ? officialPixKey : p.pixKey;
       const phone = shouldMigrateContact ? INITIAL_SETTINGS.phone : p.phone;
       const whatsapp = shouldMigrateContact ? INITIAL_SETTINGS.whatsapp : p.whatsapp;
+      const workingHours = shouldMigrateWorkdays
+        ? {
+            ...p.workingHours,
+            0: { ...p.workingHours?.[0], active: false },
+            1: {
+              ...p.workingHours?.[1],
+              active: p.id !== 'prof_talitha',
+              startTime: p.workingHours?.[1]?.startTime || '08:00',
+              endTime: p.workingHours?.[1]?.endTime || '18:00'
+            }
+          }
+        : p.workingHours;
 
-      if (avatarUrl !== p.avatarUrl || pixKey !== p.pixKey || phone !== p.phone || whatsapp !== p.whatsapp) {
+      if (avatarUrl !== p.avatarUrl || pixKey !== p.pixKey || phone !== p.phone || whatsapp !== p.whatsapp || workingHours !== p.workingHours) {
         updated = true;
-        return { ...p, avatarUrl, pixKey, phone, whatsapp };
+        return { ...p, avatarUrl, pixKey, phone, whatsapp, workingHours };
       }
 
       return p;
@@ -451,6 +466,9 @@ export class StorageService {
     }
     if (shouldMigrateContact) {
       localStorage.setItem(STORAGE_KEYS.PROFESSIONAL_CONTACT_VERSION, new Date().toISOString());
+    }
+    if (shouldMigrateWorkdays) {
+      localStorage.setItem(STORAGE_KEYS.PROFESSIONAL_WORKDAYS_VERSION, new Date().toISOString());
     }
 
     return sanitized;
@@ -488,7 +506,21 @@ export class StorageService {
 
   // Services
   static getServices(): Service[] {
-    const current = getStored<Service[]>(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
+    let current = getStored<Service[]>(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
+
+    try {
+      if (!localStorage.getItem(STORAGE_KEYS.ELISANGELA_CATALOG_VERSION)) {
+        const otherProfessionals = current.filter(service => service.professionalId !== 'prof_elisangela');
+        const officialElisangelaCatalog = INITIAL_SERVICES.filter(
+          service => service.professionalId === 'prof_elisangela'
+        );
+        current = [...otherProfessionals, ...officialElisangelaCatalog];
+        setStored(STORAGE_KEYS.SERVICES, current);
+        localStorage.setItem(STORAGE_KEYS.ELISANGELA_CATALOG_VERSION, new Date().toISOString());
+      }
+    } catch (error) {
+      console.warn('Não foi possível aplicar a atualização do catálogo da Elisangela:', error);
+    }
 
     try {
       if (!localStorage.getItem(STORAGE_KEYS.TALITHA_CATALOG_VERSION)) {

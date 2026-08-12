@@ -54,6 +54,7 @@ export interface Professional {
 
 export interface Service {
   id: string;
+  catalogVersion?: number;
   name: string;
   category: CategoryType;
   description: string;
