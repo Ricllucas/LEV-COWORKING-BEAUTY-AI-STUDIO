@@ -59,7 +59,12 @@ export const CloudServiceCatalog = {
     const merged = new Map(INITIAL_SERVICES.map(service => [service.id, service]));
     cloud.forEach(item => {
       if (item.deleted) merged.delete(item.id);
-      else if (item.payload) merged.set(item.id, item.payload);
+      else if (item.payload) {
+        const bundled = merged.get(item.id);
+        const bundledVersion = bundled?.catalogVersion || 0;
+        const cloudVersion = item.payload.catalogVersion || 0;
+        if (!bundled || cloudVersion >= bundledVersion) merged.set(item.id, item.payload);
+      }
     });
     return Array.from(merged.values());
   },

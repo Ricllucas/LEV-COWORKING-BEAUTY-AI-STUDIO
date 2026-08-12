@@ -22,6 +22,12 @@ export const addMinutes = (time: string, duration: number) => {
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 };
 const active = (status: string) => !['cancelado_cliente', 'cancelado_coworking'].includes(status);
+const worksOnDate = (professionalId: string, date: string) => {
+  const weekday = new Date(`${date}T12:00:00-03:00`).getDay();
+  if (weekday === 0) return false;
+  if (professionalId === 'prof_talitha') return weekday >= 2 && weekday <= 6;
+  return weekday >= 1 && weekday <= 6;
+};
 
 export const listAppointmentsByDate = async (date: string): Promise<UnifiedAppointment[]> => {
   const { url, key } = config();
@@ -32,6 +38,13 @@ export const listAppointmentsByDate = async (date: string): Promise<UnifiedAppoi
 };
 
 export const assertAvailable = async (appointment: UnifiedAppointment) => {
+  if (!worksOnDate(appointment.professionalId, appointment.date)) {
+    const error = new Error(appointment.professionalId === 'prof_talitha'
+      ? 'Talitha atende de terça a sábado. Escolha outra data.'
+      : 'Esta profissional atende de segunda a sábado. Escolha outra data.');
+    (error as Error & { status?: number }).status = 400;
+    throw error;
+  }
   const occupied = await listAppointmentsByDate(appointment.date);
   const start = toMinutes(appointment.startTime); const end = toMinutes(appointment.endTime);
   if (occupied.some(current => current.id !== appointment.id && start < toMinutes(current.endTime) && end > toMinutes(current.startTime))) {
@@ -40,7 +53,8 @@ export const assertAvailable = async (appointment: UnifiedAppointment) => {
   }
 };
 
-export const availableStartTimes = async (date: string, duration: number) => {
+export const availableStartTimes = async (date: string, duration: number, professionalId?: string) => {
+  if (professionalId && !worksOnDate(professionalId, date)) return [];
   const occupied = await listAppointmentsByDate(date); const result: string[] = [];
   for (let start = 8 * 60; start + duration <= 18 * 60; start += 30) {
     const end = start + duration;

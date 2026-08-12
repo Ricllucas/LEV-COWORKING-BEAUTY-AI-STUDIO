@@ -19,7 +19,7 @@ const parseDate = (text: string) => {
   return iso;
 };
 const professionalMenu = () => `Vamos agendar pelo fluxo oficial da LEV.\n\nEscolha a profissional:\n${PROFESSIONALS.map((p, i) => `${i + 1}. ${p.name}`).join('\n')}\n\nResponda apenas com o número.`;
-const serviceMenu = (professionalId: string) => `Escolha o serviço:\n${servicesFor(professionalId).map((s, i) => `${i + 1}. ${s.name} — R$ ${s.price.toFixed(2).replace('.', ',')}`).join('\n')}\n\nResponda apenas com o número.`;
+const serviceMenu = (professionalId: string) => `Escolha o serviço:\n${servicesFor(professionalId).map((s, i) => `${i + 1}. ${s.name} — ${s.price > 0 ? `R$ ${s.price.toFixed(2).replace('.', ',')}` : 'valor sob consulta'}`).join('\n')}\n\nResponda apenas com o número.`;
 
 export const processWhatsAppBooking = async (params: {
   conversation: Conversation; text: string; clientName: string; clientPhone: string;
@@ -58,8 +58,14 @@ export const processWhatsAppBooking = async (params: {
     const date = parseDate(text); const today = new Date().toISOString().slice(0, 10);
     if (!date || date < today) return 'Informe uma data futura válida no formato *DD/MM/AAAA*.';
     const weekday = new Date(`${date}T12:00:00-03:00`).getDay();
-    if (weekday === 0 || weekday === 1) return 'A LEV atende de terça a sábado. Escolha outra data.';
-    const times = await availableStartTimes(date, Number(draft.duration));
+    const isTalitha = draft.professionalId === 'prof_talitha';
+    const invalidDay = weekday === 0 || (isTalitha && weekday === 1);
+    if (invalidDay) {
+      return isTalitha
+        ? 'Talitha atende de terça a sábado. Escolha outra data.'
+        : 'Esta profissional atende de segunda a sábado. Escolha outra data.';
+    }
+    const times = await availableStartTimes(date, Number(draft.duration), draft.professionalId);
     if (!times.length) return 'Essa data está sem horários disponíveis. Envie outra data no formato *DD/MM/AAAA*.';
     draft = { ...draft, date, availableTimes: times };
     await update(conversation.id, { booking_step: 'time', booking_draft: draft });
@@ -71,7 +77,8 @@ export const processWhatsAppBooking = async (params: {
     if (!time) return 'Escolha um dos números de horário exibidos acima.';
     draft = { ...draft, startTime: time, endTime: addMinutes(time, Number(draft.duration)) };
     await update(conversation.id, { booking_step: 'confirm', booking_draft: draft });
-    return `Confira seu agendamento:\n\nProfissional: *${draft.professionalName}*\nServiço: *${draft.serviceName}*\nData: *${draft.date.split('-').reverse().join('/')}*\nHorário: *${draft.startTime} às ${draft.endTime}*\nValor: *R$ ${Number(draft.price).toFixed(2).replace('.', ',')}*\n\nResponda *CONFIRMAR* para concluir ou *SAIR* para cancelar.`;
+    const priceLabel = Number(draft.price) > 0 ? `R$ ${Number(draft.price).toFixed(2).replace('.', ',')}` : 'sob consulta';
+    return `Confira seu agendamento:\n\nProfissional: *${draft.professionalName}*\nServiço: *${draft.serviceName}*\nData: *${draft.date.split('-').reverse().join('/')}*\nHorário: *${draft.startTime} às ${draft.endTime}*\nValor: *${priceLabel}*\n\nResponda *CONFIRMAR* para concluir ou *SAIR* para cancelar.`;
   }
 
   if (step === 'confirm') {
