@@ -1,8 +1,8 @@
 export type BookingService = { id: string; name: string; professionalId: string; professionalName: string; duration: number; price: number };
 export const PROFESSIONALS = [{ id: 'prof_elisangela', name: 'Elisangela' }, { id: 'prof_talitha', name: 'Talitha' }, { id: 'prof_nayara', name: 'Nayara' }];
 export const BOOKING_SERVICES: BookingService[] = [
-  ['srv_eli_1','Mão — Esmaltação Tradicional','prof_elisangela','Elisangela',40,45],
-  ['srv_eli_2','Pé — Esmaltação Tradicional','prof_elisangela','Elisangela',45,55],
+  ['srv_eli_1','Mão — Esmaltação Tradicional','prof_elisangela','Elisangela',40,0],
+  ['srv_eli_2','Pé — Esmaltação Tradicional','prof_elisangela','Elisangela',45,0],
   ['srv_eli_3','Francesinha — Adicional Mão','prof_elisangela','Elisangela',10,0],
   ['srv_eli_4','Francesinha — Adicional Pé','prof_elisangela','Elisangela',15,0],
   ['srv_eli_5','Esmaltação em Gel — Mão','prof_elisangela','Elisangela',50,0],
