@@ -5,6 +5,7 @@ const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
 type CatalogRecord = { id: string; professional_id: string; payload: Service | null; deleted: boolean };
+const RETIRED_SERVICE_IDS = new Set(['srv_eli_3', 'srv_eli_4']);
 
 const config = () => {
   if (!SUPABASE_URL || !SUPABASE_KEY) throw new Error('O catálogo online ainda não está configurado.');
@@ -58,6 +59,7 @@ export const CloudServiceCatalog = {
     const cloud = await response.json() as CatalogRecord[];
     const merged = new Map(INITIAL_SERVICES.map(service => [service.id, service]));
     cloud.forEach(item => {
+      if (RETIRED_SERVICE_IDS.has(item.id)) return;
       if (item.deleted) merged.delete(item.id);
       else if (item.payload) {
         const bundled = merged.get(item.id);
@@ -96,3 +98,4 @@ export const CloudServiceCatalog = {
     { id: service.id, professional_id: service.professionalId, payload: null, deleted: true }
   ], role)
 };
+
