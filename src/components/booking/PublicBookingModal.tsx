@@ -119,13 +119,13 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
   const totalDeposit = currentProf ? Math.round(totalPrice * (StorageService.getSettings().depositPercentage / 100)) : 0;
 
   const toggleServiceSelection = (srvId: string) => {
-    if (selectedServiceIds.includes(srvId)) {
-      if (selectedServiceIds.length > 1) {
-        setSelectedServiceIds(selectedServiceIds.filter(id => id !== srvId));
-      }
-    } else {
-      setSelectedServiceIds([...selectedServiceIds, srvId]);
-    }
+    setSelectedServiceIds(current =>
+      current.includes(srvId)
+        ? current.filter(id => id !== srvId)
+        : [...current, srvId]
+    );
+    // A alteração dos serviços invalida qualquer horário escolhido anteriormente.
+    setSelectedTime('');
   };
 
   const handleConfirmBooking = async () => {
@@ -273,11 +273,9 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                       key={prof.id}
                       onClick={() => {
                         setSelectedProfId(prof.id);
-                        // Filter selected services to this prof
-                        const profSrvs = services.filter(s => s.professionalId === prof.id && s.active);
-                        if (profSrvs.length > 0) {
-                          setSelectedServiceIds([profSrvs[0].id]);
-                        }
+                        // A cliente deve escolher o serviço intencionalmente.
+                        setSelectedServiceIds([]);
+                        setSelectedTime('');
                       }}
                       className={`p-4 rounded-xl border text-center transition-all flex flex-col items-center justify-between ${
                         isSelected
@@ -325,7 +323,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                   2. Escolha os Serviços ({currentProf?.name})
                 </h3>
                 <span className="text-xs text-[#c4b491]">
-                  Você pode selecionar mais de um serviço
+                  Clique novamente para desmarcar
                 </span>
               </div>
 
@@ -333,10 +331,13 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                 {profServices.map(srv => {
                   const isChecked = selectedServiceIds.includes(srv.id);
                   return (
-                    <div
+                    <button
+                      type="button"
                       key={srv.id}
                       onClick={() => toggleServiceSelection(srv.id)}
-                      className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between ${
+                      aria-pressed={isChecked}
+                      aria-label={`${isChecked ? 'Desmarcar' : 'Selecionar'} ${srv.name}`}
+                      className={`w-full p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between text-left ${
                         isChecked
                           ? 'bg-[#c4b491]/20 border-[#c4b491] shadow-2xs'
                           : 'bg-[#050505] border-white/10 hover:border-[#c4b491]/50'
@@ -357,7 +358,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                       <span className="font-serif font-bold text-xs text-[#c4b491]">
                         {formatCurrency(srv.promotionalPrice || srv.price)}
                       </span>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
@@ -682,3 +683,4 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     </div>
   );
 };
+
