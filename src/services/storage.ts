@@ -35,7 +35,7 @@ const STORAGE_KEYS = {
   PROFESSIONAL_WORKDAYS_VERSION: 'lev_professional_workdays_2026_08_10',
   SERVICES: 'lev_coworking_services_v2',
   TALITHA_CATALOG_VERSION: 'lev_talitha_catalog_2026_07_31',
-  ELISANGELA_CATALOG_VERSION: 'lev_elisangela_catalog_2026_08_12_v1',
+  ELISANGELA_CATALOG_VERSION: 'lev_elisangela_catalog_2026_08_12_v2',
   CLIENTS: 'lev_coworking_clients_v1',
   APPOINTMENTS: 'lev_coworking_appointments_v1',
   REVIEWS: 'lev_coworking_reviews_v1',
@@ -855,3 +855,4 @@ export class StorageService {
     setStored(STORAGE_KEYS.NOTIFICATIONS, []);
   }
 }
+
