@@ -47,7 +47,12 @@ export const assertAvailable = async (appointment: UnifiedAppointment) => {
   }
   const occupied = await listAppointmentsByDate(appointment.date);
   const start = toMinutes(appointment.startTime); const end = toMinutes(appointment.endTime);
-  if (occupied.some(current => current.id !== appointment.id && start < toMinutes(current.endTime) && end > toMinutes(current.startTime))) {
+  if (occupied.some(current =>
+    current.id !== appointment.id &&
+    current.professionalId === appointment.professionalId &&
+    start < toMinutes(current.endTime) &&
+    end > toMinutes(current.startTime)
+  )) {
     const error = new Error('Este horário já está reservado no Studio LEV. Escolha outro horário disponível.');
     (error as Error & { status?: number }).status = 409; throw error;
   }
@@ -55,7 +60,10 @@ export const assertAvailable = async (appointment: UnifiedAppointment) => {
 
 export const availableStartTimes = async (date: string, duration: number, professionalId?: string) => {
   if (professionalId && !worksOnDate(professionalId, date)) return [];
-  const occupied = await listAppointmentsByDate(date); const result: string[] = [];
+  const occupied = (await listAppointmentsByDate(date)).filter(item =>
+    !professionalId || item.professionalId === professionalId
+  );
+  const result: string[] = [];
   for (let start = 8 * 60; start + duration <= 18 * 60; start += 30) {
     const end = start + duration;
     if (!occupied.some(item => start < toMinutes(item.endTime) && end > toMinutes(item.startTime))) {
