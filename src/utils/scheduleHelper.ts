@@ -66,11 +66,12 @@ export function getAvailableSlots(
   const dayStartMinutes = timeToMinutes(workConfig.startTime);
   const dayEndMinutes = timeToMinutes(workConfig.endTime);
 
-  // O Studio LEV realiza apenas um atendimento por vez. Qualquer agendamento
-  // ativo nesta data bloqueia o intervalo para todas as profissionais.
+  // Cada profissional possui agenda independente. Um compromisso bloqueia
+  // somente os horários da profissional responsável pelo atendimento.
   const dayAppointments = existingAppointments.filter(apt => {
     return (
       apt.date === dateStr &&
+      apt.professionalId === professional.id &&
       apt.status !== 'cancelado_cliente' &&
       apt.status !== 'cancelado_coworking'
     );
@@ -100,7 +101,7 @@ export function getAvailableSlots(
         // Overlap condition: (StartA < EndB) and (EndA > StartB)
         if (current < aptEnd && slotEndMinutes > aptStart) {
           available = false;
-          reason = 'Horário já reservado no Studio LEV';
+          reason = 'Horário já reservado para esta profissional';
           break;
         }
       }
