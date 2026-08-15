@@ -17,6 +17,7 @@ import { ProfessionalAuthService } from './services/professionalAuth';
 import { ProfessionalAccessManager } from './components/professionals/ProfessionalAccessManager';
 import { CloudServiceCatalog } from './services/cloudServiceCatalog';
 import { StorageService } from './services/storage';
+import { LegalPage } from './components/legal/LegalPage';
 
 // Views - eager load only essential views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
@@ -37,6 +38,20 @@ const SettingsManager = lazy(() => import('./components/settings/SettingsManager
 const AuditLogsView = lazy(() => import('./components/audit/AuditLogsView').then(m => ({ default: m.AuditLogsView })));
 
 export default function App() {
+  const normalizedPath = window.location.pathname.replace(/\/$/, '') || '/';
+
+  if (normalizedPath === '/politica-de-privacidade') {
+    return <LegalPage kind="privacy" />;
+  }
+
+  if (normalizedPath === '/exclusao-de-dados') {
+    return <LegalPage kind="data-deletion" />;
+  }
+
+  return <Application />;
+}
+
+function Application() {
   const { state: coworkingState, dispatch } = useCoworking();
   const currentUser = coworkingState.currentUser;
 
@@ -281,3 +296,4 @@ export default function App() {
     </ErrorBoundary>
   );
 }
+
