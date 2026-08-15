@@ -499,7 +499,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Camila Rodrigues"
+                    placeholder="Ex: Nome completo"
                     value={clientName}
                     onChange={e => setClientName(e.target.value)}
                     className="w-full px-3.5 py-2 rounded-xl border border-white/10 bg-[#050505] text-xs font-medium text-white focus:outline-hidden focus:border-[#c4b491]"
