@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { User, UserRole } from '../../types';
 import { StorageService } from '../../services/storage';
-import { UserCheck, HeartHandshake, X, Lock, ArrowLeft, KeyRound, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { HeartHandshake, X, Lock, ArrowLeft, KeyRound, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { NailCareIcon, LashBrowsIcon, GelNailsIcon, AdminShieldIcon } from '../common/SpecialtyIcons';
 
 interface RoleSwitcherModalProps {
@@ -87,16 +87,6 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
       description: 'Gerencia horários de todas as profissionais, lista de espera e atendimento WhatsApp. Sem acesso aos relatórios financeiros.',
       icon: <HeartHandshake className="w-5 h-5 text-[#8C6D46]" />,
       badgeColor: 'bg-[#8C6D46]/15 text-[#8C6D46] border-[#8C6D46]/30'
-    },
-    {
-      id: 'client_camila_user',
-      name: 'Cliente (Camila Rodrigues)',
-      email: 'camila@gmail.com',
-      role: 'cliente',
-      clientId: 'cli_1',
-      description: 'Portal da cliente: permite realizar agendamentos e acompanhar horários e histórico, sem acesso às áreas internas.',
-      icon: <UserCheck className="w-5 h-5 text-emerald-400" />,
-      badgeColor: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
     }
   ];
 
