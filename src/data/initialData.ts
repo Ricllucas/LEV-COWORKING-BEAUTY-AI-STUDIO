@@ -68,7 +68,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     bankName: "Banco Inter S.A.",
     phone: "(41) 98497-9940",
     whatsapp: "5541984979940",
-    email: "talitha@levcoworkingbeauty.com.br",
+    email: "talithakumbeauty@gmail.com",
     bio: "Especialista em maquiagem social, penteados, produções completas, design de sobrancelhas, Brow Lamination e Microblading. Atendimento personalizado para realçar sua beleza em cada ocasião.",
     avatarUrl: "/profiles/talitha.webp",
     categories: ["Produções", "Brows"],
