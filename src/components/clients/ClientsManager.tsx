@@ -188,7 +188,7 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
               <input
                 type="text"
                 required
-                placeholder="Ex: Camila Rodrigues"
+                placeholder="Ex: Nome completo"
                 value={fullName}
                 onChange={e => setFullName(e.target.value)}
                 className="w-full px-3 py-2 rounded-xl border border-[#E6D7C3] text-xs"
