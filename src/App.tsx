@@ -82,8 +82,7 @@ function Application() {
     let active = true;
     const syncSharedAgenda = async () => {
       try {
-        // TODO: Migrate syncAppointmentsFromCloud to use context after full migration
-        // await StorageService.syncAppointmentsFromCloud(currentUser);
+        await StorageService.syncAppointmentsFromCloud(currentUser);
       } catch (error) {
         if (active) console.error('Erro ao atualizar agenda compartilhada:', error);
       }
