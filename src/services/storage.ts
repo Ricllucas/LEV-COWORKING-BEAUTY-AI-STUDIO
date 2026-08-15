@@ -630,12 +630,68 @@ export class StorageService {
     const localAppointments = this.getAppointments();
     const merged = new Map(localAppointments.map(appointment => [appointment.id, appointment]));
     cloudAppointments.forEach(appointment => merged.set(appointment.id, appointment));
-    setStored(
-      STORAGE_KEYS.APPOINTMENTS,
-      Array.from(merged.values()).sort((a, b) =>
-        `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)
-      )
+    const synchronizedAppointments = Array.from(merged.values()).sort((a, b) =>
+      `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)
     );
+    setStored(STORAGE_KEYS.APPOINTMENTS, synchronizedAppointments);
+    this.syncClientsFromAppointments(cloudAppointments);
+  }
+
+  static syncClientsFromAppointments(appointments: Appointment[]): void {
+    if (appointments.length === 0) return;
+
+    const clients = this.getClients();
+    const byPhone = new Map(
+      clients.map((client, index) => [client.phone.replace(/\\D/g, ''), index])
+    );
+
+    appointments.forEach(appointment => {
+      const normalizedPhone = appointment.clientPhone.replace(/\\D/g, '');
+      if (!normalizedPhone) return;
+
+      const existingIndex = byPhone.get(normalizedPhone);
+      if (existingIndex !== undefined) {
+        const existing = clients[existingIndex];
+        clients[existingIndex] = {
+          ...existing,
+          fullName: appointment.clientName || existing.fullName,
+          phone: appointment.clientPhone,
+          whatsapp: appointment.clientPhone,
+          email: appointment.clientEmail || existing.email,
+          preferredProfessionalId: appointment.professionalId || existing.preferredProfessionalId,
+          preferredServiceId: appointment.serviceIds[0] || existing.preferredServiceId,
+          firstAppointmentDate: existing.firstAppointmentDate && existing.firstAppointmentDate < appointment.date
+            ? existing.firstAppointmentDate
+            : appointment.date,
+          lastAppointmentDate: existing.lastAppointmentDate && existing.lastAppointmentDate > appointment.date
+            ? existing.lastAppointmentDate
+            : appointment.date
+        };
+        return;
+      }
+
+      const client: Client = {
+        id: appointment.clientId || `cli_${normalizedPhone}`,
+        fullName: appointment.clientName,
+        phone: appointment.clientPhone,
+        whatsapp: appointment.clientPhone,
+        email: appointment.clientEmail,
+        preferredProfessionalId: appointment.professionalId,
+        preferredServiceId: appointment.serviceIds[0],
+        firstAppointmentDate: appointment.date,
+        lastAppointmentDate: appointment.date,
+        noShowCount: 0,
+        cancellationCount: 0,
+        imageConsent: false,
+        communicationConsent: true,
+        active: true,
+        createdAt: appointment.createdAt || new Date().toISOString()
+      };
+      byPhone.set(normalizedPhone, clients.length);
+      clients.push(client);
+    });
+
+    setStored(STORAGE_KEYS.CLIENTS, clients);
   }
 
   static saveAppointment(apt: Appointment, syncCloud: boolean = true): void {
