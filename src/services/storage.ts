@@ -120,7 +120,7 @@ export const INITIAL_USERS: (User & { password?: string })[] = [
   {
     id: "prof_talitha_user",
     name: "Talitha",
-    email: "talitha@levcoworkingbeauty.com.br",
+    email: "talithakumbeauty@gmail.com",
     role: "profissional",
     professionalId: "prof_talitha",
     password: "123"
