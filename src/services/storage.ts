@@ -642,11 +642,11 @@ export class StorageService {
 
     const clients = this.getClients();
     const byPhone = new Map(
-      clients.map((client, index) => [client.phone.replace(/\\D/g, ''), index])
+      clients.map((client, index) => [client.phone.replace(/\D/g, ''), index])
     );
 
     appointments.forEach(appointment => {
-      const normalizedPhone = appointment.clientPhone.replace(/\\D/g, '');
+      const normalizedPhone = appointment.clientPhone.replace(/\D/g, '');
       if (!normalizedPhone) return;
 
       const existingIndex = byPhone.get(normalizedPhone);
