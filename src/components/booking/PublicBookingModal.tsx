@@ -194,6 +194,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       setIsSubmitting(true);
       await StorageService.saveAppointmentToCloud(newApt);
       StorageService.saveAppointment(newApt, false);
+      StorageService.syncClientsFromAppointments([newApt]);
       setConfirmedApt(newApt);
       setStep(5); // Final Success Step
     } catch (error) {
