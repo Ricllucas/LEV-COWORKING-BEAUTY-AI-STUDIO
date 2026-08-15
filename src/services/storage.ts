@@ -42,6 +42,7 @@ const STORAGE_KEYS = {
   WAITLIST: 'lev_coworking_waitlist_v1',
   BLOCKS: 'lev_coworking_blocks_v1',
   FUTURE_SCHEDULE_RESET: 'lev_future_schedule_reset_v1',
+  TEST_DATA_PURGE_VERSION: 'lev_test_data_purge_2026_08_15_v1',
   PAYMENTS: 'lev_coworking_payments_v1',
   LOGS: 'lev_coworking_logs_v1',
   NOTIFICATIONS: 'lev_coworking_notifications_v1',
@@ -139,20 +140,39 @@ export const INITIAL_USERS: (User & { password?: string })[] = [
     email: "recepcao@levcoworkingbeauty.com.br",
     role: "recepcao",
     password: "123"
-  },
-  {
-    id: "client_camila_user",
-    name: "Camila Rodrigues",
-    email: "camila@gmail.com",
-    role: "cliente",
-    clientId: "cli_1",
-    phone: "(11) 98888-7766",
-    password: "123"
   }
 ];
 
 export class StorageService {
   static subscribeStorage = subscribeStorage;
+
+  private static purgeConfirmedTestDataOnce(): void {
+    if (localStorage.getItem(STORAGE_KEYS.TEST_DATA_PURGE_VERSION)) return;
+
+    const testPhones = new Set([
+      '11998881122',
+      '11997773344',
+      '11996665566',
+      '41991011975'
+    ]);
+    const isTestPhone = (phone?: string) => {
+      const normalized = (phone || '').replace(/\D/g, '').slice(-11);
+      return testPhones.has(normalized);
+    };
+
+    const clients = getStored<Client[]>(STORAGE_KEYS.CLIENTS, INITIAL_CLIENTS)
+      .filter(client => !isTestPhone(client.phone));
+    const appointments = getStored<Appointment[]>(STORAGE_KEYS.APPOINTMENTS, INITIAL_APPOINTMENTS)
+      .filter(appointment => !isTestPhone(appointment.clientPhone));
+    const users = getStored<(User & { password?: string })[]>(STORAGE_KEYS.USERS, INITIAL_USERS)
+      .filter(user => !isTestPhone(user.phone));
+
+    localStorage.setItem(STORAGE_KEYS.CLIENTS, JSON.stringify(clients));
+    localStorage.setItem(STORAGE_KEYS.APPOINTMENTS, JSON.stringify(appointments));
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+    localStorage.setItem(STORAGE_KEYS.TEST_DATA_PURGE_VERSION, new Date().toISOString());
+    notifyListeners();
+  }
 
   // Users List & Auth
   static getUsers(): (User & { password?: string })[] {
@@ -565,6 +585,7 @@ export class StorageService {
 
   // Clients
   static getClients(): Client[] {
+    this.purgeConfirmedTestDataOnce();
     return getStored<Client[]>(STORAGE_KEYS.CLIENTS, INITIAL_CLIENTS);
   }
 
@@ -612,6 +633,7 @@ export class StorageService {
   }
 
   static getAppointments(): Appointment[] {
+    this.purgeConfirmedTestDataOnce();
     this.clearFutureScheduleOnce();
     return getStored<Appointment[]>(STORAGE_KEYS.APPOINTMENTS, INITIAL_APPOINTMENTS);
   }
