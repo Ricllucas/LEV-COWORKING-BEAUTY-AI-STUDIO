@@ -62,7 +62,7 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
     {
       id: 'prof_talitha_user',
       name: 'Talitha',
-      email: 'talitha@levcoworkingbeauty.com.br',
+      email: 'talithakumbeauty@gmail.com',
       role: 'profissional',
       professionalId: 'prof_talitha',
       description: 'MEI Maquiagem, Cílios e Sobrancelhas. Visagista com acesso exclusivo à própria agenda e faturamento privado.',
