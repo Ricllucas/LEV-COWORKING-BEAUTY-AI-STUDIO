@@ -2,6 +2,8 @@
  * Formatters for LEV COWORKING BEAUTY
  */
 
+export const OFFICIAL_WHATSAPP_NUMBER = '5541984979940';
+
 export function formatCurrency(value: number): string {
   if (isNaN(value)) return "R$ 0,00";
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -82,3 +84,4 @@ export function generateWhatsAppMessage(type: string, data: {
       return `Olá, ${data.clientName}! Entramos em contato do *${coworking}* sobre seu atendimento de ${data.serviceName} com ${data.professionalName}.`;
   }
 }
+
