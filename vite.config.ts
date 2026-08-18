@@ -1,14 +1,19 @@
+Exit code: 0
+Wall time: 0.6 seconds
+Output:
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
 import {defineConfig} from 'vite';
+import {fileURLToPath} from 'node:url';
+
+const projectRoot = fileURLToPath(new URL('.', import.meta.url));
 
 export default defineConfig(() => {
   return {
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, '.'),
+        '@': projectRoot,
       },
     },
     server: {
@@ -20,3 +25,4 @@ export default defineConfig(() => {
     },
   };
 });
+
