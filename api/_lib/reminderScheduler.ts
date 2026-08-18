@@ -1,6 +1,3 @@
-Exit code: 0
-Wall time: 0.6 seconds
-Output:
 import { Appointment } from '../../src/types/index.js';
 import { whatsappService } from './whatsappService.js';
 import { getTemplate, replaceTemplateVariables } from './whatsappTemplates.js';
