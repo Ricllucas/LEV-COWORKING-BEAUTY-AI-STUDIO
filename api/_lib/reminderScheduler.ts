@@ -1,4 +1,7 @@
-import { Appointment } from '../types/index.js';
+Exit code: 0
+Wall time: 0.6 seconds
+Output:
+import { Appointment } from '../../src/types/index.js';
 import { whatsappService } from './whatsappService.js';
 import { getTemplate, replaceTemplateVariables } from './whatsappTemplates.js';
 
@@ -72,7 +75,7 @@ export const reminderScheduler = {
                 date: formatDateBR(appointment.date),
                 time: appointment.startTime,
                 service: appointment.serviceNames.join(', '),
-                price: appointment.value?.toString()
+                price: appointment.totalPrice?.toString()
               });
 
               await whatsappService.sendMessage(appointment.clientPhone, message);
@@ -104,7 +107,7 @@ export const reminderScheduler = {
         date: formatDateBR(appointment.date),
         time: appointment.startTime,
         service: appointment.serviceNames.join(', '),
-        price: appointment.value?.toString()
+        price: appointment.totalPrice?.toString()
       });
 
       await whatsappService.sendMessage(appointment.clientPhone, message);
@@ -169,3 +172,4 @@ function formatDateBR(date: string): string {
   ];
   return `${day} de ${monthNames[parseInt(month) - 1]} de ${year}`;
 }
+
