@@ -70,26 +70,20 @@ export const CloudAppointmentService = {
   },
 
   async list(user: User): Promise<Appointment[]> {
-    const { url, key } = config();
+    config();
     const token = getAccessToken(user.role);
     if (!token) return [];
 
-    const response = await fetch(
-      `${url}/rest/v1/appointments?select=payload&order=appointment_date.asc,start_time.asc`,
-      {
-        headers: {
-          apikey: key,
-          Authorization: `Bearer ${token}`,
-          Accept: 'application/json'
-        }
-      }
-    );
+    const response = await fetch('/api/appointments/staff-list', {
+      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
+    });
 
     if (!response.ok) {
       throw new Error('Não foi possível atualizar a agenda compartilhada.');
     }
 
-    const rows = await response.json() as Array<{ payload: Appointment }>;
-    return rows.map(row => row.payload);
+    const result = await response.json() as { appointments?: Appointment[] };
+    return result.appointments || [];
   }
 };
+
