@@ -487,6 +487,10 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                   <span>Telefone/WhatsApp:</span>
                   <span className="font-medium text-white">{selectedApt.clientPhone}</span>
                 </div>
+                <div className="flex justify-between gap-4 text-white/60">
+                  <span>E-mail:</span>
+                  <span className="font-medium text-white text-right break-all">{selectedApt.clientEmail || 'Não informado'}</span>
+                </div>
                 <div className="flex justify-between text-white/60">
                   <span>Profissional:</span>
                   <span className="font-semibold text-white">{selectedApt.professionalName}</span>
@@ -500,8 +504,30 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                   <span className="font-semibold text-white">{formatDateBR(selectedApt.date)} das {selectedApt.startTime} às {selectedApt.endTime}</span>
                 </div>
                 <div className="flex justify-between text-white/60">
+                  <span>Duração:</span>
+                  <span className="font-semibold text-white">{selectedApt.totalDurationMinutes} minutos</span>
+                </div>
+                <div className="flex justify-between text-white/60">
                   <span>Status do Atendimento:</span>
                   <span className="font-bold text-[#c4b491] uppercase">{selectedApt.status.replace('_', ' ')}</span>
+                </div>
+                {selectedApt.notes && (
+                  <div className="pt-2 mt-2 border-t border-white/10 text-white/60">
+                    <span className="block mb-1">Observações:</span>
+                    <p className="text-white whitespace-pre-wrap">{selectedApt.notes}</p>
+                  </div>
+                )}
+                <div className="pt-2 mt-2 border-t border-white/10 space-y-1 text-[10px] text-white/40">
+                  <div className="flex justify-between gap-4">
+                    <span>Agendamento LEV:</span>
+                    <span className="text-right break-all">{selectedApt.id}</span>
+                  </div>
+                  <div className="flex justify-between gap-4">
+                    <span>Última atualização:</span>
+                    <span className="text-right">
+                      {new Date(selectedApt.updatedAt || selectedApt.createdAt).toLocaleString('pt-BR')}
+                    </span>
+                  </div>
                 </div>
               </div>
 
