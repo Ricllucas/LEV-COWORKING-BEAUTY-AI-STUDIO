@@ -25,9 +25,16 @@ interface AgendaViewProps {
   onOpenNewBooking: () => void;
 }
 
+const localDateString = (date = new Date()) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBooking }) => {
   const [viewMode, setViewMode] = useState<'salon' | 'list'>('salon');
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(localDateString());
   const [selectedProfFilter, setSelectedProfFilter] = useState<string>('todas');
   const [statusFilter, setStatusFilter] = useState<string>('todos');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -36,6 +43,8 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [services, setServices] = useState<Service[]>([]);
   const [blocks, setBlocks] = useState<ScheduleBlock[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState('');
 
   // Selected Appointment Modal
   const [selectedApt, setSelectedApt] = useState<Appointment | null>(null);
@@ -66,6 +75,24 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
     load();
     return StorageService.subscribeStorage(load);
   }, []);
+
+  const refreshSharedAgenda = async () => {
+    setIsRefreshing(true);
+    setSyncMessage('');
+    try {
+      await StorageService.syncAppointmentsFromCloud(currentUser);
+      setAppointments(StorageService.getAppointments());
+      setSyncMessage('Agenda compartilhada atualizada.');
+    } catch (error) {
+      setSyncMessage(error instanceof Error ? error.message : 'Não foi possível atualizar a Agenda LEV.');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    void refreshSharedAgenda();
+  }, [currentUser.id, currentUser.role]);
 
   // Filter logic
   const filteredAppointments = appointments.filter(apt => {
@@ -247,8 +274,21 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
             <Plus className="w-4 h-4" />
             Novo Agendamento
           </button>
+          <button
+            onClick={() => void refreshSharedAgenda()}
+            disabled={isRefreshing}
+            className="px-3.5 py-2 rounded-xl border border-[#c4b491]/40 text-[#c4b491] text-xs font-semibold hover:bg-[#c4b491]/10 disabled:opacity-50"
+          >
+            {isRefreshing ? 'Atualizando...' : 'Atualizar Agenda'}
+          </button>
         </div>
       </div>
+
+      {syncMessage && (
+        <div className={`rounded-xl border px-4 py-2 text-xs ${syncMessage.includes('atualizada') ? 'border-emerald-500/30 bg-emerald-950/30 text-emerald-200' : 'border-rose-500/30 bg-rose-950/30 text-rose-200'}`}>
+          {syncMessage}
+        </div>
+      )}
 
       {/* Date Navigator & Filters Bar */}
       <div className="p-4 bg-[#0a0a0a] rounded-2xl border border-white/10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
@@ -331,7 +371,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
             </div>
             <button
               onClick={() => {
-                const today = new Date().toISOString().split('T')[0];
+                const today = localDateString();
                 setSelectedDate(today);
                 setBlockDate(today);
               }}
