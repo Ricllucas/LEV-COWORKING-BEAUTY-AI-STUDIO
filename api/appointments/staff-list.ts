@@ -55,7 +55,11 @@ export default async function handler(req: any, res: any) {
       `${url}/rest/v1/appointments?select=id,professional_id,appointment_date,start_time,status,payload,updated_at&order=appointment_date.asc,start_time.asc`,
       { headers: headers(key) }
     );
-    if (!response.ok) return json(res, 502, { error: 'Não foi possível carregar a agenda compartilhada.' });
+    if (!response.ok) {
+      const details = await response.text().catch(() => '');
+      console.error('Supabase appointments query failed:', response.status, details);
+      return json(res, 502, { error: `Não foi possível consultar os agendamentos no servidor (${response.status}).` });
+    }
     const rows = await response.json() as Array<{
       id: string;
       professional_id: string;
