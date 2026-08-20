@@ -166,6 +166,31 @@ export const ProfessionalAuthService = {
     }
   },
 
+  async refresh(): Promise<ProfessionalSession | null> {
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const session = JSON.parse(raw) as ProfessionalSession;
+      if (!session.refreshToken) return null;
+      const refreshed = await refreshSession(session.refreshToken);
+      const renewed: ProfessionalSession = {
+        ...session,
+        accessToken: refreshed.access_token,
+        refreshToken: refreshed.refresh_token || session.refreshToken,
+        expiresAt: refreshed.expires_at || Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600),
+        userId: refreshed.user?.id || session.userId,
+        email: refreshed.user?.email || session.email
+      };
+      const access = await readAccess(renewed.accessToken, renewed.userId);
+      if (!access || access.status !== 'approved') return null;
+      renewed.access = access;
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(renewed));
+      return renewed;
+    } catch {
+      return null;
+    }
+  },
+
   signOut() {
     sessionStorage.removeItem(SESSION_KEY);
   }
