@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, ScanFace } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { ProfessionalAuthService, ProfessionalProfileId, ProfessionalSession } from '../../services/professionalAuth';
 import { User } from '../../types';
@@ -18,6 +18,7 @@ export const ProfessionalLoginPage: React.FC<{ onAuthenticated: (user: User) => 
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [enableFace, setEnableFace] = useState(false);
 
   const enter = (session: ProfessionalSession) => {
     if (session.access.status !== 'approved') {
@@ -49,10 +50,25 @@ export const ProfessionalLoginPage: React.FC<{ onAuthenticated: (user: User) => 
           : 'Solicitação enviada. Aguarde a aprovação da administração.');
         setMode('login');
       } else {
-        enter(await ProfessionalAuthService.signIn(email, password));
+        const session = await ProfessionalAuthService.signIn(email, password);
+        if (enableFace && session.access.status === 'approved') {
+          await ProfessionalAuthService.registerPasskey(session);
+        }
+        enter(session);
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível continuar.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const enterWithFace = async () => {
+    setBusy(true); setError(''); setMessage('');
+    try {
+      enter(await ProfessionalAuthService.signInWithPasskey());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível confirmar sua identidade.');
     } finally {
       setBusy(false);
     }
@@ -81,12 +97,27 @@ export const ProfessionalLoginPage: React.FC<{ onAuthenticated: (user: User) => 
           )}
           <input type="email" required value={email} onChange={event => setEmail(event.target.value)} placeholder="E-mail pessoal" className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm outline-none focus:border-[#c4b491]"/>
           <input type="password" required minLength={8} value={password} onChange={event => setPassword(event.target.value)} placeholder="Senha segura (mínimo 8 caracteres)" className="w-full rounded-xl border border-white/10 bg-black px-4 py-3 text-sm outline-none focus:border-[#c4b491]"/>
+          {mode === 'login' && (
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-black/30 p-3 text-xs text-white/65">
+              <input type="checkbox" checked={enableFace} onChange={event => setEnableFace(event.target.checked)} className="mt-0.5 accent-[#c4b491]" />
+              <span><strong className="block text-white/85">Cadastrar reconhecimento facial neste aparelho</strong>Após a senha, o aparelho solicitará Face ID, reconhecimento facial ou Windows Hello.</span>
+            </label>
+          )}
           <button disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#c4b491] py-3 text-sm font-semibold text-black disabled:opacity-60">
             {busy && <Loader2 className="h-4 w-4 animate-spin"/>}{mode === 'login' ? 'Entrar no meu ambiente' : 'Enviar solicitação'}
           </button>
+          {mode === 'login' && (
+            <>
+              <div className="flex items-center gap-3 text-[10px] uppercase tracking-wider text-white/30"><span className="h-px flex-1 bg-white/10"/>ou<span className="h-px flex-1 bg-white/10"/></div>
+              <button type="button" onClick={enterWithFace} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#c4b491]/40 py-3 text-sm font-semibold text-[#c4b491] hover:bg-[#c4b491]/10 disabled:opacity-60">
+                <ScanFace className="h-5 w-5" /> Entrar com reconhecimento facial / biometria
+              </button>
+            </>
+          )}
         </form>
         <a href="/" className="mt-6 block text-center text-xs text-white/45">Voltar ao site</a>
       </section>
     </main>
   );
 };
+
