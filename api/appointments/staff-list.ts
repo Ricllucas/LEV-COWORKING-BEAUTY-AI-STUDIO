@@ -13,6 +13,18 @@ const headers = (key: string) => ({
   Accept: 'application/json'
 });
 
+const professionalNames: Record<string, string> = {
+  prof_elisangela: 'Elisangela',
+  prof_talitha: 'Talitha',
+  prof_nayara: 'Nayara'
+};
+
+const addMinutes = (time: string, minutes: number) => {
+  const [hours, mins] = time.split(':').map(Number);
+  const total = hours * 60 + mins + minutes;
+  return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+};
+
 const authenticateStaff = async (authorization?: string) => {
   const token = authorization?.replace(/^Bearer\s+/i, '').trim();
   if (!token) return null;
@@ -40,12 +52,57 @@ export default async function handler(req: any, res: any) {
 
     const { url, key } = config();
     const response = await fetch(
-      `${url}/rest/v1/appointments?select=payload&order=appointment_date.asc,start_time.asc`,
+      `${url}/rest/v1/appointments?select=id,professional_id,appointment_date,start_time,status,payload,updated_at&order=appointment_date.asc,start_time.asc`,
       { headers: headers(key) }
     );
     if (!response.ok) return json(res, 502, { error: 'Não foi possível carregar a agenda compartilhada.' });
-    const rows = await response.json() as Array<{ payload: unknown }>;
-    return json(res, 200, { appointments: rows.map(row => row.payload).filter(Boolean) });
+    const rows = await response.json() as Array<{
+      id: string;
+      professional_id: string;
+      appointment_date: string;
+      start_time: string;
+      status: string;
+      payload?: Record<string, unknown> | null;
+      updated_at?: string;
+    }>;
+    const appointments = rows.map(row => {
+      if (row.payload && typeof row.payload === 'object') {
+        return {
+          ...row.payload,
+          id: row.id,
+          professionalId: row.professional_id,
+          professionalName: row.payload.professionalName || professionalNames[row.professional_id] || 'Profissional LEV',
+          date: row.appointment_date,
+          startTime: row.start_time,
+          status: row.status,
+          updatedAt: row.updated_at || row.payload.updatedAt
+        };
+      }
+      const duration = 30;
+      return {
+        id: row.id,
+        clientId: `legacy_${row.id}`,
+        clientName: 'Cliente não identificado',
+        clientPhone: '',
+        professionalId: row.professional_id,
+        professionalName: professionalNames[row.professional_id] || 'Profissional LEV',
+        serviceIds: [],
+        serviceNames: ['Atendimento LEV'],
+        date: row.appointment_date,
+        startTime: row.start_time,
+        endTime: addMinutes(row.start_time, duration),
+        totalDurationMinutes: duration,
+        totalPrice: 0,
+        depositPaid: 0,
+        remainingPrice: 0,
+        status: row.status,
+        paymentStatus: 'pendente',
+        createdAt: row.updated_at || new Date().toISOString(),
+        updatedAt: row.updated_at || new Date().toISOString(),
+        createdBy: 'Agenda LEV'
+      };
+    });
+    return json(res, 200, { appointments });
   } catch (error) {
     return json(res, 500, { error: error instanceof Error ? error.message : 'Falha ao carregar a agenda compartilhada.' });
   }
