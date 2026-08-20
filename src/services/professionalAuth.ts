@@ -105,6 +105,7 @@ export const ProfessionalAuthService = {
         localStorage.removeItem(REQUEST_KEY);
       }
     }
+    if (access) localStorage.removeItem(REQUEST_KEY);
     if (!access) throw new Error('Esta conta não está vinculada a um perfil profissional.');
     if (access.status === 'blocked') throw new Error('Este acesso foi bloqueado pela administração.');
 
