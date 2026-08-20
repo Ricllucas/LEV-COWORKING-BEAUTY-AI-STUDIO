@@ -220,11 +220,27 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
     nao_compareceu: 'Não compareceu'
   };
 
-  const appointmentTone = (status: AppointmentStatus) => {
-    if (status === 'confirmado') return 'border-emerald-400/60 bg-emerald-950/95 text-emerald-50';
-    if (status === 'cliente_presente' || status === 'em_atendimento') return 'border-sky-400/60 bg-sky-950/95 text-sky-50';
-    if (status === 'concluido') return 'border-stone-400/50 bg-stone-800/95 text-stone-100';
-    return 'border-amber-400/60 bg-amber-950/95 text-amber-50';
+  const professionalAccent = (professionalId: string) => {
+    const colors: Record<string, string> = {
+      prof_elisangela: '#d8c7a4',
+      prof_talitha: '#b59662',
+      prof_nayara: '#a98d7a'
+    };
+    return colors[professionalId] || '#c4b491';
+  };
+
+  const appointmentTone = (appointment: Appointment) => {
+    const tones: Record<string, string> = {
+      prof_elisangela: 'border-[#d8c7a4]/80 bg-[#3a3226]/95 text-[#f8f1e4]',
+      prof_talitha: 'border-[#b59662]/80 bg-[#352817]/95 text-[#f6ead4]',
+      prof_nayara: 'border-[#a98d7a]/80 bg-[#342923]/95 text-[#f5e9e1]'
+    };
+    const statusEffect = appointment.status === 'concluido'
+      ? ' opacity-70'
+      : appointment.status === 'aguardando_confirmacao'
+        ? ' border-dashed'
+        : '';
+    return `${tones[appointment.professionalId] || 'border-[#c4b491]/80 bg-[#332d24]/95 text-[#f7f0e5]'}${statusEffect}`;
   };
 
   return (
@@ -395,7 +411,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
               </div>
               {visibleProfessionals.map(professional => (
                 <div key={professional.id} className="h-[74px] border-r border-b border-white/10 bg-[#0d0d0d] px-4 py-3 text-center">
-                  <div className="w-2.5 h-2.5 rounded-full mx-auto mb-1" style={{ backgroundColor: professional.color }} />
+                  <div className="w-2.5 h-2.5 rounded-full mx-auto mb-1" style={{ backgroundColor: professionalAccent(professional.id) }} />
                   <p className="font-serif font-semibold text-sm text-white">{professional.name}</p>
                   <p className="text-[10px] text-white/45 truncate">{professional.title}</p>
                 </div>
@@ -447,7 +463,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                         <button
                           key={appointment.id}
                           onClick={() => setSelectedApt(appointment)}
-                          className={`absolute left-1.5 right-1.5 z-20 rounded-xl border px-2.5 py-2 text-left overflow-hidden shadow-lg transition-transform hover:scale-[1.01] ${appointmentTone(appointment.status)}`}
+                          className={`absolute left-1.5 right-1.5 z-20 rounded-xl border px-2.5 py-2 text-left overflow-hidden shadow-lg transition-transform hover:scale-[1.01] ${appointmentTone(appointment)}`}
                           style={{ top: top + 2, height }}
                           title={`${appointment.clientName} · ${appointment.serviceNames.join(', ')}`}
                         >
@@ -485,7 +501,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                     className="w-full p-4 rounded-xl border border-white/10 bg-[#050505] hover:border-[#c4b491] transition-all text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="px-3 py-2 rounded-xl text-xs font-bold text-black text-center" style={{ backgroundColor: professional?.color || '#c4b491' }}>
+                      <div className="px-3 py-2 rounded-xl text-xs font-bold text-black text-center" style={{ backgroundColor: professionalAccent(appointment.professionalId) }}>
                         {appointment.startTime}<span className="block text-[9px] font-normal">{appointment.endTime}</span>
                       </div>
                       <div>
