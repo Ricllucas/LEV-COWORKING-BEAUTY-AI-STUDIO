@@ -72,9 +72,43 @@ function Application() {
   const [bookingProfId, setBookingProfId] = useState<string | undefined>(undefined);
   const [bookingServiceId, setBookingServiceId] = useState<string | undefined>(undefined);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
+  const [isRouteAuthChecking, setIsRouteAuthChecking] = useState(isAdminRoute || isProfessionalRoute);
 
-  // User state now comes from context via coworkingState.currentUser
-  // No need for manual sync - context handles it automatically
+  useEffect(() => {
+    let active = true;
+    const validateRouteSession = async () => {
+      if (!isAdminRoute && !isProfessionalRoute) {
+        setIsRouteAuthChecking(false);
+        return;
+      }
+      setIsRouteAuthChecking(true);
+      const session = isAdminRoute
+        ? await AdminAuthService.restore()
+        : await ProfessionalAuthService.restore();
+      if (!active) return;
+      if (!session) {
+        dispatch({ type: 'SET_USER', payload: { id: 'visitor_guest', name: '', email: '', role: 'cliente' } });
+      } else if (isAdminRoute) {
+        const admin = session as Awaited<ReturnType<typeof AdminAuthService.restore>>;
+        if (admin) dispatch({ type: 'SET_USER', payload: { id: admin.userId, name: admin.displayName, email: admin.email, role: 'admin' } });
+      } else {
+        const professional = session as Awaited<ReturnType<typeof ProfessionalAuthService.restore>>;
+        if (professional) dispatch({
+          type: 'SET_USER',
+          payload: {
+            id: professional.userId,
+            name: professional.access.display_name,
+            email: professional.email,
+            role: 'profissional',
+            professionalId: professional.access.professional_id
+          }
+        });
+      }
+      setIsRouteAuthChecking(false);
+    };
+    void validateRouteSession();
+    return () => { active = false; };
+  }, [dispatch, isAdminRoute, isProfessionalRoute]);
 
   useEffect(() => {
     if (currentUser.role !== 'admin' && currentUser.role !== 'profissional') return;
@@ -123,6 +157,10 @@ function Application() {
     dispatch({ type: 'SET_USER', payload: { id: 'visitor_guest', name: '', email: '', role: 'cliente' } });
     setActiveTab('publica');
   };
+
+  if (isRouteAuthChecking) {
+    return <LoadingSpinner message="Validando acesso e carregando a Agenda LEV..." />;
+  }
 
   if (isProfessionalRoute && currentUser.role !== 'profissional') {
     return (
