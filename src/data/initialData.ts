@@ -19,7 +19,7 @@ export const INITIAL_SETTINGS: CoworkingSettings = {
   whatsapp: "5541984979940",
   instagram: "@levcoworkingbeauty",
   email: "contato@levcoworkingbeauty.com.br",
-  businessHoursText: "Terça a Sábado: 08:00 às 19:00",
+  businessHoursText: "Segunda a sábado, das 9h às 18h",
   cancellationPolicy: "Cancelamentos ou reagendamentos devem ser solicitados com, no mínimo, 24 horas de antecedência. O valor do sinal não é reembolsável quando o cancelamento ocorre fora desse prazo.",
   depositPercentage: 30,
   privacyPolicy: "O LEV Coworking Beauty protege os dados das clientes conforme as diretrizes da LGPD (Lei Geral de Proteção de Dados). As informações de saúde fornecidas pela cliente são tratadas com confidencialidade e permanecem sob responsabilidade de quem as declarou.",
