@@ -29,15 +29,22 @@ const authenticateStaff = async (authorization?: string) => {
   const token = authorization?.replace(/^Bearer\s+/i, '').trim();
   if (!token) return null;
   const { url, key } = config();
+  const publicKey = process.env.SUPABASE_PUBLISHABLE_KEY
+    || process.env.VITE_SUPABASE_PUBLISHABLE_KEY
+    || key;
+  const userHeaders = { apikey: publicKey, Authorization: `Bearer ${token}`, Accept: 'application/json' };
   const userResponse = await fetch(`${url}/auth/v1/user`, {
-    headers: { apikey: key, Authorization: `Bearer ${token}` }
+    headers: userHeaders
   });
-  if (!userResponse.ok) return null;
-  const user = await userResponse.json() as { id: string };
+  if (!userResponse.ok) {
+    console.error('Staff token validation failed:', userResponse.status, await userResponse.text().catch(() => ''));
+    return null;
+  }
+  const user = await userResponse.json() as { id: string; email?: string };
 
   const [adminResponse, professionalResponse] = await Promise.all([
-    fetch(`${url}/rest/v1/admin_users?user_id=eq.${encodeURIComponent(user.id)}&select=user_id&limit=1`, { headers: headers(key) }),
-    fetch(`${url}/rest/v1/professional_access?user_id=eq.${encodeURIComponent(user.id)}&status=eq.approved&select=user_id&limit=1`, { headers: headers(key) })
+    fetch(`${url}/rest/v1/admin_users?user_id=eq.${encodeURIComponent(user.id)}&select=user_id&limit=1`, { headers: userHeaders }),
+    fetch(`${url}/rest/v1/professional_access?user_id=eq.${encodeURIComponent(user.id)}&status=eq.approved&select=user_id&limit=1`, { headers: userHeaders })
   ]);
   const admins = adminResponse.ok ? await adminResponse.json() as unknown[] : [];
   const professionals = professionalResponse.ok ? await professionalResponse.json() as unknown[] : [];
