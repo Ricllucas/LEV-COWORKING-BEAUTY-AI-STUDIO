@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, Loader2, LockKeyhole } from 'lucide-react';
+import { AlertCircle, Loader2, LockKeyhole, ScanFace } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { AdminAuthService, AdminSession } from '../../services/adminAuth';
 import { User } from '../../types';
@@ -21,6 +21,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onAuthenticated 
   const [error, setError] = useState('');
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [enableFace, setEnableFace] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -42,9 +43,22 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onAuthenticated 
     setSubmitting(true);
     try {
       const session = await AdminAuthService.signIn(email, password);
+      if (enableFace) await AdminAuthService.registerPasskey(session);
       onAuthenticated(toAdminUser(session));
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível entrar.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleFaceLogin = async () => {
+    setError('');
+    setSubmitting(true);
+    try {
+      onAuthenticated(toAdminUser(await AdminAuthService.signInWithPasskey()));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Não foi possível confirmar sua identidade.');
     } finally {
       setSubmitting(false);
     }
@@ -105,6 +119,15 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onAuthenticated 
                 />
               </div>
             </div>
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-black/30 p-3 text-xs text-white/65">
+              <input
+                type="checkbox"
+                checked={enableFace}
+                onChange={event => setEnableFace(event.target.checked)}
+                className="mt-0.5 accent-[#c4b491]"
+              />
+              <span><strong className="block text-white/85">Cadastrar reconhecimento facial neste aparelho</strong>O Face ID, reconhecimento facial ou Windows Hello será solicitado depois da senha.</span>
+            </label>
             <button
               type="submit"
               disabled={submitting}
@@ -112,6 +135,15 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onAuthenticated 
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {submitting ? 'Verificando...' : 'Entrar com segurança'}
+            </button>
+            <div className="flex items-center gap-3 text-[10px] uppercase tracking-wider text-white/30"><span className="h-px flex-1 bg-white/10"/>ou<span className="h-px flex-1 bg-white/10"/></div>
+            <button
+              type="button"
+              onClick={handleFaceLogin}
+              disabled={submitting}
+              className="flex w-full items-center justify-center gap-2 rounded-xl border border-[#c4b491]/40 py-3 text-sm font-semibold text-[#c4b491] transition hover:bg-[#c4b491]/10 disabled:opacity-60"
+            >
+              <ScanFace className="h-5 w-5" /> Entrar com reconhecimento facial / biometria
             </button>
           </form>
         )}
@@ -123,3 +155,4 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onAuthenticated 
     </main>
   );
 };
+
