@@ -1,3 +1,5 @@
+import { PasskeyAuthService } from './passkeyAuth';
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 const SESSION_KEY = 'lev_admin_session_v1';
@@ -34,6 +36,17 @@ const verifyAdmin = async (accessToken: string, userId: string) => {
   if (!response.ok) return null;
   const rows = (await response.json()) as Array<{ user_id: string; display_name: string }>;
   return rows[0] ?? null;
+};
+
+const refreshSession = async (refreshToken: string) => {
+  const { url, key } = requireConfig();
+  const response = await fetch(`${url}/auth/v1/token?grant_type=refresh_token`, {
+    method: 'POST',
+    headers: { apikey: key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken })
+  });
+  if (!response.ok) throw new Error('A sessão administrativa expirou. Entre novamente.');
+  return response.json();
 };
 
 export const AdminAuthService = {
@@ -79,14 +92,45 @@ export const AdminAuthService = {
     return session;
   },
 
+  async registerPasskey(session: AdminSession): Promise<void> {
+    if (!session.refreshToken) throw new Error('Entre novamente com sua senha antes de cadastrar o reconhecimento facial.');
+    await PasskeyAuthService.register(session.accessToken, session.refreshToken);
+  },
+
+  async signInWithPasskey(): Promise<AdminSession> {
+    const authSession = await PasskeyAuthService.signIn();
+    const membership = await verifyAdmin(authSession.access_token, authSession.user.id);
+    if (!membership) throw new Error('Esta conta não possui autorização administrativa.');
+    const session: AdminSession = {
+      accessToken: authSession.access_token,
+      refreshToken: authSession.refresh_token,
+      expiresAt: authSession.expires_at,
+      userId: authSession.user.id,
+      email: authSession.user.email || '',
+      displayName: membership.display_name || 'Administração LEV'
+    };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    return session;
+  },
+
   async restore(): Promise<AdminSession | null> {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (!raw) return null;
       const session = JSON.parse(raw) as AdminSession;
-      if (!session.accessToken || !session.userId || (session.expiresAt && session.expiresAt <= Math.floor(Date.now() / 1000))) {
+      if (!session.accessToken || !session.userId) {
         sessionStorage.removeItem(SESSION_KEY);
         return null;
+      }
+      if (session.expiresAt && session.expiresAt <= Math.floor(Date.now() / 1000) + 60) {
+        if (!session.refreshToken) throw new Error('Sessão expirada.');
+        const refreshed = await refreshSession(session.refreshToken);
+        session.accessToken = refreshed.access_token;
+        session.refreshToken = refreshed.refresh_token || session.refreshToken;
+        session.expiresAt = refreshed.expires_at || Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600);
+        session.userId = refreshed.user?.id || session.userId;
+        session.email = refreshed.user?.email || session.email;
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
       }
       const membership = await verifyAdmin(session.accessToken, session.userId);
       if (!membership) {
@@ -118,3 +162,4 @@ export const AdminAuthService = {
     }
   }
 };
+
