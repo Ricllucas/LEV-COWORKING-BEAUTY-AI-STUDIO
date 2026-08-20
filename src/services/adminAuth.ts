@@ -144,6 +144,31 @@ export const AdminAuthService = {
     }
   },
 
+  async refresh(): Promise<AdminSession | null> {
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const session = JSON.parse(raw) as AdminSession;
+      if (!session.refreshToken) return null;
+      const refreshed = await refreshSession(session.refreshToken);
+      const renewed: AdminSession = {
+        ...session,
+        accessToken: refreshed.access_token,
+        refreshToken: refreshed.refresh_token || session.refreshToken,
+        expiresAt: refreshed.expires_at || Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600),
+        userId: refreshed.user?.id || session.userId,
+        email: refreshed.user?.email || session.email
+      };
+      const membership = await verifyAdmin(renewed.accessToken, renewed.userId);
+      if (!membership) return null;
+      renewed.displayName = membership.display_name || renewed.displayName;
+      sessionStorage.setItem(SESSION_KEY, JSON.stringify(renewed));
+      return renewed;
+    } catch {
+      return null;
+    }
+  },
+
   async signOut(): Promise<void> {
     const raw = sessionStorage.getItem(SESSION_KEY);
     sessionStorage.removeItem(SESSION_KEY);
