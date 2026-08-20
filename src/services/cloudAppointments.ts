@@ -24,6 +24,18 @@ const getFreshAccessToken = async (role?: User['role']): Promise<string | undefi
   }
 };
 
+const forceRefreshAccessToken = async (role?: User['role']): Promise<string | undefined> => {
+  const refreshed = role === 'admin'
+    ? await AdminAuthService.refresh()
+    : await ProfessionalAuthService.refresh();
+  return refreshed?.accessToken;
+};
+
+const fetchSharedAppointments = (token: string) => fetch('/api/appointments/staff-list', {
+  headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+  cache: 'no-store'
+});
+
 const config = () => {
   if (!SUPABASE_URL || !SUPABASE_KEY) {
     throw new Error('A agenda online ainda não está conectada ao servidor.');
@@ -74,12 +86,17 @@ export const CloudAppointmentService = {
     const token = await getFreshAccessToken(user.role);
     if (!token) throw new Error('Sua sessão expirou. Entre novamente para carregar a agenda compartilhada.');
 
-    const response = await fetch('/api/appointments/staff-list', {
-      headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
-    });
+    let response = await fetchSharedAppointments(token);
+
+    if (response.status === 401) {
+      const renewedToken = await forceRefreshAccessToken(user.role);
+      if (!renewedToken) throw new Error('Sua sessão expirou. Saia e entre novamente para carregar a Agenda LEV.');
+      response = await fetchSharedAppointments(renewedToken);
+    }
 
     if (!response.ok) {
-      throw new Error('Não foi possível atualizar a agenda compartilhada.');
+      const result = await response.json().catch(() => ({})) as { error?: string };
+      throw new Error(result.error || `Não foi possível atualizar a agenda compartilhada (${response.status}).`);
     }
 
     const result = await response.json() as { appointments?: Appointment[] };
