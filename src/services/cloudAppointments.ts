@@ -1,27 +1,27 @@
 import { Appointment, User } from '../types';
+import { AdminAuthService } from './adminAuth';
+import { ProfessionalAuthService } from './professionalAuth';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 
-type StoredSession = { accessToken?: string };
+type ExpiringStoredSession = { accessToken?: string; expiresAt?: number };
 
-const getAccessToken = (role?: User['role']): string | undefined => {
+const getFreshAccessToken = async (role?: User['role']): Promise<string | undefined> => {
   if (typeof sessionStorage === 'undefined') return undefined;
-  const keys = role === 'admin'
-    ? ['lev_admin_session_v1']
-    : role === 'profissional'
-      ? ['lev_professional_session_v1']
-      : ['lev_admin_session_v1', 'lev_professional_session_v1'];
-
-  for (const key of keys) {
-    try {
-      const token = (JSON.parse(sessionStorage.getItem(key) || '{}') as StoredSession).accessToken;
-      if (token) return token;
-    } catch {
-      // Continue checking the other active staff session.
+  const key = role === 'admin' ? 'lev_admin_session_v1' : 'lev_professional_session_v1';
+  try {
+    const stored = JSON.parse(sessionStorage.getItem(key) || '{}') as ExpiringStoredSession;
+    if (stored.accessToken && (!stored.expiresAt || stored.expiresAt > Math.floor(Date.now() / 1000) + 60)) {
+      return stored.accessToken;
     }
+    const restored = role === 'admin'
+      ? await AdminAuthService.restore()
+      : await ProfessionalAuthService.restore();
+    return restored?.accessToken;
+  } catch {
+    return undefined;
   }
-  return undefined;
 };
 
 const config = () => {
@@ -71,8 +71,8 @@ export const CloudAppointmentService = {
 
   async list(user: User): Promise<Appointment[]> {
     config();
-    const token = getAccessToken(user.role);
-    if (!token) return [];
+    const token = await getFreshAccessToken(user.role);
+    if (!token) throw new Error('Sua sessão expirou. Entre novamente para carregar a agenda compartilhada.');
 
     const response = await fetch('/api/appointments/staff-list', {
       headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' }
