@@ -412,6 +412,10 @@ export class StorageService {
       settings.whatsapp = INITIAL_SETTINGS.whatsapp;
       updated = true;
     }
+    if (settings.businessHoursText !== INITIAL_SETTINGS.businessHoursText) {
+      settings.businessHoursText = INITIAL_SETTINGS.businessHoursText;
+      updated = true;
+    }
     if (updated) {
       setStored(STORAGE_KEYS.SETTINGS, settings);
     }
