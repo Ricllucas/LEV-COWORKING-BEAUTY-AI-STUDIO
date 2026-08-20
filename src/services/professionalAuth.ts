@@ -1,3 +1,5 @@
+import { PasskeyAuthService } from './passkeyAuth';
+
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 const SESSION_KEY = 'lev_professional_session_v1';
@@ -50,6 +52,17 @@ const createPendingAccess = async (token: string, userId: string, request: Omit<
   if (!response.ok) throw new Error('Não foi possível enviar a solicitação para aprovação.');
   const rows = await response.json() as ProfessionalAccess[];
   return rows[0];
+};
+
+const refreshSession = async (refreshToken: string) => {
+  const { url, key } = config();
+  const response = await fetch(`${url}/auth/v1/token?grant_type=refresh_token`, {
+    method: 'POST',
+    headers: { apikey: key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken })
+  });
+  if (!response.ok) throw new Error('A sessão profissional expirou. Entre novamente.');
+  return response.json();
 };
 
 export const ProfessionalAuthService = {
@@ -107,12 +120,43 @@ export const ProfessionalAuthService = {
     return session;
   },
 
+  async registerPasskey(session: ProfessionalSession): Promise<void> {
+    if (!session.refreshToken) throw new Error('Entre novamente com sua senha antes de cadastrar o reconhecimento facial.');
+    await PasskeyAuthService.register(session.accessToken, session.refreshToken);
+  },
+
+  async signInWithPasskey(): Promise<ProfessionalSession> {
+    const authSession = await PasskeyAuthService.signIn();
+    const access = await readAccess(authSession.access_token, authSession.user.id);
+    if (!access) throw new Error('Esta conta não está vinculada a um perfil profissional.');
+    if (access.status !== 'approved') throw new Error('Este acesso ainda não está aprovado pela administração.');
+    const session: ProfessionalSession = {
+      accessToken: authSession.access_token,
+      refreshToken: authSession.refresh_token,
+      expiresAt: authSession.expires_at || Math.floor(Date.now() / 1000) + 3600,
+      userId: authSession.user.id,
+      email: authSession.user.email || '',
+      access
+    };
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+    return session;
+  },
+
   async restore(): Promise<ProfessionalSession | null> {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (!raw) return null;
       const session = JSON.parse(raw) as ProfessionalSession;
-      if (session.expiresAt <= Math.floor(Date.now() / 1000)) throw new Error();
+      if (session.expiresAt <= Math.floor(Date.now() / 1000) + 60) {
+        if (!session.refreshToken) throw new Error('Sessão expirada.');
+        const refreshed = await refreshSession(session.refreshToken);
+        session.accessToken = refreshed.access_token;
+        session.refreshToken = refreshed.refresh_token || session.refreshToken;
+        session.expiresAt = refreshed.expires_at || Math.floor(Date.now() / 1000) + Number(refreshed.expires_in || 3600);
+        session.userId = refreshed.user?.id || session.userId;
+        session.email = refreshed.user?.email || session.email;
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      }
       const access = await readAccess(session.accessToken, session.userId);
       if (!access || access.status !== 'approved') throw new Error();
       return { ...session, access };
@@ -126,3 +170,4 @@ export const ProfessionalAuthService = {
     sessionStorage.removeItem(SESSION_KEY);
   }
 };
+
