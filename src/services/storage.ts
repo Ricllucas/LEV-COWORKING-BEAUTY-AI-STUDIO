@@ -107,39 +107,34 @@ export const INITIAL_USERS: (User & { password?: string })[] = [
     id: "admin_1",
     name: "Administração LEV",
     email: "admin@levcoworkingbeauty.com.br",
-    role: "admin",
-    password: "123"
+    role: "admin"
   },
   {
     id: "prof_elisangela_user",
     name: "Elisangela",
     email: "elisangela@levcoworkingbeauty.com.br",
     role: "profissional",
-    professionalId: "prof_elisangela",
-    password: "123"
+    professionalId: "prof_elisangela"
   },
   {
     id: "prof_talitha_user",
     name: "Talitha",
     email: "talithakumbeauty@gmail.com",
     role: "profissional",
-    professionalId: "prof_talitha",
-    password: "123"
+    professionalId: "prof_talitha"
   },
   {
     id: "prof_nayara_user",
     name: "Nayara",
     email: "nayara@levcoworkingbeauty.com.br",
     role: "profissional",
-    professionalId: "prof_nayara",
-    password: "123"
+    professionalId: "prof_nayara"
   },
   {
     id: "recepcao_1",
     name: "Recepção LEV",
     email: "recepcao@levcoworkingbeauty.com.br",
-    role: "recepcao",
-    password: "123"
+    role: "recepcao"
   }
 ];
 
