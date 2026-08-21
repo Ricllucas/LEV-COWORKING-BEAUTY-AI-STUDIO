@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 import { createSign } from 'node:crypto';
+import { authenticateStaff } from '../_lib/staffAuth.js';
+import { applyApiSecurity, constantTimeSecretEquals, rateLimit } from '../_lib/security.js';
 
 const requireEnv = (name: string) => {
   const value = process.env[name];
@@ -37,9 +39,15 @@ const getAccessToken = async () => {
 };
 
 export default async function handler(req: any, res: any) {
+  applyApiSecurity(req, res);
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Método não permitido.' });
   }
+  if (!rateLimit(req, res, 'calendar-sync-all', 20, 60_000)) return;
+  const bearer = String(req.headers?.authorization || '').replace(/^Bearer\s+/i, '');
+  const isCron = constantTimeSecretEquals(bearer, process.env.CRON_SECRET);
+  const staff = isCron ? null : await authenticateStaff(req.headers?.authorization);
+  if (!isCron && !staff) return res.status(401).json({ error: 'Acesso restrito à equipe LEV.' });
 
   try {
     const calendarId = requireEnv('GOOGLE_CALENDAR_ID');
@@ -128,3 +136,4 @@ export default async function handler(req: any, res: any) {
     });
   }
 }
+
