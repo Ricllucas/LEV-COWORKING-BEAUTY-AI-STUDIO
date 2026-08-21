@@ -1,6 +1,7 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { notificationService } from '../_lib/notificationService.js';
 import { sendWhatsAppText } from '../_lib/whatsapp.js';
+import { applyApiSecurity, rateLimit, safeText, validJsonRequest } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const digits = (value: string) => String(value || '').replace(/\D/g, '');
@@ -10,9 +11,13 @@ const samePhone = (left: string, right: string) => {
 };
 
 export default async function handler(req: any, res: any) {
+  applyApiSecurity(req, res);
   if (req.method !== 'POST') return json(res, 405, { error: 'Método não permitido.' });
+  if (!rateLimit(req, res, 'booking-cancel', 8, 15 * 60_000) || !validJsonRequest(req, res)) return;
   try {
-    const { appointmentId, clientPhone, reason } = req.body || {};
+    const appointmentId = safeText(req.body?.appointmentId, 100);
+    const clientPhone = safeText(req.body?.clientPhone, 24);
+    const reason = safeText(req.body?.reason, 300);
     if (!appointmentId || !clientPhone) return json(res, 400, { error: 'Informe o agendamento e o telefone utilizado na reserva.' });
     const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -58,3 +63,4 @@ export default async function handler(req: any, res: any) {
     return json(res, 500, { error: error instanceof Error ? error.message : 'Não foi possível cancelar o agendamento.' });
   }
 }
+
