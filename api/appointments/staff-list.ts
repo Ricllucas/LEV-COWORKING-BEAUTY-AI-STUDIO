@@ -1,4 +1,5 @@
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
+import { applyApiSecurity, rateLimit } from '../_lib/security.js';
 
 const config = () => {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
@@ -52,7 +53,9 @@ const authenticateStaff = async (authorization?: string) => {
 };
 
 export default async function handler(req: any, res: any) {
+  applyApiSecurity(req, res);
   if (req.method !== 'GET') return json(res, 405, { error: 'Método não permitido.' });
+  if (!rateLimit(req, res, 'staff-appointments', 120, 60_000)) return;
   try {
     const staff = await authenticateStaff(req.headers?.authorization);
     if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
