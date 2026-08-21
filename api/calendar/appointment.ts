@@ -1,9 +1,15 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
+import { authenticateStaff } from '../_lib/staffAuth.js';
+import { applyApiSecurity, rateLimit, validJsonRequest } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 
 export default async function handler(req: any, res: any) {
+  applyApiSecurity(req, res);
   if (req.method !== 'POST') return json(res, 405, { error: 'Método não permitido.' });
+  if (!rateLimit(req, res, 'calendar-sync-one', 60, 60_000) || !validJsonRequest(req, res)) return;
+  const staff = await authenticateStaff(req.headers?.authorization);
+  if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
   try {
     const appointment = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     if (!appointment?.id) return json(res, 400, { error: 'Agendamento inválido.' });
@@ -21,4 +27,5 @@ export default async function handler(req: any, res: any) {
     return json(res, 500, { error: error instanceof Error ? error.message : 'Falha ao sincronizar o Google Agenda.' });
   }
 }
+
 
