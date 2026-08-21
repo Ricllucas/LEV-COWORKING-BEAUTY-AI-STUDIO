@@ -1,4 +1,4 @@
-import { authenticateStaff, serviceHeaders, supabaseConfig } from '../_lib/staffAuth';
+import { authenticateStaff, serviceHeaders, supabaseConfig } from '../_lib/staffAuth.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const digits = (value: string) => String(value || '').replace(/\D/g, '').slice(-11);
@@ -48,4 +48,3 @@ export default async function handler(req: any, res: any) {
     return json(res, 500, { error: error instanceof Error ? error.message : 'Falha ao salvar cliente.' });
   }
 }
-
