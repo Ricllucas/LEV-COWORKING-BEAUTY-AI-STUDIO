@@ -121,7 +121,7 @@ export const INITIAL_USERS: (User & { password?: string })[] = [
   {
     id: "prof_talitha_user",
     name: "Talitha",
-    email: "talitha.aguiarocha@gmail.com",
+    email: "talithakumbeauty@gmail.com",
     role: "profissional",
     professionalId: "prof_talitha",
     password: "123"
@@ -610,6 +610,10 @@ export class StorageService {
     return client;
   }
 
+  static replaceClients(clients: Client[]): void {
+    setStored(STORAGE_KEYS.CLIENTS, clients);
+  }
+
   // Appointments
   private static clearFutureScheduleOnce(): void {
     try {
@@ -659,7 +663,10 @@ export class StorageService {
     const synchronizedAppointments = Array.from(merged.values()).sort((a, b) =>
       `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)
     );
-    setStored(STORAGE_KEYS.APPOINTMENTS, synchronizedAppointments);
+    setStored(
+      STORAGE_KEYS.APPOINTMENTS,
+      synchronizedAppointments
+    );
     this.syncClientsFromAppointments(cloudAppointments);
   }
 

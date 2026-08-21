@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Client, Professional } from '../../types';
 import { StorageService } from '../../services/storage';
+import { CloudClientService } from '../../services/cloudClients';
 import { formatPhone, buildWhatsAppLink } from '../../utils/formatters';
 import { Search, Plus, User, Phone, Mail, Calendar, MessageCircle, AlertTriangle, ShieldCheck, X, Edit3 } from 'lucide-react';
 
@@ -14,6 +15,8 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // New Client Form
   const [isOpenForm, setIsOpenForm] = useState<boolean>(isNewModalOpen || false);
@@ -29,12 +32,29 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
   }, [isNewModalOpen]);
 
   useEffect(() => {
-    const load = () => {
+    let active = true;
+    const loadLocal = () => {
       setClients(StorageService.getClients());
       setProfessionals(StorageService.getProfessionals());
     };
-    load();
-    return StorageService.subscribeStorage(load);
+    const loadShared = async () => {
+      try {
+        const shared = await CloudClientService.list();
+        if (!active) return;
+        const merged = new Map<string, Client>();
+        [...StorageService.getClients(), ...shared].forEach(client => {
+          const key = client.phone.replace(/\D/g, '').slice(-11) || client.id;
+          merged.set(key, client);
+        });
+        StorageService.replaceClients(Array.from(merged.values()));
+      } catch (error) {
+        if (active) setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Não foi possível carregar a base compartilhada.' });
+      }
+    };
+    loadLocal();
+    void loadShared();
+    const unsubscribe = StorageService.subscribeStorage(loadLocal);
+    return () => { active = false; unsubscribe(); };
   }, []);
 
   const filteredClients = clients.filter(c => {
@@ -42,7 +62,7 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
     return c.fullName.toLowerCase().includes(q) || c.phone.includes(q) || (c.email && c.email.toLowerCase().includes(q));
   });
 
-  const handleSaveClient = (e: React.FormEvent) => {
+  const handleSaveClient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fullName || !phone) {
       alert("Nome e telefone são obrigatórios.");
@@ -58,7 +78,7 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
     }
 
     const newClient: Client = {
-      id: "cli_" + Date.now(),
+      id: "cli_" + cleanPhone.slice(-11),
       fullName,
       phone,
       whatsapp: phone,
@@ -74,17 +94,26 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
       createdAt: new Date().toISOString().split('T')[0]
     };
 
-    StorageService.saveClient(newClient);
-    setIsOpenForm(false);
-    if (onCloseNewModal) onCloseNewModal();
+    setIsSaving(true);
+    setFeedback(null);
+    try {
+      const savedClient = await CloudClientService.save(newClient);
+      StorageService.saveClient(savedClient);
+      setFeedback({ type: 'success', text: `${savedClient.fullName} foi incluída na base compartilhada da LEV.` });
+      setIsOpenForm(false);
+      if (onCloseNewModal) onCloseNewModal();
 
-    // Reset Form
-    setFullName('');
-    setPhone('');
-    setEmail('');
-    setBirthDate('');
-    setNotes('');
-    setHealthSensitivities('');
+      setFullName('');
+      setPhone('');
+      setEmail('');
+      setBirthDate('');
+      setNotes('');
+      setHealthSensitivities('');
+    } catch (error) {
+      setFeedback({ type: 'error', text: error instanceof Error ? error.message : 'Não foi possível salvar a cliente.' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -108,6 +137,12 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
           Cadastrar Nova Cliente
         </button>
       </div>
+
+      {feedback && (
+        <div className={`rounded-xl border p-3 text-xs ${feedback.type === 'success' ? 'border-emerald-300 bg-emerald-50 text-emerald-800' : 'border-rose-300 bg-rose-50 text-rose-800'}`}>
+          {feedback.text}
+        </div>
+      )}
 
       {/* Search Bar */}
       <div className="relative">
@@ -254,9 +289,10 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl text-xs bg-[#D4AF37] text-white font-medium"
+                disabled={isSaving}
+                className="px-4 py-2 rounded-xl text-xs bg-[#D4AF37] text-white font-medium disabled:opacity-60"
               >
-                Salvar Cadastro
+                {isSaving ? 'Salvando...' : 'Salvar Cadastro'}
               </button>
             </div>
           </form>
@@ -317,3 +353,4 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
     </div>
   );
 };
+
