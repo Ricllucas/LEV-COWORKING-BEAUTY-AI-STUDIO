@@ -1,4 +1,6 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
+import { authenticateStaff } from '../_lib/staffAuth.js';
+import { applyApiSecurity, rateLimit, safeText, secureId, validJsonRequest } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 
@@ -20,9 +22,13 @@ interface TimeBlock {
 }
 
 export default async function handler(req: any, res: any) {
+  applyApiSecurity(req, res);
   if (req.method !== 'POST') {
     return json(res, 405, { error: 'Método não permitido.' });
   }
+  if (!rateLimit(req, res, 'calendar-block', 60, 60_000) || !validJsonRequest(req, res)) return;
+  const staff = await authenticateStaff(req.headers?.authorization);
+  if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
 
   try {
     const block = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -39,13 +45,13 @@ export default async function handler(req: any, res: any) {
     }
 
     const blockData: TimeBlock = {
-      id: block.id,
+      id: secureId('block'),
       professionalId: block.professionalId,
       professionalName: block.professionalName,
       date: block.date,
       startTime: block.startTime,
       endTime: block.endTime,
-      title: block.title || 'Bloqueio',
+      title: safeText(block.title || 'Bloqueio', 120),
       type: block.type || 'bloqueio',
       status: 'confirmado',
       serviceNames: [block.title || 'Bloqueio'],
@@ -109,3 +115,4 @@ function calculateDuration(startTime: string, endTime: string): number {
   const [endH, endM] = endTime.split(':').map(Number);
   return (endH - startH) * 60 + (endM - startM);
 }
+
