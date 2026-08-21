@@ -1,10 +1,13 @@
 import { authenticateStaff, serviceHeaders, supabaseConfig } from '../_lib/staffAuth.js';
+import { applyApiSecurity, rateLimit, safeText, validJsonRequest } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const digits = (value: string) => String(value || '').replace(/\D/g, '').slice(-11);
 
 export default async function handler(req: any, res: any) {
+  applyApiSecurity(req, res);
   if (req.method !== 'POST') return json(res, 405, { error: 'Método não permitido.' });
+  if (!rateLimit(req, res, 'staff-client-save', 60, 60_000) || !validJsonRequest(req, res)) return;
   try {
     const staff = await authenticateStaff(req.headers?.authorization);
     if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
@@ -19,10 +22,10 @@ export default async function handler(req: any, res: any) {
     const client = {
       ...input,
       id,
-      fullName: String(input.fullName).trim(),
-      phone: String(input.phone).trim(),
-      whatsapp: String(input.whatsapp || input.phone).trim(),
-      email: String(input.email || '').trim().toLowerCase(),
+      fullName: safeText(input.fullName, 100),
+      phone: safeText(input.phone, 24),
+      whatsapp: safeText(input.whatsapp || input.phone, 24),
+      email: safeText(input.email, 160).toLowerCase(),
       active: input.active !== false,
       createdAt: input.createdAt || now.slice(0, 10)
     };
@@ -48,3 +51,4 @@ export default async function handler(req: any, res: any) {
     return json(res, 500, { error: error instanceof Error ? error.message : 'Falha ao salvar cliente.' });
   }
 }
+
