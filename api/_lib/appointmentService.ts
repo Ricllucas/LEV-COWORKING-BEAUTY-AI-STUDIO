@@ -25,9 +25,7 @@ export const addMinutes = (time: string, duration: number) => {
 const active = (status: string) => !['cancelado_cliente', 'cancelado_coworking'].includes(status);
 const worksOnDate = (professionalId: string, date: string) => {
   const weekday = new Date(`${date}T12:00:00-03:00`).getDay();
-  if (weekday === 0) return false;
-  if (professionalId === 'prof_talitha') return weekday >= 2 && weekday <= 6;
-  return weekday >= 1 && weekday <= 6;
+  return weekday >= 2 && weekday <= 6;
 };
 
 type CatalogService = {
@@ -115,9 +113,7 @@ export const assertAvailable = async (appointment: UnifiedAppointment) => {
     throw error;
   }
   if (!worksOnDate(appointment.professionalId, appointment.date)) {
-    const error = new Error(appointment.professionalId === 'prof_talitha'
-      ? 'Talitha atende de terça a sábado. Escolha outra data.'
-      : 'Esta profissional atende de segunda a sábado. Escolha outra data.');
+    const error = new Error('Esta profissional atende de terça a sábado. Escolha outra data.');
     (error as Error & { status?: number }).status = 400;
     throw error;
   }

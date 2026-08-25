@@ -58,12 +58,9 @@ export const processWhatsAppBooking = async (params: {
     const date = parseDate(text); const today = new Date().toISOString().slice(0, 10);
     if (!date || date < today) return 'Informe uma data futura válida no formato *DD/MM/AAAA*.';
     const weekday = new Date(`${date}T12:00:00-03:00`).getDay();
-    const isTalitha = draft.professionalId === 'prof_talitha';
-    const invalidDay = weekday === 0 || (isTalitha && weekday === 1);
+    const invalidDay = weekday === 0 || weekday === 1;
     if (invalidDay) {
-      return isTalitha
-        ? 'Talitha atende de terça a sábado. Escolha outra data.'
-        : 'Esta profissional atende de segunda a sábado. Escolha outra data.';
+      return 'Esta profissional atende de terça a sábado. Escolha outra data.';
     }
     const times = await availableStartTimes(date, Number(draft.duration), draft.professionalId);
     if (!times.length) return 'Essa data está sem horários disponíveis. Envie outra data no formato *DD/MM/AAAA*.';

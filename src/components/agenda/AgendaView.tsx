@@ -192,8 +192,8 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
     return hours * 60 + minutes;
   };
 
-  const scheduleStartMinutes = 8 * 60;
-  const scheduleEndMinutes = 20 * 60;
+  const scheduleStartMinutes = 9 * 60;
+  const scheduleEndMinutes = 18 * 60;
   const slotMinutes = 30;
   const slotHeight = 72;
   const scheduleSlots = Array.from(

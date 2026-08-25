@@ -19,7 +19,7 @@ export const INITIAL_SETTINGS: CoworkingSettings = {
   whatsapp: "5541984979940",
   instagram: "@levcoworkingbeauty",
   email: "contato@levcoworkingbeauty.com.br",
-  businessHoursText: "Segunda a sábado, das 9h às 18h",
+  businessHoursText: "Terça a sábado, das 9h às 18h",
   cancellationPolicy: "Cancelamentos ou reagendamentos devem ser solicitados com, no mínimo, 24 horas de antecedência. O valor do sinal não é reembolsável quando o cancelamento ocorre fora desse prazo.",
   depositPercentage: 30,
   privacyPolicy: "O LEV Coworking Beauty protege os dados das clientes conforme as diretrizes da LGPD (Lei Geral de Proteção de Dados). As informações de saúde fornecidas pela cliente são tratadas com confidencialidade e permanecem sob responsabilidade de quem as declarou.",
@@ -45,13 +45,13 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     categories: ["Unha Raiz"],
     color: "#D4AF37", // Warm Gold
     workingHours: {
-      1: { active: true, startTime: "08:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Seg
-      2: { active: true, startTime: "08:00", endTime: "19:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Ter
-      3: { active: true, startTime: "08:00", endTime: "19:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Qua
-      4: { active: true, startTime: "08:00", endTime: "19:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Qui
-      5: { active: true, startTime: "08:00", endTime: "19:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Sex
-      6: { active: true, startTime: "08:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Sáb
-      0: { active: false, startTime: "08:00", endTime: "18:00" }  // Dom
+      1: { active: false, startTime: "09:00", endTime: "18:00" }, // Seg
+      2: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Ter
+      3: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Qua
+      4: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Qui
+      5: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Sex
+      6: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Sáb
+      0: { active: false, startTime: "09:00", endTime: "18:00" } // Dom
     },
     slotBufferMinutes: 10,
     maxDailyAppointments: 8,
@@ -74,13 +74,13 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     categories: ["Produções", "Brows"],
     color: "#B8860B", // Dark Goldenrod
     workingHours: {
-      1: { active: false, startTime: "08:00", endTime: "18:00" }, // Segunda-feira: não atende
-      2: { active: true, startTime: "09:00", endTime: "19:00", lunchStart: "12:30", lunchEnd: "13:30" },
-      3: { active: true, startTime: "09:00", endTime: "19:00", lunchStart: "12:30", lunchEnd: "13:30" },
-      4: { active: true, startTime: "09:00", endTime: "19:00", lunchStart: "12:30", lunchEnd: "13:30" },
-      5: { active: true, startTime: "08:00", endTime: "20:00", lunchStart: "12:30", lunchEnd: "13:30" },
-      6: { active: true, startTime: "08:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
-      0: { active: false, startTime: "08:00", endTime: "18:00" }
+      1: { active: false, startTime: "09:00", endTime: "18:00" }, // Segunda-feira: não atende
+      2: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      3: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      4: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      5: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      6: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      0: { active: false, startTime: "09:00", endTime: "18:00" }
     },
     slotBufferMinutes: 15,
     maxDailyAppointments: 8,
@@ -103,13 +103,13 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     categories: ["Unhas em Gel"],
     color: "#996515", // Warm Bronze Gold
     workingHours: {
-      1: { active: true, startTime: "08:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Seg
-      2: { active: true, startTime: "08:30", endTime: "18:30", lunchStart: "12:00", lunchEnd: "13:00" },
-      3: { active: true, startTime: "08:30", endTime: "18:30", lunchStart: "12:00", lunchEnd: "13:00" },
-      4: { active: true, startTime: "08:30", endTime: "18:30", lunchStart: "12:00", lunchEnd: "13:00" },
-      5: { active: true, startTime: "08:30", endTime: "19:00", lunchStart: "12:00", lunchEnd: "13:00" },
-      6: { active: true, startTime: "08:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
-      0: { active: false, startTime: "08:00", endTime: "18:00" }
+      1: { active: false, startTime: "09:00", endTime: "18:00" }, // Seg
+      2: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      3: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      4: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      5: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      6: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      0: { active: false, startTime: "09:00", endTime: "18:00" }
     },
     slotBufferMinutes: 15,
     maxDailyAppointments: 5,
