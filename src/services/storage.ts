@@ -32,7 +32,7 @@ const STORAGE_KEYS = {
   PROFESSIONALS: 'lev_coworking_professionals_v10',
   PIX_KEYS_VERSION: 'lev_pix_keys_2026_08_04',
   PROFESSIONAL_CONTACT_VERSION: 'lev_professional_contact_2026_08_05',
-  PROFESSIONAL_WORKDAYS_VERSION: 'lev_professional_workdays_2026_08_10',
+  PROFESSIONAL_WORKDAYS_VERSION: 'lev_professional_workdays_2026_08_24',
   SERVICES: 'lev_coworking_services_v2',
   TALITHA_CATALOG_VERSION: 'lev_talitha_catalog_2026_07_31',
   ELISANGELA_CATALOG_VERSION: 'lev_elisangela_catalog_2026_08_12_v2',
@@ -459,13 +459,13 @@ export class StorageService {
       const workingHours = shouldMigrateWorkdays
         ? {
             ...p.workingHours,
-            0: { ...p.workingHours?.[0], active: false },
-            1: {
-              ...p.workingHours?.[1],
-              active: p.id !== 'prof_talitha',
-              startTime: p.workingHours?.[1]?.startTime || '08:00',
-              endTime: p.workingHours?.[1]?.endTime || '18:00'
-            }
+            0: { ...p.workingHours?.[0], active: false, startTime: '09:00', endTime: '18:00' },
+            1: { ...p.workingHours?.[1], active: false, startTime: '09:00', endTime: '18:00' },
+            2: { ...p.workingHours?.[2], active: true, startTime: '09:00', endTime: '18:00' },
+            3: { ...p.workingHours?.[3], active: true, startTime: '09:00', endTime: '18:00' },
+            4: { ...p.workingHours?.[4], active: true, startTime: '09:00', endTime: '18:00' },
+            5: { ...p.workingHours?.[5], active: true, startTime: '09:00', endTime: '18:00' },
+            6: { ...p.workingHours?.[6], active: true, startTime: '09:00', endTime: '18:00' }
           }
         : p.workingHours;
 
