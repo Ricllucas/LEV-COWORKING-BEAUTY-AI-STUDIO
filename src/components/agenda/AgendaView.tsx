@@ -230,16 +230,17 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
   };
 
   const appointmentTone = (appointment: Appointment) => {
+    if (appointment.status === 'concluido') {
+      return 'border-[#DDE8D2] bg-[#C7D7B6] text-[#24301F] shadow-[0_8px_24px_rgba(199,215,182,0.18)]';
+    }
     const tones: Record<string, string> = {
       prof_elisangela: 'border-[#d8c7a4]/80 bg-[#3a3226]/95 text-[#f8f1e4]',
       prof_talitha: 'border-[#b59662]/80 bg-[#352817]/95 text-[#f6ead4]',
       prof_nayara: 'border-[#a98d7a]/80 bg-[#342923]/95 text-[#f5e9e1]'
     };
-    const statusEffect = appointment.status === 'concluido'
-      ? ' opacity-70'
-      : appointment.status === 'aguardando_confirmacao'
-        ? ' border-dashed'
-        : '';
+    const statusEffect = appointment.status === 'aguardando_confirmacao'
+      ? ' border-dashed'
+      : '';
     return `${tones[appointment.professionalId] || 'border-[#c4b491]/80 bg-[#332d24]/95 text-[#f7f0e5]'}${statusEffect}`;
   };
 
@@ -498,18 +499,21 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                   <button
                     key={appointment.id}
                     onClick={() => setSelectedApt(appointment)}
-                    className="w-full p-4 rounded-xl border border-white/10 bg-[#050505] hover:border-[#c4b491] transition-all text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                    className={`w-full p-4 rounded-xl border transition-all text-left flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${appointment.status === 'concluido'
+                      ? 'border-[#DDE8D2] bg-[#C7D7B6] hover:border-[#F1E8D5] text-[#24301F]'
+                      : 'border-white/10 bg-[#050505] hover:border-[#c4b491] text-white'
+                    }`}
                   >
                     <div className="flex items-center gap-3">
                       <div className="px-3 py-2 rounded-xl text-xs font-bold text-black text-center" style={{ backgroundColor: professionalAccent(appointment.professionalId) }}>
                         {appointment.startTime}<span className="block text-[9px] font-normal">{appointment.endTime}</span>
                       </div>
                       <div>
-                        <p className="font-semibold text-sm text-white">{appointment.clientName}</p>
-                        <p className="text-xs text-white/55 mt-0.5">{appointment.serviceNames.join(', ')} · {appointment.professionalName}</p>
+                        <p className={`font-semibold text-sm ${appointment.status === 'concluido' ? 'text-[#24301F]' : 'text-white'}`}>{appointment.clientName}</p>
+                        <p className={`text-xs mt-0.5 ${appointment.status === 'concluido' ? 'text-[#42533A]' : 'text-white/55'}`}>{appointment.serviceNames.join(', ')} · {appointment.professionalName}</p>
                       </div>
                     </div>
-                    <span className="text-[10px] uppercase tracking-wider text-[#c4b491]">{statusLabel[appointment.status]}</span>
+                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${appointment.status === 'concluido' ? 'text-[#36502C]' : 'text-[#c4b491]'}`}>{statusLabel[appointment.status]}</span>
                   </button>
                 );
               })}
@@ -639,7 +643,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
 
                 <button
                   onClick={() => handleStatusChange(selectedApt.id, 'concluido')}
-                  className="py-2 px-3 rounded-xl bg-stone-800 border border-stone-600 hover:bg-stone-700 text-stone-200 text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                  className="py-2 px-3 rounded-xl bg-[#C7D7B6] border border-[#DDE8D2] hover:bg-[#D5E2C8] text-[#24301F] text-xs font-semibold transition-colors flex items-center justify-center gap-1"
                 >
                   Finalizar Atendimento
                 </button>
