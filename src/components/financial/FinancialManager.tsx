@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { User, Professional, Appointment, PaymentRecord } from '../../types';
+import { User, Professional, Appointment, PaymentRecord, Service } from '../../types';
 import { StorageService } from '../../services/storage';
+import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { formatCurrency, formatDateBR } from '../../utils/formatters';
 import {
   DollarSign,
@@ -14,7 +15,11 @@ import {
   FileSpreadsheet,
   CheckCircle2,
   AlertCircle,
-  Building
+  Building,
+  Pencil,
+  Trash2,
+  X,
+  Save
 } from 'lucide-react';
 
 interface FinancialManagerProps {
@@ -25,6 +30,12 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [services, setServices] = useState<Service[]>([]);
+  const [editing, setEditing] = useState<Appointment | null>(null);
+  const [editClientName, setEditClientName] = useState('');
+  const [editDate, setEditDate] = useState('');
+  const [editServiceId, setEditServiceId] = useState('');
+  const [saving, setSaving] = useState(false);
 
   // Selected MEI tab
   const [activeMeiTab, setActiveMeiTab] = useState<string>(
@@ -40,6 +51,7 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
       setProfessionals(StorageService.getProfessionals());
       setAppointments(StorageService.getAppointments());
       setPayments(StorageService.getPaymentRecords());
+      setServices(StorageService.getServices());
     };
     load();
     return StorageService.subscribeStorage(load);
@@ -63,6 +75,65 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
   const totalDepositReceived = filteredApts.reduce((acc, a) => acc + (a.depositPaid || 0), 0);
   const totalPending = filteredApts.reduce((acc, a) => acc + (a.remainingPrice || 0), 0);
   const averageTicket = filteredApts.length > 0 ? totalRevenue / filteredApts.length : 0;
+
+  const openEdit = (apt: Appointment) => {
+    setEditing(apt);
+    setEditClientName(apt.clientName);
+    setEditDate(apt.date);
+    setEditServiceId(apt.serviceIds[0] || '');
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editing || !editClientName.trim() || !editDate || !editServiceId) return;
+    const service = services.find(item => item.id === editServiceId && item.professionalId === editing.professionalId);
+    if (!service) return alert('Selecione um serviço válido desta profissional.');
+    const [hour, minute] = editing.startTime.split(':').map(Number);
+    const end = new Date(2000, 0, 1, hour, minute + service.durationMinutes);
+    const endTime = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
+    const totalPrice = service.promotionalPrice ?? service.price;
+    const changes: Partial<Appointment> = {
+      clientName: editClientName.trim(),
+      date: editDate,
+      serviceIds: [service.id],
+      serviceNames: [service.name],
+      totalDurationMinutes: service.durationMinutes,
+      endTime,
+      totalPrice,
+      remainingPrice: Math.max(0, totalPrice - (editing.depositPaid || 0) - (editing.discountPrice || 0))
+    };
+    setSaving(true);
+    try {
+      const updated = await CloudAppointmentService.updateDetails(editing.id, changes, currentUser);
+      StorageService.saveAppointment(updated, false);
+      setAppointments(StorageService.getAppointments());
+      setEditing(null);
+      alert('Lançamento atualizado e sincronizado com a agenda.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível editar o lançamento.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (apt: Appointment) => {
+    if (!confirm(`Excluir o lançamento de ${apt.clientName}?\n\nEle será retirado do relatório e o horário será removido da agenda.`)) return;
+    setSaving(true);
+    try {
+      const updated = await CloudAppointmentService.updateStatus(
+        apt.id,
+        'cancelado_coworking',
+        currentUser,
+        'Lançamento excluído do relatório financeiro pela equipe LEV.'
+      );
+      StorageService.saveAppointment(updated, false);
+      setAppointments(StorageService.getAppointments());
+      alert('Lançamento excluído e agendas sincronizadas.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível excluir o lançamento.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Export CSV Helper
   const handleExportCSV = () => {
@@ -244,6 +315,7 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
                 <th className="pb-3 text-right">Valor Total</th>
                 <th className="pb-3 text-right">Sinal Pago</th>
                 <th className="pb-3 text-center">Status</th>
+                <th className="pb-3 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#E6D7C3]/60 text-[#3D312A]">
@@ -268,12 +340,59 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
                       {apt.paymentStatus.toUpperCase()}
                     </span>
                   </td>
+                  <td className="py-3 text-right">
+                    <div className="inline-flex items-center gap-1.5">
+                      <button onClick={() => openEdit(apt)} disabled={saving} className="p-2 rounded-lg border border-[#D8C29D] text-[#8C6D46] hover:bg-[#F5EFE6] disabled:opacity-50" title="Editar lançamento" aria-label="Editar lançamento">
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button onClick={() => void handleDelete(apt)} disabled={saving} className="p-2 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 disabled:opacity-50" title="Excluir lançamento" aria-label="Excluir lançamento">
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {editing && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Editar lançamento financeiro">
+          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#E6D7C3] shadow-2xl p-5 space-y-5">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <span className="text-[11px] font-semibold text-[#8C6D46] uppercase tracking-widest">Relatório Financeiro (MEI)</span>
+                <h2 className="font-serif text-xl font-semibold text-[#3D312A]">Editar lançamento</h2>
+              </div>
+              <button onClick={() => setEditing(null)} className="p-2 rounded-lg hover:bg-[#F5EFE6]" aria-label="Fechar"><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-4">
+              <label className="block text-xs font-semibold text-[#6B574B]">Cliente
+                <input value={editClientName} onChange={event => setEditClientName(event.target.value)} maxLength={120} className="mt-1.5 w-full rounded-xl border border-[#D8C29D] px-3 py-2.5 text-sm text-[#3D312A] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/40" />
+              </label>
+              <label className="block text-xs font-semibold text-[#6B574B]">Data do atendimento
+                <input type="date" value={editDate} onChange={event => setEditDate(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#D8C29D] px-3 py-2.5 text-sm text-[#3D312A] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/40" />
+              </label>
+              <label className="block text-xs font-semibold text-[#6B574B]">Serviço executado
+                <select value={editServiceId} onChange={event => setEditServiceId(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#D8C29D] px-3 py-2.5 text-sm text-[#3D312A] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/40">
+                  <option value="">Selecione</option>
+                  {services.filter(item => item.professionalId === editing.professionalId && item.active).map(item => (
+                    <option key={item.id} value={item.id}>{item.name} — {formatCurrency(item.promotionalPrice ?? item.price)}</option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <div className="flex justify-end gap-2">
+              <button onClick={() => setEditing(null)} disabled={saving} className="px-4 py-2.5 rounded-xl border border-[#D8C29D] text-xs font-semibold text-[#6B574B]">Cancelar</button>
+              <button onClick={() => void handleSaveEdit()} disabled={saving || !editClientName.trim() || !editDate || !editServiceId} className="px-4 py-2.5 rounded-xl bg-[#3D312A] text-white text-xs font-semibold inline-flex items-center gap-2 disabled:opacity-50">
+                <Save className="w-4 h-4" /> {saving ? 'Salvando...' : 'Salvar alterações'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
