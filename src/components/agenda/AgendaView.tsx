@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Appointment, Professional, Service, User, ScheduleBlock, AppointmentStatus, PaymentStatus } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
-import { formatCurrency, formatDateBR, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
+import { formatCurrency, formatDateBR, getDayOfWeekName, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -327,7 +327,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
       {/* Date Navigator & Filters Bar */}
       <div className="p-4 bg-[#0a0a0a] rounded-2xl border border-white/10 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         {/* Date Selector */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={() => changeDate(-1)}
             className="p-2 rounded-xl border border-white/10 bg-[#050505] text-white/70 hover:text-[#c4b491] hover:border-[#c4b491]/40"
@@ -348,8 +348,8 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
           >
             <ChevronRight className="w-4 h-4" />
           </button>
-          <span className="text-xs font-serif font-medium text-[#c4b491] hidden sm:inline">
-            {formatDateBR(selectedDate)}
+          <span className="w-full sm:w-auto text-xs font-serif font-medium text-[#c4b491] text-center sm:text-left capitalize">
+            {getDayOfWeekName(selectedDate)} · {formatDateBR(selectedDate)}
           </span>
         </div>
 
@@ -400,7 +400,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
         <div className="bg-[#0a0a0a] rounded-2xl border border-white/10 shadow-2xs overflow-hidden">
           <div className="px-4 py-3 border-b border-white/10 flex items-center justify-between gap-3">
             <div>
-              <p className="text-sm font-serif font-semibold text-white">Agenda LEV · {formatDateBR(selectedDate)}</p>
+              <p className="text-sm font-serif font-semibold text-white capitalize">
+                Agenda LEV · {getDayOfWeekName(selectedDate)} · {formatDateBR(selectedDate)}
+              </p>
               <p className="text-[11px] text-white/45 mt-0.5">Deslize horizontalmente para visualizar todas as profissionais.</p>
             </div>
             <button
