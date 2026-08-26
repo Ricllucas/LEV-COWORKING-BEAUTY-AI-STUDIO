@@ -161,14 +161,27 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
     setSelectedApt(null);
   };
 
-  const handleSaveCancellation = () => {
+  const handleSaveCancellation = async () => {
     if (!selectedApt || !cancelReason) {
       alert("Informe o motivo do cancelamento.");
       return;
     }
-    StorageService.cancelAppointment(selectedApt.id, cancelReason, currentUser.role === 'cliente');
-    setIsCancelOpen(false);
-    setSelectedApt(null);
+    try {
+      const updated = await CloudAppointmentService.updateStatus(
+        selectedApt.id,
+        'cancelado_coworking',
+        currentUser,
+        cancelReason
+      );
+      StorageService.saveAppointment(updated, false);
+      setAppointments(current => current.map(item => item.id === updated.id ? updated : item));
+      setIsCancelOpen(false);
+      setSelectedApt(null);
+      setCancelReason('');
+      alert('Atendimento cancelado. O horário foi liberado e removido do Google Agenda.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível cancelar o atendimento.');
+    }
   };
 
   const handleSaveBlock = () => {
@@ -243,8 +256,8 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
       prof_nayara: 'border-[#a98d7a]/80 bg-[#342923]/95 text-[#f5e9e1]'
     };
     const statusEffect = appointment.status === 'aguardando_confirmacao'
-      ? ' border-dashed'
-      : '';
+        ? ' border-dashed'
+        : '';
     return `${tones[appointment.professionalId] || 'border-[#c4b491]/80 bg-[#332d24]/95 text-[#f7f0e5]'}${statusEffect}`;
   };
 

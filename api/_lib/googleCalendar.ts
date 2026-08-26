@@ -78,9 +78,41 @@ export const syncGoogleCalendarEvent = async (appointment: any) => {
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   if (['cancelado_cliente', 'cancelado_coworking'].includes(appointment.status)) {
-    const response = await fetch(`${baseUrl}/${eventId}`, { method: 'DELETE', headers });
-    if (!response.ok && response.status !== 404 && response.status !== 410) throw new Error(`O Google Agenda recusou o cancelamento (${response.status}).`);
-    return { action: 'deleted', eventId };
+    const calendarIds = [...new Set([calendarId, process.env.GOOGLE_CALENDAR_ID].filter(Boolean))] as string[];
+    let deletedCount = 0;
+
+    for (const targetCalendarId of calendarIds) {
+      const targetBaseUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(targetCalendarId)}/events`;
+      const direct = await fetch(`${targetBaseUrl}/${eventId}`, { method: 'DELETE', headers });
+      if (direct.ok) deletedCount += 1;
+      if (!direct.ok && direct.status !== 404 && direct.status !== 410) {
+        throw new Error(`O Google Agenda recusou o cancelamento (${direct.status}).`);
+      }
+
+      const queries = [
+        `privateExtendedProperty=${encodeURIComponent(`levAppointmentId=${appointment.id}`)}`,
+        `q=${encodeURIComponent(appointment.id)}`
+      ];
+      const foundIds = new Set<string>();
+      for (const query of queries) {
+        const lookup = await fetch(`${targetBaseUrl}?${query}&showDeleted=false&maxResults=50`, { headers });
+        if (!lookup.ok) continue;
+        const result = await lookup.json() as { items?: Array<{ id?: string; description?: string; extendedProperties?: { private?: { levAppointmentId?: string } } }> };
+        for (const item of result.items || []) {
+          const matches = item.extendedProperties?.private?.levAppointmentId === appointment.id
+            || item.description?.includes(`Agendamento LEV: ${appointment.id}`);
+          if (item.id && matches && item.id !== eventId) foundIds.add(item.id);
+        }
+      }
+      for (const legacyId of foundIds) {
+        const removal = await fetch(`${targetBaseUrl}/${encodeURIComponent(legacyId)}`, { method: 'DELETE', headers });
+        if (removal.ok) deletedCount += 1;
+        if (!removal.ok && removal.status !== 404 && removal.status !== 410) {
+          throw new Error(`O Google Agenda recusou a remoção do evento antigo (${removal.status}).`);
+        }
+      }
+    }
+    return { action: 'deleted', eventId, deletedCount };
   }
 
   const services = Array.isArray(appointment.serviceNames) ? appointment.serviceNames.join(', ') : 'Atendimento LEV';

@@ -86,7 +86,7 @@ export const CloudAppointmentService = {
     return result.appointment;
   },
 
-  async updateStatus(appointmentId: string, status: Appointment['status'], user: User): Promise<Appointment> {
+  async updateStatus(appointmentId: string, status: Appointment['status'], user: User, cancellationReason?: string): Promise<Appointment> {
     let accessToken = await getFreshAccessToken(user.role);
     if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente para atualizar o atendimento.');
 
@@ -96,7 +96,7 @@ export const CloudAppointmentService = {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`
       },
-      body: JSON.stringify({ appointmentId, status })
+      body: JSON.stringify({ appointmentId, status, cancellationReason })
     });
 
     let response = await request(accessToken);
