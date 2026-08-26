@@ -32,6 +32,51 @@ export default async function handler(req: any, res: any) {
     }
 
     let appointment = rows[0].payload;
+    if (input?.changes) {
+      const changes = input.changes;
+      const text = (value: unknown, max: number) => typeof value === 'string' ? value.trim().slice(0, max) : undefined;
+      const clientName = text(changes.clientName, 120);
+      const date = text(changes.date, 10);
+      const startTime = text(changes.startTime, 5);
+      const endTime = text(changes.endTime, 5);
+      const serviceIds = Array.isArray(changes.serviceIds) ? changes.serviceIds.filter((v: unknown) => typeof v === 'string').slice(0, 20) : undefined;
+      const serviceNames = Array.isArray(changes.serviceNames) ? changes.serviceNames.filter((v: unknown) => typeof v === 'string').map((v: string) => v.slice(0, 120)).slice(0, 20) : undefined;
+
+      if (clientName !== undefined && !clientName) return json(res, 400, { error: 'Informe o nome da cliente.' });
+      if (date !== undefined && !/^\d{4}-\d{2}-\d{2}$/.test(date)) return json(res, 400, { error: 'Data inválida.' });
+      if (startTime !== undefined && !/^\d{2}:\d{2}$/.test(startTime)) return json(res, 400, { error: 'Horário inicial inválido.' });
+      if (endTime !== undefined && !/^\d{2}:\d{2}$/.test(endTime)) return json(res, 400, { error: 'Horário final inválido.' });
+      if (serviceIds !== undefined && serviceIds.length === 0) return json(res, 400, { error: 'Selecione ao menos um serviço.' });
+
+      const updatedAt = new Date().toISOString();
+      const numeric = (value: unknown, fallback: number) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
+      appointment = {
+        ...appointment,
+        id: rows[0].id,
+        professionalId: rows[0].professional_id,
+        ...(clientName !== undefined ? { clientName } : {}),
+        ...(date !== undefined ? { date } : {}),
+        ...(startTime !== undefined ? { startTime } : {}),
+        ...(endTime !== undefined ? { endTime } : {}),
+        ...(serviceIds !== undefined ? { serviceIds } : {}),
+        ...(serviceNames !== undefined ? { serviceNames } : {}),
+        totalDurationMinutes: numeric(changes.totalDurationMinutes, appointment.totalDurationMinutes),
+        totalPrice: numeric(changes.totalPrice, appointment.totalPrice),
+        remainingPrice: numeric(changes.remainingPrice, appointment.remainingPrice),
+        updatedAt
+      };
+      const updateResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ payload: appointment, date: appointment.date, updated_at: updatedAt })
+      });
+      if (!updateResponse.ok) return json(res, 502, { error: 'Não foi possível salvar as alterações do lançamento.' });
+    }
     if (input?.status) {
       if (!allowedStatuses.has(input.status)) return json(res, 400, { error: 'Status do atendimento inválido.' });
       const updatedAt = new Date().toISOString();
