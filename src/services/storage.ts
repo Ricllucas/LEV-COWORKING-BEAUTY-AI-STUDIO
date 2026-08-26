@@ -30,7 +30,7 @@ const STORAGE_KEYS = {
   SETTINGS: 'lev_coworking_settings_v1',
   BRAND_ASSETS_VERSION: 'lev_brand_logo_2026_08_05_v2',
   PROFESSIONALS: 'lev_coworking_professionals_v10',
-  PIX_KEYS_VERSION: 'lev_pix_keys_2026_08_04',
+  PIX_KEYS_VERSION: 'lev_pix_keys_2026_08_25',
   PROFESSIONAL_CONTACT_VERSION: 'lev_professional_contact_2026_08_05',
   PROFESSIONAL_WORKDAYS_VERSION: 'lev_professional_workdays_2026_08_24',
   SERVICES: 'lev_coworking_services_v2',
@@ -434,7 +434,7 @@ export class StorageService {
     const officialPixKeys: Record<string, string> = {
       prof_elisangela: '(41)992461203',
       prof_talitha: '(41)999983228',
-      prof_nayara: '(41)996556742'
+      prof_nayara: '61573046000194'
     };
     const shouldMigratePixKeys = !localStorage.getItem(STORAGE_KEYS.PIX_KEYS_VERSION);
     const shouldMigrateContact = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_CONTACT_VERSION);
@@ -460,7 +460,12 @@ export class StorageService {
         ? {
             ...p.workingHours,
             0: { ...p.workingHours?.[0], active: false, startTime: '09:00', endTime: '18:00' },
-            1: { ...p.workingHours?.[1], active: false, startTime: '09:00', endTime: '18:00' },
+            1: {
+              ...p.workingHours?.[1],
+              active: false,
+              startTime: '09:00',
+              endTime: '18:00'
+            },
             2: { ...p.workingHours?.[2], active: true, startTime: '09:00', endTime: '18:00' },
             3: { ...p.workingHours?.[3], active: true, startTime: '09:00', endTime: '18:00' },
             4: { ...p.workingHours?.[4], active: true, startTime: '09:00', endTime: '18:00' },
