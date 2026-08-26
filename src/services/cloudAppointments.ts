@@ -113,6 +113,33 @@ export const CloudAppointmentService = {
     return result.appointment;
   },
 
+  async updateDetails(appointmentId: string, changes: Partial<Appointment>, user: User): Promise<Appointment> {
+    let accessToken = await getFreshAccessToken(user.role);
+    if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente para editar o lançamento.');
+
+    const request = (token: string) => fetch('/api/calendar/appointment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ appointmentId, changes })
+    });
+
+    let response = await request(accessToken);
+    if (response.status === 401) {
+      accessToken = await forceRefreshAccessToken(user.role);
+      if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente para editar o lançamento.');
+      response = await request(accessToken);
+    }
+
+    const result = await response.json().catch(() => ({})) as { appointment?: Appointment; error?: string };
+    if (!response.ok || !result.appointment) {
+      throw new Error(result.error || 'Não foi possível salvar as alterações do lançamento.');
+    }
+    return result.appointment;
+  },
+
   async list(user: User): Promise<Appointment[]> {
     config();
     const token = await getFreshAccessToken(user.role);
