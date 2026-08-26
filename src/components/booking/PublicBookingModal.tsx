@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Professional, Service, Client, Appointment } from '../../types';
+import { Professional, Service, Client, Appointment, User } from '../../types';
 import { StorageService } from '../../services/storage';
 import { getAvailableSlots, SlotAvailability } from '../../utils/scheduleHelper';
 import { formatCurrency, formatDateBR, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
@@ -14,14 +14,17 @@ interface PublicBookingModalProps {
   onClose: () => void;
   initialProfId?: string;
   initialServiceId?: string;
+  currentUser?: User;
 }
 
 export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
   isOpen,
   onClose,
   initialProfId,
-  initialServiceId
+  initialServiceId,
+  currentUser
 }) => {
+  const isStaffBooking = currentUser?.role === 'profissional' || currentUser?.role === 'admin';
   const [step, setStep] = useState<number>(1);
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [services, setServices] = useState<Service[]>([]);
@@ -100,13 +103,13 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       const blocks = StorageService.getScheduleBlocks();
 
       if (prof) {
-        const slots = getAvailableSlots(selectedDate, prof, selSrvs, existingApts, blocks);
+        const slots = getAvailableSlots(selectedDate, prof, selSrvs, existingApts, blocks, isStaffBooking);
         setAvailableSlots(slots);
       }
     } else {
       setAvailableSlots([]);
     }
-  }, [selectedProfId, selectedDate, selectedServiceIds, onlineAppointments]);
+  }, [selectedProfId, selectedDate, selectedServiceIds, onlineAppointments, isStaffBooking]);
 
   if (!isOpen) return null;
 
@@ -192,7 +195,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
 
     try {
       setIsSubmitting(true);
-      await StorageService.saveAppointmentToCloud(newApt);
+      await StorageService.saveAppointmentToCloud(newApt, currentUser);
       StorageService.saveAppointment(newApt, false);
       StorageService.syncClientsFromAppointments([newApt]);
       setConfirmedApt(newApt);
