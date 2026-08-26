@@ -68,28 +68,6 @@ export const CloudAppointmentService = {
     }
   },
 
-  async updateStatus(appointmentId: string, status: Appointment['status'], user: User): Promise<Appointment> {
-    let accessToken = await getFreshAccessToken(user.role);
-    if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente para atualizar o atendimento.');
-
-    const request = (token: string) => fetch('/api/appointments/update-status', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ appointmentId, status })
-    });
-
-    let response = await request(accessToken);
-    if (response.status === 401) {
-      accessToken = await forceRefreshAccessToken(user.role);
-      if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente para atualizar o atendimento.');
-      response = await request(accessToken);
-    }
-
-    const result = await response.json().catch(() => ({})) as { appointment?: Appointment; error?: string };
-    if (!response.ok || !result.appointment) throw new Error(result.error || 'Não foi possível fixar o status do atendimento.');
-    return result.appointment;
-  },
-
   async listPublicByDate(date: string): Promise<Appointment[]> {
     const response = await fetch(`/api/appointments/availability?date=${encodeURIComponent(date)}`);
     if (!response.ok) throw new Error('Não foi possível consultar os horários disponíveis.');
@@ -105,6 +83,33 @@ export const CloudAppointmentService = {
     });
     const result = await response.json().catch(() => ({})) as { appointment?: Appointment; error?: string };
     if (!response.ok || !result.appointment) throw new Error(result.error || 'Não foi possível cancelar o agendamento.');
+    return result.appointment;
+  },
+
+  async updateStatus(appointmentId: string, status: Appointment['status'], user: User): Promise<Appointment> {
+    let accessToken = await getFreshAccessToken(user.role);
+    if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente para atualizar o atendimento.');
+
+    const request = (token: string) => fetch('/api/calendar/appointment', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ appointmentId, status })
+    });
+
+    let response = await request(accessToken);
+    if (response.status === 401) {
+      accessToken = await forceRefreshAccessToken(user.role);
+      if (!accessToken) throw new Error('Sua sessão expirou. Entre novamente para atualizar o atendimento.');
+      response = await request(accessToken);
+    }
+
+    const result = await response.json().catch(() => ({})) as { appointment?: Appointment; error?: string };
+    if (!response.ok || !result.appointment) {
+      throw new Error(result.error || 'Não foi possível fixar o status do atendimento.');
+    }
     return result.appointment;
   },
 
