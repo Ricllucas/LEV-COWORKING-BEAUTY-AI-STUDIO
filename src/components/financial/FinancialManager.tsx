@@ -34,7 +34,7 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
   const [editing, setEditing] = useState<Appointment | null>(null);
   const [editClientName, setEditClientName] = useState('');
   const [editDate, setEditDate] = useState('');
-  const [editServiceId, setEditServiceId] = useState('');
+  const [editServiceIds, setEditServiceIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
   // Selected MEI tab
@@ -80,23 +80,36 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
     setEditing(apt);
     setEditClientName(apt.clientName);
     setEditDate(apt.date);
-    setEditServiceId(apt.serviceIds[0] || '');
+    setEditServiceIds(apt.serviceIds || []);
+  };
+
+  const toggleEditService = (serviceId: string) => {
+    setEditServiceIds(current => current.includes(serviceId)
+      ? current.filter(id => id !== serviceId)
+      : [...current, serviceId]
+    );
   };
 
   const handleSaveEdit = async () => {
-    if (!editing || !editClientName.trim() || !editDate || !editServiceId) return;
-    const service = services.find(item => item.id === editServiceId && item.professionalId === editing.professionalId);
-    if (!service) return alert('Selecione um serviço válido desta profissional.');
+    if (!editing || !editClientName.trim() || !editDate || editServiceIds.length === 0) return;
+    const selectedServices = services.filter(item =>
+      editServiceIds.includes(item.id) && item.professionalId === editing.professionalId
+    );
+    if (selectedServices.length !== editServiceIds.length) return alert('Selecione apenas serviços válidos desta profissional.');
+    const totalDurationMinutes = selectedServices.reduce((total, service) => total + service.durationMinutes, 0);
     const [hour, minute] = editing.startTime.split(':').map(Number);
-    const end = new Date(2000, 0, 1, hour, minute + service.durationMinutes);
+    const end = new Date(2000, 0, 1, hour, minute + totalDurationMinutes);
     const endTime = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
-    const totalPrice = service.promotionalPrice ?? service.price;
+    const totalPrice = selectedServices.reduce(
+      (total, service) => total + (service.promotionalPrice ?? service.price),
+      0
+    );
     const changes: Partial<Appointment> = {
       clientName: editClientName.trim(),
       date: editDate,
-      serviceIds: [service.id],
-      serviceNames: [service.name],
-      totalDurationMinutes: service.durationMinutes,
+      serviceIds: selectedServices.map(service => service.id),
+      serviceNames: selectedServices.map(service => service.name),
+      totalDurationMinutes,
       endTime,
       totalPrice,
       remainingPrice: Math.max(0, totalPrice - (editing.depositPaid || 0) - (editing.discountPrice || 0))
@@ -374,18 +387,36 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
               <label className="block text-xs font-semibold text-[#6B574B]">Data do atendimento
                 <input type="date" value={editDate} onChange={event => setEditDate(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#D8C29D] px-3 py-2.5 text-sm text-[#3D312A] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/40" />
               </label>
-              <label className="block text-xs font-semibold text-[#6B574B]">Serviço executado
-                <select value={editServiceId} onChange={event => setEditServiceId(event.target.value)} className="mt-1.5 w-full rounded-xl border border-[#D8C29D] px-3 py-2.5 text-sm text-[#3D312A] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/40">
-                  <option value="">Selecione</option>
-                  {services.filter(item => item.professionalId === editing.professionalId && item.active).map(item => (
-                    <option key={item.id} value={item.id}>{item.name} — {formatCurrency(item.promotionalPrice ?? item.price)}</option>
-                  ))}
-                </select>
-              </label>
+              <fieldset>
+                <legend className="text-xs font-semibold text-[#6B574B]">Serviços executados</legend>
+                <p className="mt-1 text-[11px] text-[#8C6D46]">Selecione um ou mais serviços realizados.</p>
+                <div className="mt-2 max-h-52 overflow-y-auto rounded-xl border border-[#D8C29D] divide-y divide-[#E6D7C3]">
+                  {services.filter(item => item.professionalId === editing.professionalId && item.active).map(item => {
+                    const checked = editServiceIds.includes(item.id);
+                    return (
+                      <label key={item.id} className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer transition-colors ${checked ? 'bg-[#F5EFE6]' : 'bg-white hover:bg-[#FDFBF7]'}`}>
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={() => toggleEditService(item.id)}
+                          className="h-4 w-4 accent-[#8C6D46]"
+                        />
+                        <span className="min-w-0 flex-1 text-sm text-[#3D312A]">{item.name}</span>
+                        <span className="shrink-0 text-xs font-semibold text-[#8C6D46]">{formatCurrency(item.promotionalPrice ?? item.price)}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                {editServiceIds.length > 0 && (
+                  <p className="mt-2 text-xs font-semibold text-[#6B574B]">
+                    {editServiceIds.length} serviço(s) selecionado(s)
+                  </p>
+                )}
+              </fieldset>
             </div>
             <div className="flex justify-end gap-2">
               <button onClick={() => setEditing(null)} disabled={saving} className="px-4 py-2.5 rounded-xl border border-[#D8C29D] text-xs font-semibold text-[#6B574B]">Cancelar</button>
-              <button onClick={() => void handleSaveEdit()} disabled={saving || !editClientName.trim() || !editDate || !editServiceId} className="px-4 py-2.5 rounded-xl bg-[#3D312A] text-white text-xs font-semibold inline-flex items-center gap-2 disabled:opacity-50">
+              <button onClick={() => void handleSaveEdit()} disabled={saving || !editClientName.trim() || !editDate || editServiceIds.length === 0} className="px-4 py-2.5 rounded-xl bg-[#3D312A] text-white text-xs font-semibold inline-flex items-center gap-2 disabled:opacity-50">
                 <Save className="w-4 h-4" /> {saving ? 'Salvando...' : 'Salvar alterações'}
               </button>
             </div>
