@@ -5,7 +5,8 @@ import { applyApiSecurity, rateLimit, validJsonRequest } from '../_lib/security.
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const allowedStatuses = new Set([
   'aguardando_confirmacao', 'confirmado', 'cliente_presente', 'em_atendimento',
-  'concluido', 'reagendamento_solicitado', 'reagendado', 'nao_compareceu'
+  'concluido', 'reagendamento_solicitado', 'reagendado', 'nao_compareceu',
+  'cancelado_cliente', 'cancelado_coworking'
 ]);
 
 export default async function handler(req: any, res: any) {
@@ -34,7 +35,14 @@ export default async function handler(req: any, res: any) {
     if (input?.status) {
       if (!allowedStatuses.has(input.status)) return json(res, 400, { error: 'Status do atendimento inválido.' });
       const updatedAt = new Date().toISOString();
-      appointment = { ...appointment, id: rows[0].id, professionalId: rows[0].professional_id, status: input.status, updatedAt };
+      appointment = {
+        ...appointment,
+        id: rows[0].id,
+        professionalId: rows[0].professional_id,
+        status: input.status,
+        cancellationReason: input.cancellationReason || appointment.cancellationReason,
+        updatedAt
+      };
       const updateResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}`, {
         method: 'PATCH',
         headers: {
