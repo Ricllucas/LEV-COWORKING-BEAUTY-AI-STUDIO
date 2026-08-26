@@ -46,11 +46,16 @@ const config = () => {
 export const CloudAppointmentService = {
   isConfigured: () => Boolean(SUPABASE_URL && SUPABASE_KEY),
 
-  async save(appointment: Appointment, _user?: User): Promise<void> {
+  async save(appointment: Appointment, user?: User): Promise<void> {
     config();
+    const isStaff = user?.role === 'admin' || user?.role === 'profissional';
+    const accessToken = isStaff ? await getFreshAccessToken(user.role) : undefined;
     const response = await fetch('/api/appointments/create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
+      },
       body: JSON.stringify(appointment)
     });
 
