@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Appointment, Professional, Service, User, ScheduleBlock, AppointmentStatus, PaymentStatus } from '../../types';
 import { StorageService } from '../../services/storage';
+import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { formatCurrency, formatDateBR, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
 import {
   Calendar as CalendarIcon,
@@ -112,13 +113,16 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
     return true;
   });
 
-  const handleStatusChange = (aptId: string, newStatus: AppointmentStatus) => {
+  const handleStatusChange = async (aptId: string, newStatus: AppointmentStatus) => {
     const apt = StorageService.getAppointmentById(aptId);
-    if (apt) {
-      apt.status = newStatus;
-      apt.updatedAt = new Date().toISOString();
-      StorageService.saveAppointment(apt);
-      setSelectedApt({ ...apt });
+    if (!apt) return;
+    try {
+      const updated = await CloudAppointmentService.updateStatus(aptId, newStatus, currentUser);
+      StorageService.saveAppointment(updated, false);
+      setAppointments(current => current.map(item => item.id === updated.id ? updated : item));
+      setSelectedApt({ ...updated });
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível atualizar o atendimento.');
     }
   };
 
