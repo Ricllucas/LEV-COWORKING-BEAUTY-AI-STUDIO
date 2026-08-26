@@ -317,6 +317,7 @@ function Application() {
         onClose={() => setIsBookingModalOpen(false)}
         initialProfId={bookingProfId}
         initialServiceId={bookingServiceId}
+        currentUser={currentUser}
       />
 
       <NotificationDrawer

@@ -645,8 +645,8 @@ export class StorageService {
     return this.getAppointments().find(a => a.id === id);
   }
 
-  static async saveAppointmentToCloud(apt: Appointment): Promise<void> {
-    await CloudAppointmentService.save(apt);
+  static async saveAppointmentToCloud(apt: Appointment, user?: User): Promise<void> {
+    await CloudAppointmentService.save(apt, user);
   }
 
   static async syncAppointmentsFromCloud(user: User): Promise<void> {
