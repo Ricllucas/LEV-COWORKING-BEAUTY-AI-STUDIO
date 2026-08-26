@@ -23,7 +23,8 @@ export function getAvailableSlots(
   professional: Professional,
   selectedServices: Service[],
   existingAppointments: Appointment[],
-  scheduleBlocks: ScheduleBlock[]
+  scheduleBlocks: ScheduleBlock[],
+  allowStaffMonday = false
 ): SlotAvailability[] {
   if (!dateStr || !professional) return [];
 
@@ -44,7 +45,10 @@ export function getAvailableSlots(
     }
   }
 
-  const workConfig = professional.workingHours?.[dayOfWeek];
+  const savedWorkConfig = professional.workingHours?.[dayOfWeek];
+  const workConfig = dayOfWeek === 1 && allowStaffMonday
+    ? { ...savedWorkConfig, active: true, startTime: '09:00', endTime: '18:00' }
+    : savedWorkConfig;
   if (!workConfig || !workConfig.active) {
     return [{ time: "Fechado", available: false, reason: "A profissional não atende neste dia da semana" }];
   }
