@@ -1,6 +1,11 @@
 export type BookingService = { id: string; name: string; professionalId: string; professionalName: string; duration: number; price: number };
 export const PROFESSIONALS = [{ id: 'prof_elisangela', name: 'Elisangela' }, { id: 'prof_talitha', name: 'Talitha' }, { id: 'prof_nayara', name: 'Nayara' }];
 export const BOOKING_SERVICES: BookingService[] = [
+  ['srv_tal_10','Extensão de Cílios','prof_talitha','Talitha',90,170],
+  ['srv_tal_11','Manutenção de Cílios','prof_talitha','Talitha',60,120],
+  ['srv_tal_12','Lash Lifting','prof_talitha','Talitha',90,150],
+  ['srv_tal_13','Design de Sobrancelhas com Henna','prof_talitha','Talitha',30,65],
+  ['srv_tal_14','Depilação de Buço','prof_talitha','Talitha',15,35],
   ['srv_eli_1','Mão Tradicional','prof_elisangela','Elisangela',40,35],
   ['srv_eli_2','Pedicure Tradicional','prof_elisangela','Elisangela',45,45],
   ['srv_eli_5','Mão — Esmaltação em Gel','prof_elisangela','Elisangela',50,55],

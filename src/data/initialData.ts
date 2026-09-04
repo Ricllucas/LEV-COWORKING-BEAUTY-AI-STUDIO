@@ -356,6 +356,57 @@ export const INITIAL_SERVICES: Service[] = [
     preInstructions: "Evite bebidas alcoólicas e produtos ácidos na pele nas 48 horas anteriores."
   },
 
+  {
+    id: "srv_tal_10", catalogVersion: 2026090401,
+    name: "Extensão de Cílios", category: "Sobrancelhas & Cílios",
+    description: "Aplicação de extensões para realçar o comprimento e o volume dos cílios, com acabamento personalizado para valorizar o olhar.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 90, bufferAfterMinutes: 0, price: 170,
+    depositRequired: true, depositValue: 51,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+  {
+    id: "srv_tal_11", catalogVersion: 2026090401,
+    name: "Manutenção de Cílios", category: "Sobrancelhas & Cílios",
+    description: "Reposição e ajuste das extensões de cílios, conforme avaliação profissional, para renovar o acabamento e manter a harmonia do olhar.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 60, bufferAfterMinutes: 0, price: 120,
+    depositRequired: true, depositValue: 36,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+  {
+    id: "srv_tal_12", catalogVersion: 2026090401,
+    name: "Lash Lifting", category: "Sobrancelhas & Cílios",
+    description: "Curvatura e valorização dos cílios naturais, proporcionando um olhar mais destacado sem aplicação de extensões.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 90, bufferAfterMinutes: 0, price: 150,
+    depositRequired: true, depositValue: 45,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+  {
+    id: "srv_tal_13", catalogVersion: 2026090401,
+    name: "Design de Sobrancelhas com Henna", category: "Sobrancelhas & Cílios",
+    description: "Modelagem das sobrancelhas com aplicação de henna para realçar o desenho e preencher visualmente pequenas falhas.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 30, bufferAfterMinutes: 0, price: 65,
+    depositRequired: true, depositValue: 19.5,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+  {
+    id: "srv_tal_14", catalogVersion: 2026090401,
+    name: "Depilação de Buço", category: "Sobrancelhas & Cílios",
+    description: "Remoção dos pelos da região do buço, com técnica e cuidados adequados à pele, para um acabamento delicado.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 15, bufferAfterMinutes: 0, price: 35,
+    depositRequired: true, depositValue: 10.5,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+
   // Nayara - Unhas em Gel
   {
     id: "srv_nay_1",
