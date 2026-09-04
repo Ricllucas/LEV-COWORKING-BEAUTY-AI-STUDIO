@@ -532,6 +532,19 @@ export class StorageService {
   static getServices(): Service[] {
     let current = getStored<Service[]>(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
 
+    // Inclusão aditiva: preserva serviços e alterações anteriores da profissional.
+    if (!localStorage.getItem('lev_talitha_additions_20260904')) {
+      const additions = INITIAL_SERVICES.filter(service =>
+        ['srv_tal_10', 'srv_tal_11', 'srv_tal_12', 'srv_tal_13', 'srv_tal_14'].includes(service.id)
+      );
+      const ids = new Set(current.map(service => service.id));
+      current = [...current, ...additions.filter(service => !ids.has(service.id))];
+      setStored(STORAGE_KEYS.SERVICES, current);
+      localStorage.setItem('lev_talitha_additions_20260904', '1');
+    }
+
+
+
     try {
       if (!localStorage.getItem(STORAGE_KEYS.ELISANGELA_CATALOG_VERSION)) {
         const otherProfessionals = current.filter(service => service.professionalId !== 'prof_elisangela');
