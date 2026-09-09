@@ -166,7 +166,10 @@ export const CoworkingProvider: React.FC<CoworkingProviderProps> = ({ children }
   }, [state.clients]);
 
   React.useEffect(() => {
-    state.appointments.forEach(a => StorageService.saveAppointment(a));
+    // O servidor é a fonte oficial dos agendamentos. O estado carregado atualiza
+    // somente o cache local; reenviá-lo ao endpoint de criação gera novos IDs e
+    // pode recriar um atendimento que já foi cancelado.
+    state.appointments.forEach(a => StorageService.saveAppointment(a, false));
   }, [state.appointments]);
 
   const value: CoworkingContextType = { state, dispatch };

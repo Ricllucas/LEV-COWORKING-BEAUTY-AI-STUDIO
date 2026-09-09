@@ -740,7 +740,7 @@ export class StorageService {
     setStored(STORAGE_KEYS.CLIENTS, clients);
   }
 
-  static saveAppointment(apt: Appointment, syncCloud: boolean = true): void {
+  static saveAppointment(apt: Appointment, syncCloud: boolean = false): void {
     const list = this.getAppointments();
     const index = list.findIndex(a => a.id === apt.id);
     if (index >= 0) {
