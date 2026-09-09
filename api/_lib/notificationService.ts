@@ -18,11 +18,20 @@ interface NotificationData {
 
 const getProfessionalPhone = (professionalId: string): string => {
   const phones: Record<string, string> = {
-    'prof_elisangela': '5541984979940',
-    'prof_talitha': '5541984979940',
-    'prof_nayara': '5541984979940'
+    'prof_elisangela': '5541992461203',
+    'prof_talitha': '5541999983228',
+    'prof_nayara': '5541996556742'
   };
   return phones[professionalId] || '';
+};
+
+const getProfessionalIdByName = (professionalName: string): string => {
+  const professionalIds: Record<string, string> = {
+    Elisangela: 'prof_elisangela',
+    Talitha: 'prof_talitha',
+    Nayara: 'prof_nayara'
+  };
+  return professionalIds[professionalName] || '';
 };
 
 const sendWhatsAppNotification = async (
@@ -73,19 +82,12 @@ Status: ${cancelled ? '❌ Cancelado pela cliente' : appointmentData.status === 
   }
 };
 
-const notifyAllProfessionals = async (
+const notifyScheduledProfessional = async (
   appointmentData: NotificationData,
   scheduledProfessionalId: string
 ): Promise<void> => {
-  const allProfessionals = ['prof_elisangela', 'prof_talitha', 'prof_nayara'];
-
-  for (const profId of allProfessionals) {
-    const phone = getProfessionalPhone(profId);
-    if (phone) {
-      await sendWhatsAppNotification(phone, appointmentData.professionalName, appointmentData);
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-  }
+  const phone = getProfessionalPhone(scheduledProfessionalId);
+  if (phone) await sendWhatsAppNotification(phone, appointmentData.professionalName, appointmentData);
 };
 
 export const notificationService = {
@@ -94,7 +96,7 @@ export const notificationService = {
     professionalId: string
   ): Promise<{ sent: boolean; error?: string }> => {
     try {
-      await notifyAllProfessionals(appointmentData, professionalId);
+      await notifyScheduledProfessional(appointmentData, professionalId);
       return { sent: true };
     } catch (error) {
       console.error('Notification service error:', error);
@@ -109,7 +111,8 @@ export const notificationService = {
     appointmentData: NotificationData
   ): Promise<{ sent: boolean; error?: string }> => {
     try {
-      await notifyAllProfessionals(appointmentData, appointmentData.professionalName);
+      const professionalId = getProfessionalIdByName(appointmentData.professionalName);
+      if (professionalId) await notifyScheduledProfessional(appointmentData, professionalId);
       return { sent: true };
     } catch (error) {
       console.error('Status change notification error:', error);
@@ -120,3 +123,4 @@ export const notificationService = {
     }
   }
 };
+
