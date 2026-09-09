@@ -18,7 +18,8 @@ import {
   Lock,
   ChevronLeft,
   ChevronRight,
-  MoreVertical
+  MoreVertical,
+  Pencil
 } from 'lucide-react';
 
 interface AgendaViewProps {
@@ -58,6 +59,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
 
   const [isCancelOpen, setIsCancelOpen] = useState<boolean>(false);
   const [cancelReason, setCancelReason] = useState<string>('');
+  const [isServiceEditOpen, setIsServiceEditOpen] = useState(false);
+  const [editServiceIds, setEditServiceIds] = useState<string[]>([]);
+  const [isSavingServices, setIsSavingServices] = useState(false);
 
   const [isBlockModalOpen, setIsBlockModalOpen] = useState<boolean>(false);
   const [blockProfId, setBlockProfId] = useState<string>(professionals[0]?.id || 'prof_elisangela');
@@ -181,6 +185,39 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
       alert('Atendimento cancelado. O horário foi liberado e removido do Google Agenda.');
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível cancelar o atendimento.');
+    }
+  };
+
+  const handleSaveServices = async () => {
+    if (!selectedApt || editServiceIds.length === 0) return;
+    const selectedServices = services.filter(service =>
+      service.professionalId === selectedApt.professionalId && editServiceIds.includes(service.id)
+    );
+    if (selectedServices.length !== editServiceIds.length) return alert('Selecione apenas serviços desta profissional.');
+    const totalDurationMinutes = selectedServices.reduce((total, service) => total + service.durationMinutes, 0);
+    const totalPrice = selectedServices.reduce((total, service) => total + (service.promotionalPrice ?? service.price), 0);
+    const [hour, minute] = selectedApt.startTime.split(':').map(Number);
+    const end = new Date(2000, 0, 1, hour, minute + totalDurationMinutes);
+    const endTime = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
+    setIsSavingServices(true);
+    try {
+      const updated = await CloudAppointmentService.updateDetails(selectedApt.id, {
+        serviceIds: selectedServices.map(service => service.id),
+        serviceNames: selectedServices.map(service => service.name),
+        totalDurationMinutes,
+        totalPrice,
+        endTime,
+        remainingPrice: Math.max(0, totalPrice - (selectedApt.depositPaid || 0) - (selectedApt.discountPrice || 0))
+      }, currentUser);
+      StorageService.saveAppointment(updated, false);
+      setAppointments(current => current.map(item => item.id === updated.id ? updated : item));
+      setSelectedApt(updated);
+      setIsServiceEditOpen(false);
+      alert('Serviços atualizados na Agenda LEV e no Google Agenda.');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Não foi possível atualizar os serviços.');
+    } finally {
+      setIsSavingServices(false);
     }
   };
 
@@ -578,6 +615,12 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                   <span>Serviço(s):</span>
                   <span className="font-semibold text-white">{selectedApt.serviceNames.join(', ')}</span>
                 </div>
+                <button
+                  onClick={() => { setEditServiceIds(selectedApt.serviceIds); setIsServiceEditOpen(true); }}
+                  className="w-full mt-2 py-2 rounded-lg border border-[#c4b491]/40 text-[#c4b491] hover:bg-[#c4b491]/10 text-xs font-semibold flex items-center justify-center gap-1.5"
+                >
+                  <Pencil className="w-3.5 h-3.5" /> Alterar ou incluir serviços
+                </button>
                 <div className="flex justify-between text-white/60">
                   <span>Data e Horário:</span>
                   <span className="font-semibold text-white">{formatDateBR(selectedApt.date)} das {selectedApt.startTime} às {selectedApt.endTime}</span>
@@ -712,6 +755,30 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                   Cancelar
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {selectedApt && isServiceEditOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80">
+          <div className="bg-[#0a0a0a] rounded-2xl max-w-lg w-full border border-white/10 p-5 text-white max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-start gap-3 mb-4">
+              <div><span className="text-[10px] uppercase tracking-widest text-[#c4b491]">Editar agendamento</span><h3 className="font-serif text-lg">Serviços de {selectedApt.clientName}</h3></div>
+              <button onClick={() => setIsServiceEditOpen(false)} className="p-2"><X className="w-5 h-5" /></button>
+            </div>
+            <p className="text-xs text-white/55 mb-3">Selecione um ou mais serviços realizados pela {selectedApt.professionalName}.</p>
+            <div className="rounded-xl border border-white/10 divide-y divide-white/10 max-h-72 overflow-y-auto">
+              {services.filter(service => service.professionalId === selectedApt.professionalId && service.active).map(service => (
+                <label key={service.id} className={`flex items-center gap-3 p-3 cursor-pointer ${editServiceIds.includes(service.id) ? 'bg-[#c4b491]/15' : ''}`}>
+                  <input type="checkbox" checked={editServiceIds.includes(service.id)} onChange={() => setEditServiceIds(ids => ids.includes(service.id) ? ids.filter(id => id !== service.id) : [...ids, service.id])} className="accent-[#c4b491]" />
+                  <span className="flex-1 text-sm">{service.name}</span><span className="text-xs text-[#c4b491]">{formatCurrency(service.promotionalPrice ?? service.price)}</span>
+                </label>
+              ))}
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button onClick={() => setIsServiceEditOpen(false)} className="px-4 py-2 rounded-xl border border-white/10 text-xs">Cancelar</button>
+              <button onClick={() => void handleSaveServices()} disabled={editServiceIds.length === 0 || isSavingServices} className="px-4 py-2 rounded-xl bg-[#c4b491] text-black text-xs font-semibold disabled:opacity-50">{isSavingServices ? 'Salvando...' : 'Salvar serviços'}</button>
             </div>
           </div>
         </div>
