@@ -45,12 +45,30 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
     return StorageService.subscribeStorage(load);
   }, []);
 
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const monthStart = `${todayStr.slice(0, 7)}-01`;
+
+  const deduplicateAppointments = (items: Appointment[]) => {
+    const unique = new Map<string, Appointment>();
+    [...items]
+      .sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)))
+      .forEach(appointment => {
+        const key = [
+          appointment.professionalId,
+          appointment.date,
+          appointment.startTime,
+          appointment.clientPhone.replace(/\D/g, ''),
+          appointment.serviceNames.join('|')
+        ].join('::');
+        if (!unique.has(key)) unique.set(key, appointment);
+      });
+    return Array.from(unique.values());
+  };
 
   // Filter appointments based on role & user
-  let filteredApts = appointments;
+  let filteredApts = deduplicateAppointments(appointments);
   if (currentUser.role === 'profissional' && currentUser.professionalId) {
-    filteredApts = appointments.filter(a => a.professionalId === currentUser.professionalId);
+    filteredApts = filteredApts.filter(a => a.professionalId === currentUser.professionalId);
   }
 
   const todayApts = filteredApts.filter(a => a.date === todayStr && a.status !== 'cancelado_cliente' && a.status !== 'cancelado_coworking');
@@ -58,7 +76,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
   // Revenue Calculations
   const calcRevenueForProf = (profId?: string) => {
-    let list = appointments.filter(a => a.status !== 'cancelado_cliente' && a.status !== 'cancelado_coworking');
+    let list = deduplicateAppointments(appointments).filter(a =>
+      a.status === 'concluido' && a.date >= monthStart && a.date <= todayStr
+    );
     if (profId) list = list.filter(a => a.professionalId === profId);
     return list.reduce((acc, a) => acc + (a.totalPrice - (a.discountPrice || 0)), 0);
   };
@@ -169,7 +189,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
               : formatCurrency(calcRevenueForProf(currentUser.professionalId))}
           </span>
           <span className="text-[11px] text-white/60 mt-1 block">
-            Controle separado por MEI individual
+            Atendimentos concluídos no mês atual
           </span>
         </div>
       </div>
@@ -191,7 +211,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {professionals.map(p => {
-              const profApts = appointments.filter(a => a.professionalId === p.id && a.status !== 'cancelado_cliente' && a.status !== 'cancelado_coworking');
+              const profApts = deduplicateAppointments(appointments).filter(a =>
+                a.professionalId === p.id && a.status === 'concluido' && a.date >= monthStart && a.date <= todayStr
+              );
               const revenue = profApts.reduce((acc, a) => acc + a.totalPrice, 0);
 
               return (
