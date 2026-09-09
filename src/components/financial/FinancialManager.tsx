@@ -63,18 +63,42 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
     setActiveMeiTab(currentUser.professionalId || 'prof_elisangela');
   }
 
-  // Filter appointments
-  let filteredApts = appointments.filter(a => a.status !== 'cancelado_cliente' && a.status !== 'cancelado_coworking');
+  // Aplica o período selecionado e remove cópias históricas do mesmo atendimento.
+  const now = new Date();
+  const today = now.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const monthStart = `${today.slice(0, 7)}-01`;
+  const weekStartDate = new Date(`${today}T12:00:00`);
+  weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
+  const weekStart = weekStartDate.toLocaleDateString('en-CA');
+  let filteredApts = appointments.filter(a => {
+    if (a.status === 'cancelado_cliente' || a.status === 'cancelado_coworking') return false;
+    if (dateFilter === 'mes') return a.date >= monthStart && a.date <= today;
+    if (dateFilter === 'semana') return a.date >= weekStart && a.date <= today;
+    return true;
+  });
 
   if (activeMeiTab !== 'todos') {
     filteredApts = filteredApts.filter(a => a.professionalId === activeMeiTab);
   }
 
-  // Calculate Metrics
-  const totalRevenue = filteredApts.reduce((acc, a) => acc + (a.totalPrice - (a.discountPrice || 0)), 0);
+  const uniqueAppointments = new Map<string, Appointment>();
+  [...filteredApts]
+    .sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)))
+    .forEach(appointment => {
+      const phone = appointment.clientPhone.replace(/\D/g, '');
+      const key = [appointment.professionalId, appointment.date, appointment.startTime, phone, appointment.serviceNames.join('|')].join('::');
+      if (!uniqueAppointments.has(key)) uniqueAppointments.set(key, appointment);
+    });
+  filteredApts = Array.from(uniqueAppointments.values()).sort((a, b) =>
+    `${b.date} ${b.startTime}`.localeCompare(`${a.date} ${a.startTime}`)
+  );
+
+  // Faturamento é serviço efetivamente realizado, não agenda futura.
+  const completedApts = filteredApts.filter(a => a.status === 'concluido');
+  const totalRevenue = completedApts.reduce((acc, a) => acc + (a.totalPrice - (a.discountPrice || 0)), 0);
   const totalDepositReceived = filteredApts.reduce((acc, a) => acc + (a.depositPaid || 0), 0);
-  const totalPending = filteredApts.reduce((acc, a) => acc + (a.remainingPrice || 0), 0);
-  const averageTicket = filteredApts.length > 0 ? totalRevenue / filteredApts.length : 0;
+  const totalPending = filteredApts.filter(a => a.status !== 'concluido').reduce((acc, a) => acc + (a.remainingPrice || 0), 0);
+  const averageTicket = completedApts.length > 0 ? totalRevenue / completedApts.length : 0;
 
   const openEdit = (apt: Appointment) => {
     setEditing(apt);
@@ -245,7 +269,7 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
             {formatCurrency(totalRevenue)}
           </span>
           <span className="text-[11px] text-[#6B574B] mt-1 block">
-            {filteredApts.length} atendimento(s)
+            {completedApts.length} atendimento(s) concluído(s)
           </span>
         </div>
 
