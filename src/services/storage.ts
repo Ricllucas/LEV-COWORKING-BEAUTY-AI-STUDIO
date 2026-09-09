@@ -670,10 +670,9 @@ export class StorageService {
   static async syncAppointmentsFromCloud(user: User): Promise<void> {
     if (!CloudAppointmentService.isConfigured() || (user.role !== 'admin' && user.role !== 'profissional')) return;
     const cloudAppointments = await CloudAppointmentService.list(user);
-    const localAppointments = this.getAppointments();
-    const merged = new Map(localAppointments.map(appointment => [appointment.id, appointment]));
-    cloudAppointments.forEach(appointment => merged.set(appointment.id, appointment));
-    const synchronizedAppointments = Array.from(merged.values()).sort((a, b) =>
+    // O servidor é a fonte oficial. Substituir o cache remove registros órfãos
+    // ou antigos que poderiam voltar a bloquear horários já liberados.
+    const synchronizedAppointments = [...cloudAppointments].sort((a, b) =>
       `${a.date} ${a.startTime}`.localeCompare(`${b.date} ${b.startTime}`)
     );
     setStored(
