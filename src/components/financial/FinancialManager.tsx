@@ -44,7 +44,10 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
       : 'todos'
   );
 
-  const [dateFilter, setDateFilter] = useState<'mes' | 'semana' | 'tudo'>('mes');
+  const currentDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const [dateFilter, setDateFilter] = useState<'mes' | 'dia'>('mes');
+  const [selectedMonth, setSelectedMonth] = useState(currentDate.slice(0, 7));
+  const [selectedDay, setSelectedDay] = useState(currentDate);
 
   useEffect(() => {
     const load = () => {
@@ -63,18 +66,11 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
     setActiveMeiTab(currentUser.professionalId || 'prof_elisangela');
   }
 
-  // Aplica o período selecionado e remove cópias históricas do mesmo atendimento.
-  const now = new Date();
-  const today = now.toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
-  const monthStart = `${today.slice(0, 7)}-01`;
-  const weekStartDate = new Date(`${today}T12:00:00`);
-  weekStartDate.setDate(weekStartDate.getDate() - weekStartDate.getDay());
-  const weekStart = weekStartDate.toLocaleDateString('en-CA');
+  // Todos os indicadores e lançamentos respeitam o mês ou dia selecionado.
   let filteredApts = appointments.filter(a => {
     if (a.status === 'cancelado_cliente' || a.status === 'cancelado_coworking') return false;
-    if (dateFilter === 'mes') return a.date >= monthStart && a.date <= today;
-    if (dateFilter === 'semana') return a.date >= weekStart && a.date <= today;
-    return true;
+    if (dateFilter === 'mes') return a.date.startsWith(selectedMonth);
+    return a.date === selectedDay;
   });
 
   if (activeMeiTab !== 'todos') {
@@ -257,6 +253,26 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
             </button>
           );
         })}
+      </div>
+
+      {/* Period filter */}
+      <div className="p-4 rounded-2xl bg-white border border-[#E6D7C3] shadow-2xs flex flex-col sm:flex-row sm:items-end gap-3">
+        <div className="flex-1">
+          <span className="text-xs font-semibold text-[#8C6D46] uppercase tracking-wider block mb-2">Período do relatório</span>
+          <div className="inline-flex rounded-xl border border-[#D8C29D] bg-[#FDFBF7] p-1">
+            <button onClick={() => setDateFilter('mes')} className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${dateFilter === 'mes' ? 'bg-[#3D312A] text-white' : 'text-[#6B574B]'}`}>Por mês</button>
+            <button onClick={() => setDateFilter('dia')} className={`px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${dateFilter === 'dia' ? 'bg-[#3D312A] text-white' : 'text-[#6B574B]'}`}>Por dia</button>
+          </div>
+        </div>
+        <label className="text-xs font-semibold text-[#6B574B]">
+          {dateFilter === 'mes' ? 'Escolha o mês' : 'Escolha o dia'}
+          <input
+            type={dateFilter === 'mes' ? 'month' : 'date'}
+            value={dateFilter === 'mes' ? selectedMonth : selectedDay}
+            onChange={event => dateFilter === 'mes' ? setSelectedMonth(event.target.value) : setSelectedDay(event.target.value)}
+            className="mt-1.5 block w-full sm:w-56 rounded-xl border border-[#D8C29D] bg-white px-3 py-2.5 text-sm text-[#3D312A] focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/40"
+          />
+        </label>
       </div>
 
       {/* Metrics Cards */}
