@@ -96,10 +96,10 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       const prof = StorageService.getProfessionalById(selectedProfId);
       const allSrvs = StorageService.getServices();
       const selSrvs = allSrvs.filter(s => selectedServiceIds.includes(s.id));
-      const localApts = StorageService.getAppointments();
-      const existingApts = [...localApts, ...onlineAppointments].filter(
-        (apt, index, all) => all.findIndex(item => item.id === apt.id) === index
-      );
+      // A disponibilidade deve vir da fonte oficial. Somar o cache deste
+      // aparelho pode manter cópias antigas/canceladas bloqueando horários que
+      // já estão livres no servidor.
+      const existingApts = onlineAppointments;
       const blocks = StorageService.getScheduleBlocks();
 
       if (prof) {
