@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Appointment, Professional, Service } from '../../types';
 import { StorageService } from '../../services/storage';
 import { formatCurrency, formatDateBR } from '../../utils/formatters';
+import { auditUniqueAppointments, currentMonthRange } from '../../utils/appointmentAudit';
 import { Logo } from '../brand/Logo';
 import { Printer, Download, BarChart2, TrendingUp, Users, Calendar } from 'lucide-react';
 
@@ -18,10 +19,13 @@ export const ReportsView: React.FC = () => {
     return StorageService.subscribeStorage(load);
   }, []);
 
-  const totalApts = appointments.length;
-  const completedApts = appointments.filter(a => a.status === 'concluido').length;
-  const canceledApts = appointments.filter(a => a.status === 'cancelado_cliente' || a.status === 'cancelado_coworking').length;
-  const totalRevenue = appointments.filter(a => a.status !== 'cancelado_cliente' && a.status !== 'cancelado_coworking').reduce((acc, a) => acc + a.totalPrice, 0);
+  const { today, monthStart } = currentMonthRange();
+  const auditedAppointments = auditUniqueAppointments(appointments).filter(a => a.date >= monthStart && a.date <= today);
+  const completedAppointments = auditedAppointments.filter(a => a.status === 'concluido');
+  const totalApts = auditedAppointments.length;
+  const completedApts = completedAppointments.length;
+  const canceledApts = auditedAppointments.filter(a => a.status === 'cancelado_cliente' || a.status === 'cancelado_coworking').length;
+  const totalRevenue = completedAppointments.reduce((acc, a) => acc + (a.totalPrice - (a.discountPrice || 0)), 0);
 
   const handlePrint = () => {
     window.print();
@@ -55,6 +59,7 @@ export const ReportsView: React.FC = () => {
           <div className="text-right text-xs text-white/60">
             <span className="font-semibold text-white block">Relatório Consolidado de Gestão</span>
             <span>Gerado em: {new Date().toLocaleDateString('pt-BR')}</span>
+            <span className="block">Competência: {formatDateBR(monthStart)} a {formatDateBR(today)}</span>
           </div>
         </div>
 
@@ -85,8 +90,8 @@ export const ReportsView: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {professionals.map(p => {
-              const profApts = appointments.filter(a => a.professionalId === p.id && a.status !== 'cancelado_cliente' && a.status !== 'cancelado_coworking');
-              const rev = profApts.reduce((acc, a) => acc + a.totalPrice, 0);
+              const profApts = completedAppointments.filter(a => a.professionalId === p.id);
+              const rev = profApts.reduce((acc, a) => acc + (a.totalPrice - (a.discountPrice || 0)), 0);
 
               return (
                 <div key={p.id} className="p-4 rounded-xl border border-white/10 bg-[#050505] space-y-1">
@@ -96,6 +101,7 @@ export const ReportsView: React.FC = () => {
                     <span>Total MEI:</span>
                     <span>{formatCurrency(rev)}</span>
                   </div>
+                  <span className="text-[10px] text-white/50">{profApts.length} atendimento(s) concluído(s) no mês</span>
                 </div>
               );
             })}
@@ -105,3 +111,4 @@ export const ReportsView: React.FC = () => {
     </div>
   );
 };
+
