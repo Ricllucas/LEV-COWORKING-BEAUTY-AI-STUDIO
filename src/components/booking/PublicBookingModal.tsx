@@ -200,6 +200,19 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       StorageService.syncClientsFromAppointments([newApt]);
       setConfirmedApt(newApt);
       setStep(5); // Final Success Step
+      if (!isStaffBooking) {
+        const whatsappMessage = generateWhatsAppMessage('solicitacao_agendamento_cliente', {
+          clientName: newApt.clientName,
+          professionalName: newApt.professionalName,
+          serviceName: newApt.serviceNames.join(', '),
+          date: newApt.date,
+          time: newApt.startTime,
+          totalPrice: newApt.totalPrice,
+          depositValue: totalDeposit,
+          pixKey: currentProf.pixKey
+        });
+        window.location.assign(buildWhatsAppLink(StorageService.getSettings().whatsapp, whatsappMessage));
+      }
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível concluir o agendamento.');
     } finally {
@@ -646,12 +659,13 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                 <a
                   href={buildWhatsAppLink(
                     StorageService.getSettings().whatsapp,
-                    generateWhatsAppMessage('confirmacao', {
+                    generateWhatsAppMessage('solicitacao_agendamento_cliente', {
                       clientName: confirmedApt.clientName,
                       professionalName: confirmedApt.professionalName,
                       serviceName: confirmedApt.serviceNames.join(', '),
                       date: confirmedApt.date,
                       time: confirmedApt.startTime,
+                      totalPrice: confirmedApt.totalPrice,
                       depositValue: totalDeposit,
                       pixKey: currentProf?.pixKey
                     })
@@ -661,7 +675,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                   className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs transition-colors shadow-md flex items-center justify-center gap-2"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Abrir WhatsApp para Enviar Comprovante
+                  Abrir mensagem pronta no WhatsApp
                 </a>
 
                 <button
