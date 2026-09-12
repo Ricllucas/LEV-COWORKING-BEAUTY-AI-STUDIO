@@ -71,12 +71,18 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
         setStep(1);
       }
 
-      // Auto-fill logged in user info
+      // Profissionais e administradores agendam em nome de clientes. Nunca
+      // reaproveite os dados do usuário da equipe ou da cliente anterior.
       const u = StorageService.getCurrentUser();
-      if (u && u.id !== 'visitor_guest') {
+      if (u?.role === 'cliente') {
         if (u.name) setClientName(u.name);
         if (u.phone) setClientPhone(u.phone);
         if (u.email) setClientEmail(u.email);
+      } else {
+        setClientName('');
+        setClientPhone('');
+        setClientEmail('');
+        setClientNotes('');
       }
     }
   }, [isOpen, initialProfId, initialServiceId]);
@@ -139,7 +145,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
 
     // Get or create client
     const existingClients = StorageService.getClients();
-    let client = existingClients.find(c => c.phone.replace(/\D/g, '') === clientPhone.replace(/\D/g, ''));
+    const normalizedClientPhone = clientPhone.replace(/\D/g, '');
+    let client = existingClients.find(c => c.phone.replace(/\D/g, '') === normalizedClientPhone);
 
     if (!client) {
       const newClient: Client = {
@@ -161,6 +168,25 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       client = StorageService.saveClient(newClient);
     }
 
+    // O formulário atual é a fonte correta do agendamento. Um cadastro antigo
+    // com o mesmo telefone não pode trocar silenciosamente o nome informado.
+    const appointmentClient: Client = {
+      ...client,
+      fullName: clientName.trim(),
+      phone: clientPhone.trim(),
+      whatsapp: clientPhone.trim(),
+      email: clientEmail.trim() || client.email
+    };
+    if (
+      appointmentClient.fullName !== client.fullName ||
+      appointmentClient.phone !== client.phone ||
+      appointmentClient.email !== client.email
+    ) {
+      client = StorageService.saveClient(appointmentClient);
+    } else {
+      client = appointmentClient;
+    }
+
     // Create Appointment
     const [h, m] = selectedTime.split(':').map(Number);
     const endMinutes = h * 60 + m + totalDuration;
@@ -171,8 +197,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     const newApt: Appointment = {
       id: "apt_" + Date.now(),
       clientId: client.id,
-      clientName: client.fullName,
-      clientPhone: client.phone,
+      clientName: clientName.trim(),
+      clientPhone: clientPhone.trim(),
       clientEmail: client.email,
       professionalId: currentProf.id,
       professionalName: currentProf.name,
@@ -240,6 +266,10 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     setStep(1);
     setConfirmedApt(null);
     setSelectedTime('');
+    setClientName('');
+    setClientPhone('');
+    setClientEmail('');
+    setClientNotes('');
     onClose();
   };
 
