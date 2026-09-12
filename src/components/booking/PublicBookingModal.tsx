@@ -226,20 +226,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       StorageService.syncClientsFromAppointments([newApt]);
       setConfirmedApt(newApt);
       setStep(5); // Final Success Step
-      if (!isStaffBooking) {
-        const whatsappMessage = generateWhatsAppMessage('solicitacao_agendamento_cliente', {
-          clientName: newApt.clientName,
-          professionalName: newApt.professionalName,
-          serviceName: newApt.serviceNames.join(', '),
-          date: newApt.date,
-          time: newApt.startTime,
-          totalPrice: newApt.totalPrice,
-          depositValue: totalDeposit,
-          pixKey: currentProf.pixKey
-        });
-        const professionalWhatsApp = PROFESSIONAL_WHATSAPP_NUMBERS[newApt.professionalId];
-        window.location.assign(buildWhatsAppLink(professionalWhatsApp || StorageService.getSettings().whatsapp, whatsappMessage));
-      }
+      // Mensagem automática será enviada via API para a profissional
+      // Sem necessidade de ação do cliente
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível concluir o agendamento.');
     } finally {
@@ -687,48 +675,12 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
               )}
 
               <div className="pt-4 flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-3">
-                <a
-                  href={buildWhatsAppLink(
-                    PROFESSIONAL_WHATSAPP_NUMBERS[confirmedApt.professionalId] || StorageService.getSettings().whatsapp,
-                    generateWhatsAppMessage('solicitacao_agendamento_cliente', {
-                      clientName: confirmedApt.clientName,
-                      professionalName: confirmedApt.professionalName,
-                      serviceName: confirmedApt.serviceNames.join(', '),
-                      date: confirmedApt.date,
-                      time: confirmedApt.startTime,
-                      totalPrice: confirmedApt.totalPrice,
-                      depositValue: totalDeposit,
-                      pixKey: currentProf?.pixKey
-                    })
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs transition-colors shadow-md flex items-center justify-center gap-2"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Avisar {confirmedApt.professionalName} no WhatsApp
-                </a>
-                <a
-                  href={buildWhatsAppLink(
-                    StorageService.getSettings().whatsapp,
-                    generateWhatsAppMessage('solicitacao_agendamento_cliente', {
-                      clientName: confirmedApt.clientName,
-                      professionalName: confirmedApt.professionalName,
-                      serviceName: confirmedApt.serviceNames.join(', '),
-                      date: confirmedApt.date,
-                      time: confirmedApt.startTime,
-                      totalPrice: confirmedApt.totalPrice,
-                      depositValue: totalDeposit,
-                      pixKey: currentProf?.pixKey
-                    })
-                  )}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-white font-medium text-xs border border-white/10 transition-colors flex items-center justify-center gap-2"
-                >
-                  <MessageCircle className="w-4 h-4" />
-                  Enviar também para a LEV
-                </a>
+                <div className="text-center text-sm text-emerald-400 font-medium">
+                  ✅ Agendamento confirmado!
+                </div>
+                <div className="text-center text-xs text-white/60">
+                  Notificação automaticamente enviada para {confirmedApt.professionalName}
+                </div>
 
                 <button
                   onClick={resetModal}
