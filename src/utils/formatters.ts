@@ -4,6 +4,12 @@
 
 export const OFFICIAL_WHATSAPP_NUMBER = '5541984979940';
 
+export const PROFESSIONAL_WHATSAPP_NUMBERS: Record<string, string> = {
+  prof_nayara: '5541996556742',
+  prof_elisangela: '5541992461203',
+  prof_talitha: '5541999983228'
+};
+
 export function formatCurrency(value: number): string {
   if (isNaN(value)) return "R$ 0,00";
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
