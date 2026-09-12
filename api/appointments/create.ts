@@ -1,4 +1,5 @@
 import { createUnifiedAppointment } from '../_lib/appointmentService.js';
+import { sendProfessionalNotification } from '../_lib/whatsappProfessionalNotification.js';
 import { applyApiSecurity, rateLimit, safeText, secureId, validJsonRequest } from '../_lib/security.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
@@ -25,10 +26,27 @@ export default async function handler(req: any, res: any) {
     };
     if (!allowedProfessionals.has(appointment.professionalId)) return json(res, 400, { error: 'Profissional inválida.' });
     if (!valid(appointment)) return json(res, 400, { error: 'Dados do agendamento incompletos.' });
-    return json(res, 201, await createUnifiedAppointment(
+    const result = await createUnifiedAppointment(
       { ...appointment, source: staff ? 'staff' : 'site' },
       { allowStaffMonday: Boolean(staff) }
-    ));
+    );
+
+    // Enviar notificação automática para a profissional via WhatsApp
+    if (result?.appointment) {
+      await sendProfessionalNotification({
+        clientName: appointment.clientName,
+        clientPhone: appointment.clientPhone,
+        professionalId: appointment.professionalId,
+        professionalName: appointment.professionalName,
+        date: appointment.date,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        serviceNames: appointment.serviceNames,
+        totalPrice: appointment.totalPrice,
+      });
+    }
+
+    return json(res, 201, result);
   } catch (error) {
     const status = Number((error as Error & { status?: number })?.status || 500);
     return json(res, status, { error: error instanceof Error ? error.message : 'Não foi possível salvar o agendamento.' });
