@@ -56,6 +56,10 @@ export function generateWhatsAppMessage(type: string, data: {
   const dateFormatted = formatDateBR(data.date);
 
   switch (type) {
+    case 'solicitacao_agendamento_cliente':
+      return `Olá! Sou *${data.clientName}* e acabei de solicitar um agendamento pelo site da LEV.\n\n👩‍💼 Profissional: *${data.professionalName}*\n💅 Serviço(s): *${data.serviceName}*\n📅 Data: *${dateFormatted}*\n⏰ Horário: *${data.time}*\n💰 Valor total: *${formatCurrency(data.totalPrice || 0)}*${data.depositValue ? `\n💳 Sinal: *${formatCurrency(data.depositValue)}*\n🔑 Chave Pix: *${data.pixKey || 'Consulte a LEV'}*` : ''}\n\nPor favor, confirme o recebimento da minha solicitação.${data.depositValue ? ' Enviarei o comprovante do sinal por aqui.' : ''}`;
+
+
     case 'confirmacao':
       return `Olá, ${data.clientName}! ✨ Seu atendimento com ${data.professionalName} no *${coworking}* está agendado para *${dateFormatted}* às *${data.time}* (${data.serviceName}).\n\nCaso precise de suporte ou dúvidas, estamos à disposição. Te esperamos! 🌸`;
 
