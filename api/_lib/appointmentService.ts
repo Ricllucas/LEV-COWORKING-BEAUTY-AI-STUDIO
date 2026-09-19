@@ -104,17 +104,23 @@ export const listAppointmentsByDate = async (date: string): Promise<UnifiedAppoi
   return rows.map(row => row.payload).filter(item => item && active(item.status));
 };
 
-export const assertAvailable = async (appointment: UnifiedAppointment, allowStaffMonday = false) => {
+export const assertAvailable = async (
+  appointment: UnifiedAppointment,
+  options?: { allowStaffMonday?: boolean; allowStaffRetrospective?: boolean }
+) => {
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
   const start = toMinutes(appointment.startTime); const end = toMinutes(appointment.endTime);
-  if (appointment.date < today || start < 9 * 60 || end > 18 * 60 || end <= start) {
+  const retrospectiveStaffEntry = options?.allowStaffRetrospective === true && appointment.date <= today;
+  const invalidDate = appointment.date < today && !retrospectiveStaffEntry;
+  const invalidHours = start < 9 * 60 || start >= 18 * 60 || end <= start || (!retrospectiveStaffEntry && end > 18 * 60);
+  if (invalidDate || invalidHours) {
     const error = new Error('Escolha uma data futura e um horário entre 09:00 e 18:00.');
     (error as Error & { status?: number }).status = 400;
     throw error;
   }
   const weekday = new Date(`${appointment.date}T12:00:00-03:00`).getDay();
   const worksThisDate = worksOnDate(appointment.professionalId, appointment.date)
-    || (allowStaffMonday && weekday === 1);
+    || (options?.allowStaffMonday === true && weekday === 1);
   if (!worksThisDate) {
     const error = new Error('Esta profissional atende de terça a sábado. Escolha outra data.');
     (error as Error & { status?: number }).status = 400;
@@ -147,11 +153,14 @@ export const availableStartTimes = async (date: string, duration: number, profes
   return result;
 };
 
-export const createUnifiedAppointment = async (appointment: UnifiedAppointment, options?: { allowStaffMonday?: boolean }) => {
+export const createUnifiedAppointment = async (
+  appointment: UnifiedAppointment,
+  options?: { allowStaffMonday?: boolean; allowStaffRetrospective?: boolean }
+) => {
   const payload = appointment.source === 'site' || !appointment.source
     ? await canonicalizePublicAppointment(appointment)
     : appointment;
-  await assertAvailable(payload, options?.allowStaffMonday === true);
+  await assertAvailable(payload, options);
   const { url, key } = config();
   const response = await fetch(`${url}/rest/v1/appointments?on_conflict=id`, {
     method: 'POST', headers: { ...authHeaders(key), 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },

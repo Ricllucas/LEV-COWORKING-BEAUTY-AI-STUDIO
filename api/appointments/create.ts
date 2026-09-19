@@ -28,7 +28,10 @@ export default async function handler(req: any, res: any) {
     if (!valid(appointment)) return json(res, 400, { error: 'Dados do agendamento incompletos.' });
     const result = await createUnifiedAppointment(
       { ...appointment, source: staff ? 'staff' : 'site' },
-      { allowStaffMonday: Boolean(staff) }
+      {
+        allowStaffMonday: Boolean(staff),
+        allowStaffRetrospective: Boolean(staff)
+      }
     );
 
     // Enviar notificação automática para a profissional via WhatsApp

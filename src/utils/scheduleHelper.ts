@@ -24,7 +24,7 @@ export function getAvailableSlots(
   selectedServices: Service[],
   existingAppointments: Appointment[],
   scheduleBlocks: ScheduleBlock[],
-  allowStaffMonday = false
+  staffMode = false
 ): SlotAvailability[] {
   if (!dateStr || !professional) return [];
 
@@ -46,7 +46,7 @@ export function getAvailableSlots(
   }
 
   const savedWorkConfig = professional.workingHours?.[dayOfWeek];
-  const workConfig = dayOfWeek === 1 && allowStaffMonday
+  const workConfig = dayOfWeek === 1 && staffMode
     ? { ...savedWorkConfig, active: true, startTime: '09:00', endTime: '18:00' }
     : savedWorkConfig;
   if (!workConfig || !workConfig.active) {
@@ -69,6 +69,8 @@ export function getAvailableSlots(
 
   const dayStartMinutes = timeToMinutes(workConfig.startTime);
   const dayEndMinutes = timeToMinutes(workConfig.endTime);
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const isRetrospectiveStaffEntry = staffMode && dateStr <= today;
 
   // Cada profissional possui agenda independente. Um compromisso bloqueia
   // somente os horários da profissional responsável pelo atendimento.
@@ -89,7 +91,15 @@ export function getAvailableSlots(
   // Generate slots every 30 minutes or 15 minutes step
   const step = 30;
 
-  for (let current = dayStartMinutes; current + serviceMinutes <= dayEndMinutes; current += step) {
+  // A equipe pode registrar posteriormente um atendimento que realmente
+  // começou antes do fechamento, mesmo que a duração avance após as 18h.
+  // Para clientes e agendamentos futuros, o serviço deve caber integralmente
+  // dentro do expediente.
+  const canStartAt = (current: number) => isRetrospectiveStaffEntry
+    ? current < dayEndMinutes
+    : current + serviceMinutes <= dayEndMinutes;
+
+  for (let current = dayStartMinutes; canStartAt(current); current += step) {
     const slotTimeStr = minutesToTime(current);
     const slotEndMinutes = current + totalOccupiedMinutes;
 
