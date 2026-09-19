@@ -445,7 +445,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                 </label>
                 <input
                   type="date"
-                  min={new Date().toISOString().split('T')[0]}
+                  min={isStaffBooking ? undefined : new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' })}
                   value={selectedDate}
                   onChange={e => setSelectedDate(e.target.value)}
                   className="w-full px-3.5 py-2 rounded-xl border border-white/10 bg-[#050505] text-xs font-medium text-white focus:outline-hidden focus:border-[#c4b491]"
