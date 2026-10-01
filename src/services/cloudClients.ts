@@ -33,14 +33,14 @@ const authorizedFetch = async (url: string, init?: RequestInit) => {
 
 export const CloudClientService = {
   async list(): Promise<Client[]> {
-    const response = await authorizedFetch('/api/clients/list', { cache: 'no-store' });
+    const response = await authorizedFetch('/api/clients', { cache: 'no-store' });
     const result = await response.json().catch(() => ({})) as { clients?: Client[]; error?: string };
     if (!response.ok) throw new Error(result.error || 'Não foi possível carregar a base compartilhada de clientes.');
     return result.clients || [];
   },
 
   async save(client: Client): Promise<Client> {
-    const response = await authorizedFetch('/api/clients/upsert', {
+    const response = await authorizedFetch('/api/clients', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(client)
