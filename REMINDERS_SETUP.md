@@ -1,8 +1,19 @@
 # 📱 Sistema de Lembretes Automáticos via WhatsApp - Setup Completo
 
+> ⚠️ **Atualização (30/09/2026):** o disparo agora é feito pelo **Supabase (pg_cron)**, não mais pelo Vercel Cron —
+> o plano gratuito da Vercel só permite cron diário. As seções abaixo que falam em `crons` no `vercel.json`
+> e em `supabase/reminders_tracking.sql` estão desatualizadas. Setup atual:
+>
+> 1. Gere um segredo (`openssl rand -hex 32`) e cadastre como `CRON_SECRET` nas Environment Variables da Vercel; faça redeploy.
+> 2. No SQL Editor do Supabase, rode `supabase/migrations/20260912_reminders.sql` (se ainda não rodou).
+> 3. No SQL Editor, guarde o mesmo segredo no Vault: `select vault.create_secret('SEU_SEGREDO', 'cron_secret');`
+> 4. Rode `supabase/migrations/20260930_reminders_cron.sql`.
+> 5. Confira as execuções em `select * from cron.job_run_details order by start_time desc limit 10;`
+>    e as respostas em `select status_code, content from net._http_response order by created desc limit 10;`
+
 ## 🎯 Resumo da Solução Implementada
 
-Seu projeto LEV Coworking agora tem **automação de lembretes via WhatsApp** usando Vercel Cron Jobs. O sistema:
+Seu projeto LEV Coworking agora tem **automação de lembretes via WhatsApp**. O sistema:
 
 ✅ Envia lembrete **1 dia antes** do agendamento  
 ✅ Envia lembrete **1 hora antes** do agendamento  
