@@ -10,6 +10,14 @@ export const PROFESSIONAL_WHATSAPP_NUMBERS: Record<string, string> = {
   prof_talitha: '5541999983228'
 };
 
+export function getProfessionalWhatsApp(id: string, contact?: { whatsapp?: string; phone?: string }): string {
+ const phone = [contact?.whatsapp, contact?.phone].map(v => (v || '').replace(/\D/g, '')).find(v => v.length >= 10 && v !== OFFICIAL_WHATSAPP_NUMBER && v !== OFFICIAL_WHATSAPP_NUMBER.slice(2));
+ return phone || PROFESSIONAL_WHATSAPP_NUMBERS[id] || '';
+}
+export function buildProfessionalWhatsAppLink(id: string, text: string, contact?: { whatsapp?: string; phone?: string }): string | undefined {
+ const phone = getProfessionalWhatsApp(id, contact);
+ return phone ? buildWhatsAppLink(phone, text) : undefined;
+}
 export function formatCurrency(value: number): string {
   if (isNaN(value)) return "R$ 0,00";
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -63,8 +71,7 @@ export function generateWhatsAppMessage(type: string, data: {
 
   switch (type) {
     case 'solicitacao_agendamento_cliente':
-      return `Olá! Sou *${data.clientName}* e acabei de solicitar um agendamento pelo site da LEV.\n\n👩‍💼 Profissional: *${data.professionalName}*\n💅 Serviço(s): *${data.serviceName}*\n📅 Data: *${dateFormatted}*\n⏰ Horário: *${data.time}*\n💰 Valor total: *${formatCurrency(data.totalPrice || 0)}*${data.depositValue ? `\n💳 Sinal: *${formatCurrency(data.depositValue)}*\n🔑 Chave Pix: *${data.pixKey || 'Consulte a LEV'}*` : ''}\n\nPor favor, confirme o recebimento da minha solicitação.${data.depositValue ? ' Enviarei o comprovante do sinal por aqui.' : ''}`;
-
+      return `Olá! Sou *${data.clientName}* e acabei de solicitar um agendamento pelo site da LEV.\n\n👩‍💼 Profissional: *${data.professionalName}*\n💅 Serviço(s): *${data.serviceName}*\n📅 Data: *${dateFormatted}*\n⏰ Horário: *${data.time}*\n💰 Valor total: *${formatCurrency(data.totalPrice || 0)}*${data.depositValue ? `\n💳 Sinal: *${formatCurrency(data.depositValue)}*\n🔑 Chave Pix: *${data.pixKey || 'Consulte a profissional'}*` : ''}\n\nPor favor, confirme o recebimento da minha solicitação.${data.depositValue ? ' Enviarei o comprovante do sinal por aqui.' : ''}`;
 
     case 'confirmacao':
       return `Olá, ${data.clientName}! ✨ Seu atendimento com ${data.professionalName} no *${coworking}* está agendado para *${dateFormatted}* às *${data.time}* (${data.serviceName}).\n\nCaso precise de suporte ou dúvidas, estamos à disposição. Te esperamos! 🌸`;
@@ -94,4 +101,3 @@ export function generateWhatsAppMessage(type: string, data: {
       return `Olá, ${data.clientName}! Entramos em contato do *${coworking}* sobre seu atendimento de ${data.serviceName} com ${data.professionalName}.`;
   }
 }
-

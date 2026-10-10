@@ -1,6 +1,5 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { notificationService } from '../_lib/notificationService.js';
-import { sendWhatsAppText } from '../_lib/whatsapp.js';
 import { applyApiSecurity, rateLimit, safeText, validJsonRequest } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
@@ -51,8 +50,6 @@ export default async function handler(req: any, res: any) {
       professionalName: updated.professionalName, serviceNames: updated.serviceNames,
       date: updated.date, startTime: updated.startTime, endTime: updated.endTime, status: updated.status
     }).catch(error => console.error('Cancellation notification error:', error));
-    sendWhatsAppText(digits(updated.clientPhone), `Seu agendamento LEV de ${updated.serviceNames.join(', ')} com ${updated.professionalName}, em ${updated.date} às ${updated.startTime}, foi cancelado. O horário já foi liberado.`)
-      .catch(error => console.error('Client cancellation WhatsApp error:', error));
     fetch(`${url}/rest/v1/whatsapp_conversations?appointment_id=eq.${encodeURIComponent(appointmentId)}`, {
       method: 'PATCH', headers: { ...headers, Prefer: 'return=minimal' },
       body: JSON.stringify({ status: 'encerrada', last_message: 'Agendamento cancelado pela cliente', updated_at: updated.updatedAt })

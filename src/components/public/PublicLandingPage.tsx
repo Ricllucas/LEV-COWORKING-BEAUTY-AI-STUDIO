@@ -3,7 +3,7 @@ import { Logo } from '../brand/Logo';
 import { Professional, Service, CoworkingSettings, Review, Appointment } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
-import { buildWhatsAppLink, formatCurrency, OFFICIAL_WHATSAPP_NUMBER } from '../../utils/formatters';
+import { formatCurrency, buildProfessionalWhatsAppLink } from '../../utils/formatters';
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
 import { compressImageToDataUrl } from '../../utils/imageCompressor';
@@ -130,15 +130,13 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           </p>
 
           <div className="mt-8 flex items-center justify-center">
-            <a
-              href={buildWhatsAppLink(OFFICIAL_WHATSAPP_NUMBER, 'Olá! Gostaria de agendar um atendimento no LEV Coworking Beauty.')}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button" onClick={() => onOpenBookingModal()}
               className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-[#c4b491] via-[#d6c7a7] to-[#b5a37f] hover:from-[#b5a37f] hover:to-[#a3926f] text-[#050505] font-semibold text-sm transition-all shadow-[0_0_25px_rgba(196,180,145,0.25)] flex items-center justify-center gap-2 group hover:scale-[1.02]"
             >
               <MessageCircle className="w-5 h-5 text-[#050505] group-hover:scale-110 transition-transform" />
-              Agendar pelo WhatsApp
-            </a>
+              Escolher profissional e agendar
+            </button>
           </div>
 
           {/* Highlights Badges */}
@@ -285,15 +283,12 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                   Montar Minha Experiência / Agendar
                 </button>
 
-                <a
-                  href={buildWhatsAppLink(OFFICIAL_WHATSAPP_NUMBER, 'Olá! Gostaria de informações sobre o Spa de Noivas e Pacote Completo de Beleza no LEV Beauty!')}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button type="button" onClick={() => onOpenBookingModal()}
                   className="px-6 py-3.5 rounded-xl bg-white/[0.05] border border-white/15 hover:bg-white/10 text-white font-medium text-xs transition-all flex items-center gap-2"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-400" />
                   Consultar Produção para Noivas
-                </a>
+                </button>
               </div>
             </div>
 
@@ -389,7 +384,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                   </button>
 
                   <a
-                    href={buildWhatsAppLink(OFFICIAL_WHATSAPP_NUMBER, `Olá! Gostaria de falar sobre os serviços de ${prof.name} no LEV Coworking Beauty.`)}
+                    href={buildProfessionalWhatsAppLink(prof.id, `Olá, ${prof.name}! Gostaria de falar sobre seus serviços.`, prof)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="w-full py-2 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] text-white/80 font-medium text-xs transition-colors text-center flex items-center justify-center gap-1.5"
@@ -582,18 +577,15 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
 
       {/* Floating WhatsApp booking launcher */}
       <div className="fixed bottom-20 right-4 z-20">
-        <a
-          href={buildWhatsAppLink(OFFICIAL_WHATSAPP_NUMBER, 'Olá! Gostaria de agendar um atendimento no LEV Coworking Beauty.')}
-          target="_blank"
-          rel="noopener noreferrer"
+        <button
+          type="button" onClick={() => onOpenBookingModal()}
           className="px-4 py-3 rounded-full bg-[#c4b491] hover:bg-[#b5a37f] text-[#050505] font-semibold text-xs shadow-xl flex items-center gap-2 transition-transform hover:scale-105"
-          title="Agendar pelo WhatsApp"
+          title="Escolher profissional e agendar"
         >
           <MessageCircle className="w-4 h-4" />
-          <span className="font-semibold">Agendar pelo WhatsApp</span>
-        </a>
+          <span className="font-semibold">Escolher profissional e agendar</span>
+        </button>
       </div>
     </div>
   );
 };
-

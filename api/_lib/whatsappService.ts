@@ -47,6 +47,7 @@ interface WebhookEvent {
 export const whatsappService = {
   // Enviar mensagem de texto simples
   sendMessage: async (recipientPhone: string, message: string): Promise<boolean> => {
+    return false; // Automação central desativada.
     try {
       const accessToken = requireEnv('WHATSAPP_ACCESS_TOKEN');
       const phoneNumberId = requireEnv('WHATSAPP_PHONE_NUMBER_ID');
@@ -87,6 +88,7 @@ export const whatsappService = {
     templateName: string,
     parameters: string[]
   ): Promise<boolean> => {
+    return false; // Automação central desativada.
     try {
       const accessToken = requireEnv('WHATSAPP_ACCESS_TOKEN');
       const phoneNumberId = requireEnv('WHATSAPP_PHONE_NUMBER_ID');

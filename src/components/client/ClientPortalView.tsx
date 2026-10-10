@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Appointment, Professional, Service } from '../../types';
 import { StorageService } from '../../services/storage';
-import { formatCurrency, formatDateBR, buildWhatsAppLink } from '../../utils/formatters';
+import { formatCurrency, formatDateBR, buildProfessionalWhatsAppLink } from '../../utils/formatters';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
 import { Calendar, Clock, User as UserIcon, Sparkles, MessageCircle, CheckCircle2, AlertCircle, Phone, Star, ArrowRight } from 'lucide-react';
 
@@ -167,7 +167,7 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
                     </button>
 
                     <a
-                      href={`https://wa.me/${StorageService.getSettings().whatsapp}`}
+                      href={buildProfessionalWhatsAppLink(prof.id, `Olá, ${prof.name}! Gostaria de saber mais sobre seus serviços.`, prof)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="w-full py-2 rounded-xl bg-white/[0.03] border border-white/10 hover:bg-white/[0.08] text-white/80 font-medium text-xs transition-colors text-center flex items-center justify-center gap-1.5"
@@ -318,16 +318,17 @@ export const ClientPortalView: React.FC<ClientPortalViewProps> = ({
                     </span>
 
                     <a
-                      href={buildWhatsAppLink(
-                        StorageService.getSettings().whatsapp,
-                        `Olá! Gostaria de falar sobre o meu agendamento do dia ${formatDateBR(apt.date)} às ${apt.startTime} com a profissional ${apt.professionalName}.`
+                      href={buildProfessionalWhatsAppLink(
+                        apt.professionalId,
+                        `Olá! Gostaria de falar sobre o meu agendamento do dia ${formatDateBR(apt.date)} às ${apt.startTime} com a profissional ${apt.professionalName}.`,
+                        professionals.find(prof => prof.id === apt.professionalId)
                       )}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-3 py-1.5 rounded-xl bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 text-xs font-semibold hover:bg-emerald-600/30 transition-colors flex items-center gap-1.5"
                     >
                       <MessageCircle className="w-3.5 h-3.5" />
-                      Falar sobre Agendamento no WhatsApp
+                      Falar com a profissional no WhatsApp
                     </a>
                   </div>
                 </div>
