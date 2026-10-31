@@ -1,0 +1,70 @@
+{
+  "squad": "lev-instagram-automacao",
+  "status": "error",
+  "step": {
+    "current": 1,
+    "total": 11,
+    "label": "checkpoint-musica-campanha"
+  },
+  "agents": [
+    {
+      "id": "creative-strategist",
+      "name": "Strategist de Conteúdo",
+      "icon": "🎯",
+      "status": "idle",
+      "deliverTo": null,
+      "desk": {
+        "col": 1,
+        "row": 1
+      }
+    },
+    {
+      "id": "copywriter",
+      "name": "Copywriter de Instagram",
+      "icon": "✍️",
+      "status": "idle",
+      "deliverTo": null,
+      "desk": {
+        "col": 2,
+        "row": 1
+      }
+    },
+    {
+      "id": "social-media-manager",
+      "name": "Gestor de Redes",
+      "icon": "📅",
+      "status": "idle",
+      "deliverTo": null,
+      "desk": {
+        "col": 3,
+        "row": 1
+      }
+    }
+  ],
+  "handoff": null,
+  "startedAt": "2026-08-13T23:14:04.258Z",
+  "updatedAt": "2026-08-13T23:25:04.873Z",
+  "runId": "run-1786662844226",
+  "log": [
+    {
+      "ts": "2026-08-13T23:14:04.258Z",
+      "agent": "system",
+      "msg": "▶ Run iniciada (run-1786662844226) — aguardando runner..."
+    },
+    {
+      "ts": "2026-08-13T23:14:32Z",
+      "agent": "system",
+      "msg": "Iniciando: Briefing da Música da Semana"
+    },
+    {
+      "ts": "2026-08-13T23:14:32Z",
+      "agent": "system",
+      "msg": "⏸ Aguardando resposta do usuário: música da campanha"
+    },
+    {
+      "ts": "2026-08-13T23:25:04.873Z",
+      "agent": "system",
+      "msg": "⚠️ Execução interrompida sem checkpoint pendente — confira o log e reinicie"
+    }
+  ]
+}

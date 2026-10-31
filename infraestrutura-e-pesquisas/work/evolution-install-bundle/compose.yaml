@@ -1,0 +1,69 @@
+services:
+  evolution:
+    image: ${EVOLUTION_IMAGE:?Defina uma imagem Evolution API v2 com tag ou digest validado}
+    restart: unless-stopped
+    environment:
+      SERVER_URL: https://${EVOLUTION_DOMAIN}
+      SERVER_PORT: 8080
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:?Defina uma chave secreta forte}
+      DATABASE_ENABLED: 'true'
+      DATABASE_PROVIDER: postgresql
+      DATABASE_CONNECTION_URI: postgresql://evolution:${POSTGRES_PASSWORD}@postgres:5432/evolution?schema=public
+      CACHE_REDIS_ENABLED: 'true'
+      CACHE_REDIS_URI: redis://redis:6379/0
+      CACHE_REDIS_PREFIX_KEY: lev-evolution
+      CACHE_REDIS_SAVE_INSTANCES: 'true'
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: 'false'
+    volumes:
+      - instances:/evolution/instances
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks: [private]
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: evolution
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Defina uma senha forte}
+      POSTGRES_DB: evolution
+    volumes: [database:/var/lib/postgresql/data]
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U evolution -d evolution']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [private]
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes: [redis:/data]
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks: [private]
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports: ['80:80', '443:443']
+    environment:
+      EVOLUTION_DOMAIN: ${EVOLUTION_DOMAIN:?Defina o domínio do servidor}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - certificates:/data
+      - caddy_config:/config
+    depends_on: [evolution]
+    networks: [private]
+volumes:
+  instances:
+  database:
+  redis:
+  certificates:
+  caddy_config:
+networks:
+  private:

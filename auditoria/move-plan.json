@@ -1,0 +1,174 @@
+[
+  {
+    "source": "C:\\Users\\ricll\\lev-coworking-repo",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\sistema"
+  },
+  {
+    "source": "C:\\Users\\ricll\\lev-coworking",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\historico\\sistema-agosto"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-07-29\\new-chat\\LEV-COWORKING-BEAUT-AI-STUDIO",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\historico\\codex-julho\\LEV-COWORKING-BEAUT-AI-STUDIO"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-07-29\\new-chat\\LEV-COWORKING-BEAUTY",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\historico\\codex-julho\\LEV-COWORKING-BEAUTY"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-07-29\\new-chat\\LEV-COWORKING-BEAUTY-AI-STUDIO",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\historico\\codex-julho\\LEV-COWORKING-BEAUTY-AI-STUDIO"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-07-29\\new-chat\\lev-whatsapp-tool",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\historico\\codex-julho\\lev-whatsapp-tool"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-07-29\\new-chat\\lev-main.zip",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\historico\\codex-julho\\lev-main.zip"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-07-29\\new-chat\\outputs\\lev-coworking-beauty-perfil.png",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\marca\\lev-coworking-beauty-perfil.png"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-07-29\\new-chat\\work\\space-images",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\marca\\space-images"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-07-29\\new-chat\\work\\profile-photos",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\marca\\profile-photos"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-07-29\\new-chat\\work\\meta-logo-1024.jpeg",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\marca\\meta-logo-1024.jpeg"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-08-08\\new-chat\\outputs\\lev-instagram-automation",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\instagram-app"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-10\\loc\\outputs",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\infraestrutura-e-pesquisas\\outputs"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-10\\loc\\work",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\infraestrutura-e-pesquisas\\work"
+  },
+  {
+    "source": "C:\\Users\\ricll\\.squads100\\squads\\lev-instagram-automacao",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\squads\\lev-instagram-automacao"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-30-day-calendar.md",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-30-day-calendar.md"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-30-prompts.md",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-30-prompts.md"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-automation-pipeline.md",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-automation-pipeline.md"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-caption-bank.md",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-caption-bank.md"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-master-prompt.md",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-master-prompt.md"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-music-guide.md",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-music-guide.md"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-production-checklist.md",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-production-checklist.md"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-production.ps1",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-production.ps1"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-upload-post-queue.csv",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-upload-post-queue.csv"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-upload-post.ps1",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-upload-post.ps1"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-weekly-calendar.md",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-weekly-calendar.md"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\scripts\\lev-beauty-weekly-prompt.md",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\scripts\\lev-beauty-weekly-prompt.md"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\1 - LEV - INICIAR PRODUCAO.bat",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\1 - LEV - INICIAR PRODUCAO.bat"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Documents\\Squads100\\1 - LEV BEAUTY - INICIAR PRODUCAO.bat",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-documentos\\1 - LEV BEAUTY - INICIAR PRODUCAO.bat"
+  },
+  {
+    "source": "C:\\Users\\ricll\\.squads100\\squads\\lev-instagram-automacao",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-local\\squads\\lev-instagram-automacao"
+  },
+  {
+    "source": "C:\\Users\\ricll\\.squads100\\scripts\\lev-beauty-automation.ps1",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-local\\scripts\\lev-beauty-automation.ps1"
+  },
+  {
+    "source": "C:\\Users\\ricll\\.squads100\\scripts\\lev-beauty-sync-generated-queue.ps1",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-local\\scripts\\lev-beauty-sync-generated-queue.ps1"
+  },
+  {
+    "source": "C:\\Users\\ricll\\.squads100\\scripts\\lev-beauty-upload-post-api.ps1",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-local\\scripts\\lev-beauty-upload-post-api.ps1"
+  },
+  {
+    "source": "C:\\Users\\ricll\\.squads100\\scripts\\lev-beauty-upload-post-queue.csv",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-local\\scripts\\lev-beauty-upload-post-queue.csv"
+  },
+  {
+    "source": "C:\\Users\\ricll\\.squads100\\scripts\\lev-beauty-upload-post.ps1",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-local\\scripts\\lev-beauty-upload-post.ps1"
+  },
+  {
+    "source": "C:\\Users\\ricll\\.squads100\\scripts\\lev-instagram-producao.ps1",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-local\\scripts\\lev-instagram-producao.ps1"
+  },
+  {
+    "source": "C:\\Users\\ricll\\.squads100\\1 - LEV - INICIAR PRODUCAO.bat",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\automacoes\\squad-local\\1 - LEV - INICIAR PRODUCAO.bat"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Downloads\\lev-coworking-beauty",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\recebidos\\lev-coworking-beauty"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Downloads\\lev-coworking-beauty.zip",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\recebidos\\lev-coworking-beauty.zip"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Downloads\\banner lev.jpeg",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\recebidos\\banner lev.jpeg"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Downloads\\logo lev.jpeg",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\recebidos\\logo lev.jpeg"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Downloads\\Logo Retangular LEV.jpeg",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\recebidos\\Logo Retangular LEV.jpeg"
+  },
+  {
+    "source": "C:\\Users\\ricll\\Downloads\\LEV COWORKING BEAUTY.pdf",
+    "destination": "C:\\Users\\ricll\\Documents\\Codex\\2026-10-31\\lo\\outputs\\LEV\\recebidos\\LEV COWORKING BEAUTY.pdf"
+  }
+]

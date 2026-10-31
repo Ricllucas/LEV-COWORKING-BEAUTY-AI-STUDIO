@@ -1,0 +1,6 @@
+{
+  "name": "LEV COWORKING BEAUTY",
+  "description": "Aplicativo web e PWA para gestão de coworking de beleza, agendamentos, clientes, financeiro por MEI e controle de profissionais.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

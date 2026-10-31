@@ -1,0 +1,168 @@
+name: lev-instagram-automacao
+display_name: "LEV | Automação Premium de Conteúdo"
+description: >-
+  Squad criada para produzir conteúdos premium para Instagram com foco em imagens
+  exclusivas e carrosséis elegantes, inspirados em ausência de vídeo. A automação
+  estrutura a pauta semanal, seleciona músicas condizentes ao posicionamento da marca,
+  gera criativos com estética de elite, cria legendas persuasivas e organiza a fila
+  de postagem para gerar engajamento, comentários, curtidas e conversão.
+version: "1.1.0"
+created: "2026-08-13"
+updated: "2026-08-13"
+performance_mode: alta-performance
+
+output:
+  versioned: true
+  folder_pattern: "{YYYY-MM-DD}_{HH-MM}_{slug}"
+  base_dir: pipeline/output
+
+creator:
+  name: LEV Coworking Beauty
+  type: personal_brand
+  niche: beleza premium, autoestima e atendimento exclusivo
+  platforms:
+    - instagram
+  tone: acolhedor, elegante, premium, sofisticado, aspiracional
+  audience: mulheres com interesse em beleza, autocuidado, autoestima e serviços exclusivos
+
+formats:
+  - instagram-static-image
+  - instagram-carousel
+  - instagram-story
+
+music_strategy:
+  type: premium_match
+  goal: "Ajustar a trilha sonora ao clima e ao posicionamento do conteúdo"
+  rules:
+    - "Sempre usar música que transmita luxo, elegância e desejo premium"
+    - "Se o criativo for emocional, priorizar músicas suaves e sofisticadas"
+    - "Se o criativo for aspiracional ou de desejo, usar música mais envolvente com clima premium"
+    - "A música deve reforçar a sensação de exclusividade e alta qualidade"
+    - "Nunca usar trilha genérica ou incompatível com o tom premium da marca"
+
+pipeline:
+  - step: 0
+    id: checkpoint-musica-campanha
+    name: "Briefing da Música da Semana"
+    type: checkpoint
+    required: true
+    description: >-
+      Definir a música-base da campanha semanal para orientar o clima, o tom e o
+      posicionamento visual dos criativos premium. O objetivo é manter consistência
+      entre a estética, a trilha e a narrativa do conteúdo.
+    options:
+      - label: "Informar música da semana agora"
+        description: "Peça apenas o nome da música ou o estilo de trilha; o restante é inferido pela squad."
+
+  - step: 1
+    id: planejamento-editorial
+    name: "Planejamento Editorial"
+    agent: creative-strategist
+    execution: inline
+    required: true
+    description: >-
+      Estruturar a pauta semanal com temas, pilares, assuntos relevantes e formatos
+      para imagens e carrosséis premium com alto potencial de engajamento.
+    output: pipeline/data/editorial-plan.md
+
+  - step: 2
+    id: pesquisa-de-mercado
+    name: "Pesquisa de Tendências"
+    agent: creative-strategist
+    execution: inline
+    description: >-
+      Identificar tendências de beleza premium, gatilhos de engajamento, referências
+      de estética e ideias que reforcem exclusividade e desejo na audiência.
+    output: pipeline/data/trend-research.md
+
+  - step: 3
+    id: ideacao-de-criativos
+    name: "Ideação de Criativos"
+    agent: creative-strategist
+    execution: inline
+    description: >-
+      Gerar ideias de imagens e carrosséis com apelo premium, visual marcante e forte
+      potencial de comentários, curtidas e atenção no Instagram.
+    output: pipeline/data/content-ideas.md
+
+  - step: 4
+    id: checkpoint-aprovacao-ideias
+    name: "Aprovação das Ideias"
+    type: checkpoint
+    description: >-
+      Revisar os temas propostos e confirmar quais ideias entram para criação dos
+      criativos finais antes do desenvolvimento visual.
+    outputFile: pipeline/data/ideas-approval.md
+
+  - step: 5
+    id: criacao-dos-criativos
+    name: "Criação de Criativos"
+    agent: creative-strategist
+    execution: inline
+    description: >-
+      Transformar as ideias aprovadas em arquivos reais de imagem estática ou carrossel,
+      mantendo visual premium, elegante e alinhado ao posicionamento da marca. Salvar os
+      arquivos no pacote de saída e registrar cada caminho no manifesto
+      pipeline/data/upload-post-queue.json junto com a legenda e a data de publicação.
+    output: pipeline/data/creative-brief.md
+
+  - step: 6
+    id: copywriter-instagram
+    name: "Copywriter de Instagram"
+    agent: copywriter
+    execution: inline
+    description: >-
+      Gerar legendas curtas, fortes e persuasivas para cada criativo, com foco em
+      gerar comentários, engajamento e ligação emocional com a marca.
+    output: pipeline/data/captions.md
+
+  - step: 7
+    id: organizador-producao
+    name: "Organizador de Produção"
+    agent: social-media-manager
+    execution: inline
+    description: >-
+      Organizar a fila de publicação a partir dos arquivos reais gerados. O manifesto
+      pipeline/data/upload-post-queue.json deve conter posts[], media_paths[], caption,
+      date, content_id e account; não usar caminhos fictícios ou placeholders.
+    output: pipeline/data/upload-post-queue.json
+
+  - step: 8
+    id: checkpoint-aprovacao-final
+    name: "Aprovação Final"
+    type: checkpoint
+    description: >-
+      Revisão final de criativos, legendas, música e calendário antes de publicar.
+    outputFile: pipeline/data/final-approval.md
+
+  - step: 9
+    id: agendamento-publicacao
+    name: "Agendamento de Publicação"
+    agent: social-media-manager
+    execution: inline
+    description: >-
+      Programar as publicações em ordem estratégica, combinando o melhor horário com a
+      melhor trilha emocional e o melhor formato de criativo.
+    output: pipeline/data/scheduling-plan.md
+
+  - step: 10
+    id: analise-pos-publicacao
+    name: "Análise Pós-Publicação"
+    agent: social-media-manager
+    execution: inline
+    description: >-
+      Avaliar engajamento, comentários e desempenho geral para ajustar próximos
+      conteúdos e melhorar a conversão de interesse em atendimento.
+    output: pipeline/data/post-performance.md
+
+settings:
+  platform: instagram
+  objective: gerar engajamento, curtidas, comentários e leads premium
+  posting_frequency: 4 a 6 posts por semana
+  content_types:
+    - imagem-unica
+    - carrossel
+    - story
+    - campanha-de-engajamento
+  target_format: "imagens premium + carrosséis elegantes, sem vídeos como criativos principais"
+  creative_style: "elite premium, luxuoso, delicado e aspiracional"

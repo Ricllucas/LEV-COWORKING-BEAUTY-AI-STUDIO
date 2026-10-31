@@ -1,0 +1,15 @@
+{
+  "folders": [
+    {
+      "name": "LEV",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "search.exclude": {
+      "**/node_modules": true,
+      "**/.npm-cache*": true,
+      "**/.git": true
+    }
+  }
+}
