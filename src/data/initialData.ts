@@ -1,0 +1,575 @@
+import {
+  Professional,
+  Service,
+  Client,
+  Appointment,
+  CoworkingSettings,
+  Review,
+  WaitlistEntry,
+  AuditLog,
+  SystemNotification
+} from '../types';
+
+export const INITIAL_SETTINGS: CoworkingSettings = {
+  name: "LEV COWORKING BEAUTY",
+  subName: "lev | COWORKING beauty",
+  slogan: "Sua beleza completa: unhas, cílios, sobrancelhas, maquiagem e penteados em um só lugar.",
+  address: "Rua General Carneiro, 543, Centro, Curitiba - PR",
+  phone: "(41) 98497-9940",
+  whatsapp: "5541984979940",
+  instagram: "@levcoworkingbeauty",
+  email: "contato@levcoworkingbeauty.com.br",
+  businessHoursText: "Terça a sábado, das 9h às 18h",
+  cancellationPolicy: "Cancelamentos ou reagendamentos devem ser solicitados com, no mínimo, 24 horas de antecedência. O valor do sinal não é reembolsável quando o cancelamento ocorre fora desse prazo.",
+  depositPercentage: 30,
+  privacyPolicy: "O LEV Coworking Beauty protege os dados das clientes conforme as diretrizes da LGPD (Lei Geral de Proteção de Dados). As informações de saúde fornecidas pela cliente são tratadas com confidencialidade e permanecem sob responsabilidade de quem as declarou.",
+  termsOfService: "Ao agendar um serviço no LEV Coworking Beauty, você concorda com nossas políticas de cancelamento e pontualidade.",
+  logoUrl: "/branding/lev-logo.jpeg",
+  heroBannerUrl: "/branding/lev-logo.jpeg"
+};
+
+export const INITIAL_PROFESSIONALS: Professional[] = [
+  {
+    id: "prof_elisangela",
+    name: "Elisangela",
+    title: "Unha Raiz",
+    meiName: "Elisangela Manicure MEI",
+    cnpjCpf: "12.345.678/0001-90",
+    pixKey: "(41)992461203",
+    bankName: "Banco Nu Pagamentos S.A.",
+    phone: "(41) 98497-9940",
+    whatsapp: "5541992461203",
+    email: "elisangela@levcoworkingbeauty.com.br",
+    bio: "Especialista em manicure e pedicure tradicional, cutilagem técnica funda sem agressão e spa dos pés relaxante. Cuidado clássico e impecável.",
+    avatarUrl: "/profiles/elisangela.webp",
+    categories: ["Unha Raiz"],
+    color: "#D4AF37", // Warm Gold
+    workingHours: {
+      1: { active: false, startTime: "09:00", endTime: "18:00" }, // Seg
+      2: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Ter
+      3: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Qua
+      4: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Qui
+      5: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Sex
+      6: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" }, // Sáb
+      0: { active: false, startTime: "09:00", endTime: "18:00" }  // Dom
+    },
+    slotBufferMinutes: 10,
+    maxDailyAppointments: 8,
+    offDays: [],
+    vacations: []
+  },
+  {
+    id: "prof_talitha",
+    name: "Talitha",
+    title: "Maquiagem, Penteados & Brows",
+    meiName: "Talitha Kum Studio Beauty MEI",
+    cnpjCpf: "23.456.789/0001-01",
+    pixKey: "(41)999983228",
+    bankName: "Banco Inter S.A.",
+    phone: "(41) 98497-9940",
+    whatsapp: "5541999983228",
+    email: "talithakumbeauty@gmail.com",
+    bio: "Especialista em maquiagem social, penteados, produções completas, design de sobrancelhas, Brow Lamination e Microblading. Atendimento personalizado para realçar sua beleza em cada ocasião.",
+    avatarUrl: "/profiles/talitha.webp",
+    categories: ["Produções", "Brows"],
+    color: "#B8860B", // Dark Goldenrod
+    workingHours: {
+      1: { active: false, startTime: "09:00", endTime: "18:00" }, // Segunda-feira: não atende
+      2: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      3: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      4: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      5: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      6: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:30", lunchEnd: "13:30" },
+      0: { active: false, startTime: "09:00", endTime: "18:00" }
+    },
+    slotBufferMinutes: 15,
+    maxDailyAppointments: 8,
+    offDays: [],
+    vacations: []
+  },
+  {
+    id: "prof_nayara",
+    name: "Nayara",
+    title: "Unhas em Gel",
+    meiName: "Nayara Nails Gel MEI",
+    cnpjCpf: "34.567.890/0001-12",
+    pixKey: "61573046000194",
+    bankName: "Banco C6 Bank S.A.",
+    phone: "(41) 98497-9940",
+    whatsapp: "5541996556742",
+    email: "nayara@levcoworkingbeauty.com.br",
+    bio: "Nail designer especialista em alongamento em gel, banho de gel, blindagem de alta resistência e nail art minimalista e elegante.",
+    avatarUrl: "/profiles/nayara.webp",
+    categories: ["Unhas em Gel"],
+    color: "#996515", // Warm Bronze Gold
+    workingHours: {
+      1: { active: false, startTime: "09:00", endTime: "18:00" }, // Seg
+      2: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      3: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      4: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      5: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      6: { active: true, startTime: "09:00", endTime: "18:00", lunchStart: "12:00", lunchEnd: "13:00" },
+      0: { active: false, startTime: "09:00", endTime: "18:00" }
+    },
+    slotBufferMinutes: 15,
+    maxDailyAppointments: 5,
+    offDays: [],
+    vacations: []
+  }
+];
+
+export const INITIAL_SERVICES: Service[] = [
+  // Elisangela - catálogo oficial (12/08/2026)
+  {
+    id: "srv_eli_1",
+    catalogVersion: 2026081202,
+    name: "Mão Tradicional",
+    category: "Unha Raiz",
+    description: "Esmaltação tradicional das mãos, com acabamento delicado e cuidadoso.",
+    professionalId: "prof_elisangela",
+    professionalName: "Elisangela",
+    durationMinutes: 40,
+    bufferAfterMinutes: 10,
+    price: 35,
+    depositRequired: true,
+    depositValue: 10.50,
+    color: "#D4AF37",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 2,
+    maxCancellationNoticeHours: 24,
+    preInstructions: "Caso esteja usando esmaltação em gel, selecione o serviço correspondente."
+  },
+  {
+    id: "srv_eli_2",
+    catalogVersion: 2026081202,
+    name: "Pedicure Tradicional",
+    category: "Unha Raiz",
+    description: "Esmaltação tradicional dos pés, realizada com atenção e acabamento uniforme.",
+    professionalId: "prof_elisangela",
+    professionalName: "Elisangela",
+    durationMinutes: 45,
+    bufferAfterMinutes: 10,
+    price: 45,
+    depositRequired: true,
+    depositValue: 13.50,
+    color: "#D4AF37",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 2,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_eli_5", catalogVersion: 2026081202, name: "Mão — Esmaltação em Gel", category: "Unha Raiz",
+    description: "Esmaltação em gel para as mãos, com brilho intenso e maior durabilidade.",
+    professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 50,
+    bufferAfterMinutes: 10, price: 55, depositRequired: true, depositValue: 16.50, color: "#D4AF37",
+    active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_eli_6", catalogVersion: 2026081202, name: "Pé — Esmaltação em Gel", category: "Unha Raiz",
+    description: "Esmaltação em gel para os pés, com acabamento uniforme e maior durabilidade.",
+    professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 60,
+    bufferAfterMinutes: 10, price: 80, depositRequired: true, depositValue: 24, color: "#D4AF37",
+    active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_eli_7", catalogVersion: 2026081202, name: "SPA dos Pés", category: "Unha Raiz",
+    description: "Experiência completa com escalda-pés, esfoliação, hidratação e massagem relaxante.",
+    professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 60,
+    bufferAfterMinutes: 10, price: 65, depositRequired: true, depositValue: 20, color: "#D4AF37",
+    active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_eli_8", catalogVersion: 2026081202, name: "Combo Pé Tradicional + SPA dos Pés", category: "Unha Raiz",
+    description: "Esmaltação tradicional dos pés combinada ao SPA dos Pés para uma experiência completa de cuidado e relaxamento.",
+    professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 105,
+    bufferAfterMinutes: 10, price: 105, depositRequired: true, depositValue: 30, color: "#D4AF37",
+    active: true, onlineBookingEnabled: true, minNoticeHours: 4, maxCancellationNoticeHours: 24
+  },
+
+  // Talitha - catálogo oficial (31/07/2026)
+  {
+    id: "srv_tal_1",
+    name: "Maquiagem Social",
+    category: "Produções",
+    description: "Maquiagem social completa para realçar sua beleza em qualquer ocasião. Ideal para festas, jantares, eventos e ensaios.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    durationMinutes: 90,
+    bufferAfterMinutes: 15,
+    price: 170.00,
+    depositRequired: true,
+    depositValue: 50.00,
+    color: "#B8860B",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 6,
+    maxCancellationNoticeHours: 24,
+    preInstructions: "Compareça com a pele limpa e hidratada."
+  },
+  {
+    id: "srv_tal_2",
+    name: "Penteado",
+    category: "Produções",
+    description: "Indicado para ensaios, casamentos, festas e ocasiões mais formais.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    durationMinutes: 90,
+    bufferAfterMinutes: 15,
+    price: 170.00,
+    depositRequired: true,
+    depositValue: 50.00,
+    color: "#B8860B",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 6,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_tal_3",
+    name: "Produção Beauty",
+    category: "Produções",
+    description: "Maquiagem e penteado para um visual deslumbrante e duradouro. Ideal para festas e eventos mais formais.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    durationMinutes: 150,
+    bufferAfterMinutes: 20,
+    price: 300.00,
+    depositRequired: true,
+    depositValue: 90.00,
+    color: "#B8860B",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 12,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_tal_4",
+    name: "Baby Liss",
+    category: "Produções",
+    description: "Ideal para dar mais movimento e volume ao cabelo, com resultado natural e textura. Perfeito para o dia a dia ou eventos.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    durationMinutes: 60,
+    bufferAfterMinutes: 10,
+    price: 140.00,
+    depositRequired: true,
+    depositValue: 40.00,
+    color: "#B8860B",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 4,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_tal_5",
+    name: "Penteado para Cabelos Cacheados",
+    category: "Produções",
+    description: "Penteado pensado para valorizar os cachos e preservar a textura natural, com definição e movimento.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    durationMinutes: 120,
+    bufferAfterMinutes: 15,
+    price: 200.00,
+    depositRequired: true,
+    depositValue: 60.00,
+    color: "#B8860B",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 6,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_tal_6",
+    name: "Produção Noivas",
+    category: "Produções",
+    description: "Pré-wedding, casamento civil e produção para o dia da noiva. Pacotes disponíveis e valor sob consulta.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    durationMinutes: 180,
+    bufferAfterMinutes: 30,
+    price: 0,
+    depositRequired: false,
+    depositValue: 0,
+    color: "#B8860B",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 24,
+    maxCancellationNoticeHours: 48
+  },
+  {
+    id: "srv_tal_7",
+    name: "Design de Sobrancelhas",
+    category: "Brows",
+    description: "Análise do rosto, formato, simetria e proporções, com mapeamento personalizado e opção de henna.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    durationMinutes: 40,
+    bufferAfterMinutes: 10,
+    price: 45.00,
+    depositRequired: true,
+    depositValue: 15.00,
+    color: "#B8860B",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 2,
+    maxCancellationNoticeHours: 24,
+    preInstructions: "Evite depilar as sobrancelhas nas 2 semanas anteriores."
+  },
+  {
+    id: "srv_tal_8",
+    name: "Brow Lamination",
+    category: "Brows",
+    description: "Procedimento estético semipermanente que alinha e fixa os fios na direção desejada, deixando as sobrancelhas definidas e com efeito mais cheio.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    durationMinutes: 60,
+    bufferAfterMinutes: 10,
+    price: 200.00,
+    depositRequired: true,
+    depositValue: 60.00,
+    color: "#B8860B",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 4,
+    maxCancellationNoticeHours: 24,
+    postInstructions: "Não molhe as sobrancelhas nas primeiras 24 horas após o procedimento."
+  },
+  {
+    id: "srv_tal_9",
+    name: "Microblading",
+    category: "Brows",
+    description: "Micropigmentação de sobrancelhas na técnica fio a fio, ideal para preencher falhas e realçar o olhar com naturalidade.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    durationMinutes: 120,
+    bufferAfterMinutes: 20,
+    price: 450.00,
+    depositRequired: true,
+    depositValue: 135.00,
+    color: "#B8860B",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 12,
+    maxCancellationNoticeHours: 48,
+    preInstructions: "Evite bebidas alcoólicas e produtos ácidos na pele nas 48 horas anteriores."
+  },
+
+  {
+    id: "srv_tal_10", catalogVersion: 2026090401,
+    name: "Extensão de Cílios", category: "Sobrancelhas & Cílios",
+    description: "Aplicação de extensões para realçar o comprimento e o volume dos cílios, com acabamento personalizado para valorizar o olhar.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 90, bufferAfterMinutes: 0, price: 170,
+    depositRequired: true, depositValue: 51,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+  {
+    id: "srv_tal_11", catalogVersion: 2026090401,
+    name: "Manutenção de Cílios", category: "Sobrancelhas & Cílios",
+    description: "Reposição e ajuste das extensões de cílios, conforme avaliação profissional, para renovar o acabamento e manter a harmonia do olhar.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 60, bufferAfterMinutes: 0, price: 120,
+    depositRequired: true, depositValue: 36,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+  {
+    id: "srv_tal_12", catalogVersion: 2026090401,
+    name: "Lash Lifting", category: "Sobrancelhas & Cílios",
+    description: "Curvatura e valorização dos cílios naturais, proporcionando um olhar mais destacado sem aplicação de extensões.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 90, bufferAfterMinutes: 0, price: 150,
+    depositRequired: true, depositValue: 45,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+  {
+    id: "srv_tal_13", catalogVersion: 2026090401,
+    name: "Design de Sobrancelhas com Henna", category: "Sobrancelhas & Cílios",
+    description: "Modelagem das sobrancelhas com aplicação de henna para realçar o desenho e preencher visualmente pequenas falhas.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 30, bufferAfterMinutes: 0, price: 65,
+    depositRequired: true, depositValue: 19.5,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+  {
+    id: "srv_tal_14", catalogVersion: 2026090401,
+    name: "Depilação de Buço", category: "Sobrancelhas & Cílios",
+    description: "Remoção dos pelos da região do buço, com técnica e cuidados adequados à pele, para um acabamento delicado.",
+    professionalId: "prof_talitha", professionalName: "Talitha",
+    durationMinutes: 15, bufferAfterMinutes: 0, price: 35,
+    depositRequired: true, depositValue: 10.5,
+    color: "#B8860B", active: true, onlineBookingEnabled: true,
+    minNoticeHours: 12, maxCancellationNoticeHours: 48
+  },
+
+  // Nayara - Unhas em Gel
+  {
+    id: "srv_nay_1",
+    name: "Alongamento",
+    category: "Unhas em Gel",
+    description: "Alongamento em gel com estrutura resistente, formato personalizado e acabamento natural e elegante.",
+    professionalId: "prof_nayara",
+    professionalName: "Nayara",
+    durationMinutes: 150,
+    bufferAfterMinutes: 15,
+    price: 130.00,
+    depositRequired: true,
+    depositValue: 39.00,
+    color: "#996515",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 12,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_nay_2",
+    name: "Manutenção em Gel",
+    category: "Unhas em Gel",
+    description: "Manutenção da estrutura em gel, com correção do crescimento, nivelamento, acabamento e renovação da esmaltação.",
+    professionalId: "prof_nayara",
+    professionalName: "Nayara",
+    durationMinutes: 120,
+    bufferAfterMinutes: 15,
+    price: 100.00,
+    depositRequired: true,
+    depositValue: 30.00,
+    color: "#996515",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 6,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_nay_3",
+    name: "Banho de Gel",
+    category: "Unhas em Gel",
+    description: "Camada estruturada de gel sobre as unhas naturais para proporcionar resistência, nivelamento e acabamento duradouro.",
+    professionalId: "prof_nayara",
+    professionalName: "Nayara",
+    durationMinutes: 90,
+    bufferAfterMinutes: 10,
+    price: 90.00,
+    depositRequired: true,
+    depositValue: 27.00,
+    color: "#996515",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 4,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_nay_4",
+    name: "Esmaltação em Gel",
+    category: "Unhas em Gel",
+    description: "Esmaltação em gel com secagem em cabine, brilho intenso e acabamento uniforme de longa duração.",
+    professionalId: "prof_nayara",
+    professionalName: "Nayara",
+    durationMinutes: 60,
+    bufferAfterMinutes: 10,
+    price: 55.00,
+    depositRequired: true,
+    depositValue: 16.50,
+    color: "#996515",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 4,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_nay_5",
+    name: "Blindagem",
+    category: "Unhas em Gel",
+    description: "Proteção das unhas naturais com uma camada fina e resistente, ideal para reduzir quebras e preservar o crescimento.",
+    professionalId: "prof_nayara",
+    professionalName: "Nayara",
+    durationMinutes: 60,
+    bufferAfterMinutes: 10,
+    price: 70.00,
+    depositRequired: true,
+    depositValue: 21.00,
+    color: "#996515",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 4,
+    maxCancellationNoticeHours: 24
+  },
+  {
+    id: "srv_nay_6",
+    name: "Cuticulagem",
+    category: "Unhas em Gel",
+    description: "Cuidado preciso das cutículas, com higienização e acabamento delicado para mãos bem cuidadas.",
+    professionalId: "prof_nayara",
+    professionalName: "Nayara",
+    durationMinutes: 60,
+    bufferAfterMinutes: 10,
+    price: 35.00,
+    depositRequired: true,
+    depositValue: 10.50,
+    color: "#996515",
+    active: true,
+    onlineBookingEnabled: true,
+    minNoticeHours: 4,
+    maxCancellationNoticeHours: 24
+  }
+];
+
+export const INITIAL_CLIENTS: Client[] = [];
+
+export const INITIAL_APPOINTMENTS: Appointment[] = [];
+
+export const INITIAL_REVIEWS: Review[] = [
+  {
+    id: "rev_1",
+    clientName: "Mariana Souza",
+    professionalId: "prof_nayara",
+    professionalName: "Nayara",
+    serviceName: "Alongamento em Gel",
+    rating: 5,
+    comment: "A Nayara é incrível! Unhas em gel com acabamento natural, super fininhas e extremamente resistentes. O espaço é impecável!",
+    date: "2026-07-18",
+    approved: true
+  },
+  {
+    id: "rev_2",
+    clientName: "Patrícia B.",
+    professionalId: "prof_elisangela",
+    professionalName: "Elisangela",
+    serviceName: "Spa dos Pés",
+    rating: 5,
+    comment: "Atendimento maravilhoso com a Elisangela! Cutilagem sem machucar e o spa dos pés me fez renovar as energias. Recomendadíssima!",
+    date: "2026-07-22",
+    approved: true
+  },
+  {
+    id: "rev_3",
+    clientName: "Beatriz M.",
+    professionalId: "prof_talitha",
+    professionalName: "Talitha",
+    serviceName: "Design de Sobrancelhas",
+    rating: 5,
+    comment: "A Talitha tem as mãos de fada! Minhas sobrancelhas nunca ficaram tão alinhadas e com aspecto natural. Virei cliente fiel.",
+    date: "2026-07-25",
+    approved: true
+  }
+];
+
+export const INITIAL_AUDIT_LOGS: AuditLog[] = [
+  {
+    id: "log_1",
+    userId: "admin_1",
+    userName: "Administradora LEV",
+    userRole: "admin",
+    action: "SISTEMA_INICIALIZADO",
+    target: "Lev Coworking Beauty",
+    details: "Ambiente do sistema LEV Coworking Beauty configurado com sucesso com profissionais Elisangela, Talitha e Nayara.",
+    timestamp: "2026-07-28 08:00"
+  }
+];
+
+export const INITIAL_NOTIFICATIONS: SystemNotification[] = [];
+
