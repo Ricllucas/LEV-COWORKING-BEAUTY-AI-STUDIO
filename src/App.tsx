@@ -18,6 +18,7 @@ import { ProfessionalAccessManager } from './components/professionals/Profession
 import { CloudServiceCatalog } from './services/cloudServiceCatalog';
 import { StorageService } from './services/storage';
 import { LegalPage } from './components/legal/LegalPage';
+import PortfolioPage from './pages/PortfolioPage';
 
 // Views - eager load only essential views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
@@ -46,6 +47,10 @@ export default function App() {
 
   if (normalizedPath === '/exclusao-de-dados') {
     return <LegalPage kind="data-deletion" />;
+  }
+
+  if (normalizedPath === '/portfolio') {
+    return <PortfolioPage />;
   }
 
   return <Application />;
