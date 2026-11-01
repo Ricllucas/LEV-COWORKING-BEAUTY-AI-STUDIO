@@ -223,6 +223,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       setIsSubmitting(true);
       await StorageService.saveAppointmentToCloud(newApt, currentUser);
       StorageService.saveAppointment(newApt, false);
+      if (!isStaffBooking) StorageService.rememberClientBooking(newApt.id);
       StorageService.syncClientsFromAppointments([newApt]);
       setConfirmedApt(newApt);
       setStep(5); // Final Success Step

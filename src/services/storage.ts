@@ -45,6 +45,7 @@ const STORAGE_KEYS = {
   ELISANGELA_CATALOG_VERSION: 'lev_elisangela_catalog_2026_08_12_v2',
   CLIENTS: 'lev_coworking_clients_v1',
   APPOINTMENTS: 'lev_coworking_appointments_v1',
+  CLIENT_BOOKING_IDS: 'lev_client_booking_ids_v1',
   REVIEWS: 'lev_coworking_reviews_v1',
   WAITLIST: 'lev_coworking_waitlist_v1',
   BLOCKS: 'lev_coworking_blocks_v1',
@@ -667,6 +668,30 @@ export class StorageService {
     this.purgeConfirmedTestDataOnce();
     this.clearFutureScheduleOnce();
     return getStored<Appointment[]>(STORAGE_KEYS.APPOINTMENTS, INITIAL_APPOINTMENTS);
+  }
+
+  // Bookings the visitor made themselves on this device; the shared appointment
+  // cache also holds the studio agenda and must never be shown to clients.
+  static rememberClientBooking(id: string): void {
+    const ids = getStored<string[]>(STORAGE_KEYS.CLIENT_BOOKING_IDS, []);
+    if (ids.includes(id)) return;
+    localStorage.setItem(STORAGE_KEYS.CLIENT_BOOKING_IDS, JSON.stringify([...ids, id]));
+  }
+
+  static getClientBookings(): Appointment[] {
+    const ids = new Set(getStored<string[]>(STORAGE_KEYS.CLIENT_BOOKING_IDS, []));
+    if (ids.size === 0) return [];
+    const now = new Date();
+    const today = [
+      now.getFullYear(),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      String(now.getDate()).padStart(2, '0')
+    ].join('-');
+    return this.getAppointments().filter(item =>
+      ids.has(item.id) &&
+      item.date >= today &&
+      !['cancelado_cliente', 'cancelado_coworking', 'concluido'].includes(item.status)
+    );
   }
 
   static getAppointmentById(id: string): Appointment | undefined {

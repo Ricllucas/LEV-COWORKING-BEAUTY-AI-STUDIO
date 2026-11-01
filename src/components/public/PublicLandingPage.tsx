@@ -37,9 +37,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
   const [services, setServices] = useState<Service[]>(() => StorageService.getServices());
   const [reviews, setReviews] = useState<Review[]>(() => StorageService.getReviews().filter(r => r.approved));
   const [selectedProfCategory, setSelectedProfCategory] = useState<string>('todas');
-  const [localAppointments, setLocalAppointments] = useState<Appointment[]>(() =>
-    StorageService.getAppointments().filter(item => !['cancelado_cliente', 'cancelado_coworking', 'concluido'].includes(item.status))
-  );
+  const [localAppointments, setLocalAppointments] = useState<Appointment[]>(() => StorageService.getClientBookings());
   const [cancellingId, setCancellingId] = useState<string>('');
 
   const isAdmin = currentUser?.role === 'admin';
@@ -74,9 +72,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           setProfessionals(StorageService.getProfessionals());
           setServices(StorageService.getServices());
           setReviews(StorageService.getReviews().filter(r => r.approved));
-          setLocalAppointments(StorageService.getAppointments().filter(item =>
-            !['cancelado_cliente', 'cancelado_coworking', 'concluido'].includes(item.status)
-          ));
+          setLocalAppointments(StorageService.getClientBookings());
         }
       });
     };
