@@ -26,6 +26,13 @@ import {
   INITIAL_NOTIFICATIONS
 } from '../data/initialData';
 
+// "Unha Raiz" was renamed to "Unha Tradicional"; older browser data and the cloud
+// catalog may still carry the legacy label, so it is translated whenever it is read.
+const LEGACY_LABELS: Record<string, string> = { 'Unha Raiz': 'Unha Tradicional' };
+const renameLegacyLabel = <T extends string>(label: T): T => (LEGACY_LABELS[label] ?? label) as T;
+const normalizeServiceLabels = (services: Service[]): Service[] =>
+  services.map(s => (LEGACY_LABELS[s.category] ? { ...s, category: renameLegacyLabel(s.category) } : s));
+
 const STORAGE_KEYS = {
   SETTINGS: 'lev_coworking_settings_v1',
   BRAND_ASSETS_VERSION: 'lev_brand_logo_2026_08_05_v2',
@@ -474,9 +481,12 @@ export class StorageService {
           }
         : p.workingHours;
 
-      if (avatarUrl !== p.avatarUrl || pixKey !== p.pixKey || phone !== p.phone || whatsapp !== p.whatsapp || workingHours !== p.workingHours) {
+      const title = renameLegacyLabel(p.title);
+      const categories = p.categories.some(c => LEGACY_LABELS[c]) ? p.categories.map(renameLegacyLabel) : p.categories;
+
+      if (avatarUrl !== p.avatarUrl || pixKey !== p.pixKey || phone !== p.phone || whatsapp !== p.whatsapp || workingHours !== p.workingHours || title !== p.title || categories !== p.categories) {
         updated = true;
-        return { ...p, avatarUrl, pixKey, phone, whatsapp, workingHours };
+        return { ...p, avatarUrl, pixKey, phone, whatsapp, workingHours, title, categories };
       }
 
       return p;
@@ -569,13 +579,13 @@ export class StorageService {
 
         setStored(STORAGE_KEYS.SERVICES, updatedCatalog);
         localStorage.setItem(STORAGE_KEYS.TALITHA_CATALOG_VERSION, new Date().toISOString());
-        return updatedCatalog;
+        return normalizeServiceLabels(updatedCatalog);
       }
     } catch (error) {
       console.warn('Não foi possível aplicar a atualização do catálogo da Talitha:', error);
     }
 
-    return current;
+    return normalizeServiceLabels(current);
   }
 
   static saveService(service: Service): void {
@@ -597,7 +607,7 @@ export class StorageService {
   }
 
   static replaceServices(services: Service[]): void {
-    setStored(STORAGE_KEYS.SERVICES, services);
+    setStored(STORAGE_KEYS.SERVICES, normalizeServiceLabels(services));
   }
 
   // Clients

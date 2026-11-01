@@ -21,12 +21,12 @@ export const MobileNav: React.FC<MobileNavProps> = ({
 
   if (isClient) {
     return (
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#0a0a0a]/95 backdrop-blur-lg border-t border-white/10 px-3 py-1.5 shadow-lg">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-[#FCF9F2]/95 backdrop-blur-lg border-t border-[#3D312A]/10 px-3 py-1.5 shadow-lg">
         <div className="flex items-center justify-around relative">
           <button
             onClick={() => onTabChange('inicio')}
             className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-              activeTab === 'inicio' ? 'text-[#c4b491]' : 'text-white/50 hover:text-white'
+              activeTab === 'inicio' ? 'text-[#8C7249]' : 'text-[#3D312A]/50 hover:text-[#3D312A]'
             }`}
           >
             <Home className="w-5 h-5" />
@@ -36,7 +36,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
           <button
             onClick={() => onTabChange('agendar')}
             className={`flex flex-col items-center py-1 px-2 rounded-xl transition-colors ${
-              activeTab === 'agendar' ? 'text-[#c4b491]' : 'text-white/50 hover:text-white'
+              activeTab === 'agendar' ? 'text-[#8C7249]' : 'text-[#3D312A]/50 hover:text-[#3D312A]'
             }`}
           >
             <Sparkles className="w-5 h-5" />
@@ -46,7 +46,7 @@ export const MobileNav: React.FC<MobileNavProps> = ({
           {/* Center Highlighted Agendar */}
           <button
             onClick={onOpenNewBooking}
-            className="flex flex-col items-center justify-center -mt-5 w-12 h-12 rounded-full bg-[#c4b491] text-[#050505] shadow-lg border-2 border-[#050505] active:scale-95 transition-transform"
+            className="flex flex-col items-center justify-center -mt-5 w-12 h-12 rounded-full bg-[#A1865B] text-white shadow-lg border-2 border-[#FCF9F2] active:scale-95 transition-transform"
           >
             <Plus className="w-6 h-6 stroke-[2.5]" />
           </button>

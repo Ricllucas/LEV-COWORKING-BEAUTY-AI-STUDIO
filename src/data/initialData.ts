@@ -32,7 +32,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
   {
     id: "prof_elisangela",
     name: "Elisangela",
-    title: "Unha Raiz",
+    title: "Unha Tradicional",
     meiName: "Elisangela Manicure MEI",
     cnpjCpf: "12.345.678/0001-90",
     pixKey: "(41)992461203",
@@ -42,7 +42,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     email: "elisangela@levcoworkingbeauty.com.br",
     bio: "Especialista em manicure e pedicure tradicional, cutilagem técnica funda sem agressão e spa dos pés relaxante. Cuidado clássico e impecável.",
     avatarUrl: "/profiles/elisangela.webp",
-    categories: ["Unha Raiz"],
+    categories: ["Unha Tradicional"],
     color: "#D4AF37", // Warm Gold
     workingHours: {
       1: { active: false, startTime: "09:00", endTime: "18:00" }, // Seg
@@ -124,7 +124,7 @@ export const INITIAL_SERVICES: Service[] = [
     id: "srv_eli_1",
     catalogVersion: 2026081202,
     name: "Mão Tradicional",
-    category: "Unha Raiz",
+    category: "Unha Tradicional",
     description: "Esmaltação tradicional das mãos, com acabamento delicado e cuidadoso.",
     professionalId: "prof_elisangela",
     professionalName: "Elisangela",
@@ -144,7 +144,7 @@ export const INITIAL_SERVICES: Service[] = [
     id: "srv_eli_2",
     catalogVersion: 2026081202,
     name: "Pedicure Tradicional",
-    category: "Unha Raiz",
+    category: "Unha Tradicional",
     description: "Esmaltação tradicional dos pés, realizada com atenção e acabamento uniforme.",
     professionalId: "prof_elisangela",
     professionalName: "Elisangela",
@@ -160,28 +160,28 @@ export const INITIAL_SERVICES: Service[] = [
     maxCancellationNoticeHours: 24
   },
   {
-    id: "srv_eli_5", catalogVersion: 2026081202, name: "Mão — Esmaltação em Gel", category: "Unha Raiz",
+    id: "srv_eli_5", catalogVersion: 2026081202, name: "Mão — Esmaltação em Gel", category: "Unha Tradicional",
     description: "Esmaltação em gel para as mãos, com brilho intenso e maior durabilidade.",
     professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 50,
     bufferAfterMinutes: 10, price: 55, depositRequired: true, depositValue: 16.50, color: "#D4AF37",
     active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
   },
   {
-    id: "srv_eli_6", catalogVersion: 2026081202, name: "Pé — Esmaltação em Gel", category: "Unha Raiz",
+    id: "srv_eli_6", catalogVersion: 2026081202, name: "Pé — Esmaltação em Gel", category: "Unha Tradicional",
     description: "Esmaltação em gel para os pés, com acabamento uniforme e maior durabilidade.",
     professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 60,
     bufferAfterMinutes: 10, price: 80, depositRequired: true, depositValue: 24, color: "#D4AF37",
     active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
   },
   {
-    id: "srv_eli_7", catalogVersion: 2026081202, name: "SPA dos Pés", category: "Unha Raiz",
+    id: "srv_eli_7", catalogVersion: 2026081202, name: "SPA dos Pés", category: "Unha Tradicional",
     description: "Experiência completa com escalda-pés, esfoliação, hidratação e massagem relaxante.",
     professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 60,
     bufferAfterMinutes: 10, price: 65, depositRequired: true, depositValue: 20, color: "#D4AF37",
     active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
   },
   {
-    id: "srv_eli_8", catalogVersion: 2026081202, name: "Combo Pé Tradicional + SPA dos Pés", category: "Unha Raiz",
+    id: "srv_eli_8", catalogVersion: 2026081202, name: "Combo Pé Tradicional + SPA dos Pés", category: "Unha Tradicional",
     description: "Esmaltação tradicional dos pés combinada ao SPA dos Pés para uma experiência completa de cuidado e relaxamento.",
     professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 105,
     bufferAfterMinutes: 10, price: 105, depositRequired: true, depositValue: 30, color: "#D4AF37",

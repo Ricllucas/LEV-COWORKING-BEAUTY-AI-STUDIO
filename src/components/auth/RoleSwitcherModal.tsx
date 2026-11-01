@@ -55,7 +55,7 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
       email: 'elisangela@levcoworkingbeauty.com.br',
       role: 'profissional',
       professionalId: 'prof_elisangela',
-      description: 'MEI Unha Raiz. Acesso exclusivo à própria agenda, clientes e relatórios financeiros individuais de manicure e pedicure.',
+      description: 'MEI Unha Tradicional. Acesso exclusivo à própria agenda, clientes e relatórios financeiros individuais de manicure e pedicure.',
       icon: <NailCareIcon className="w-5 h-5 text-[#c4b491]" />,
       badgeColor: 'bg-[#c4b491]/20 text-[#c4b491] border-[#c4b491]/40'
     },

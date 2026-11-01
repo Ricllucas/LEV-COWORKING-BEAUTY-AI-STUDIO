@@ -7,7 +7,7 @@ interface SpecialtyIconProps {
 }
 
 /**
- * Icon 1: Nail Care / Unha Raiz / Manicure Tradicional & Cutilagem
+ * Icon 1: Nail Care / Unha Tradicional / Manicure Tradicional & Cutilagem
  * Unique SVG: Nail polish brush with sleek nail tip and subtle shine
  */
 export const NailCareIcon: React.FC<SpecialtyIconProps> = ({ className = "w-5 h-5", size, color }) => (
@@ -153,7 +153,7 @@ export function getSpecialtyIcon(
 ): React.ReactNode {
   const k = key.toLowerCase();
 
-  if (k.includes('elisangela') || k.includes('unha raiz') || k.includes('cutilagem') || k.includes('pedicure') || k.includes('manicure')) {
+  if (k.includes('elisangela') || k.includes('unha raiz') || k.includes('unha tradicional') || k.includes('cutilagem') || k.includes('pedicure') || k.includes('manicure')) {
     return <NailCareIcon className={className} color={color} />;
   }
 

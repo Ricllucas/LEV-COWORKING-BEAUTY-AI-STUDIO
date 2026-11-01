@@ -6,6 +6,8 @@ interface ProfessionalAvatarProps {
   className?: string;
   sizeClassName?: string;
   textClassName?: string;
+  /** Gold ring around the photo; public pages show photos without it. */
+  bordered?: boolean;
 }
 
 export const ProfessionalAvatar: React.FC<ProfessionalAvatarProps> = ({
@@ -13,7 +15,8 @@ export const ProfessionalAvatar: React.FC<ProfessionalAvatarProps> = ({
   name,
   className = '',
   sizeClassName = 'w-16 h-16',
-  textClassName = 'text-xl'
+  textClassName = 'text-xl',
+  bordered = true
 }) => {
   const [hasError, setHasError] = useState(false);
 
@@ -26,7 +29,7 @@ export const ProfessionalAvatar: React.FC<ProfessionalAvatarProps> = ({
 
   return (
     <div
-      className={`relative rounded-full overflow-hidden bg-stone-900 border-2 border-[#c4b491] shadow-md flex items-center justify-center shrink-0 text-[#c4b491] font-serif font-bold select-none ${sizeClassName} ${className}`}
+      className={`relative rounded-full overflow-hidden flex items-center ${bordered ? 'bg-stone-900 border-2 border-[#c4b491] shadow-md' : 'bg-[#F3EBDD]'} justify-center shrink-0 text-[#c4b491] font-serif font-bold select-none ${sizeClassName} ${className}`}
     >
       {/* Centered fallback initial letter */}
       <span className={textClassName}>{initial}</span>

@@ -12,7 +12,7 @@ export interface User {
 }
 
 export type CategoryType = 
-  | 'Unha Raiz' 
+  | 'Unha Tradicional' 
   | 'Maquiagem e Sobrancelhas' 
   | 'Unhas em Gel' 
   | 'Sobrancelhas & Cílios' 
@@ -25,7 +25,7 @@ export type CategoryType =
 export interface Professional {
   id: string;
   name: string;
-  title: string; // e.g. 'Unha Raiz', 'Maquiagem e Sobrancelhas', 'Unhas em Gel'
+  title: string; // e.g. 'Unha Tradicional', 'Maquiagem e Sobrancelhas', 'Unhas em Gel'
   meiName: string;
   cnpjCpf: string;
   pixKey: string;

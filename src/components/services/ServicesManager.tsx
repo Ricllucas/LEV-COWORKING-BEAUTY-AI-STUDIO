@@ -16,7 +16,7 @@ export const ServicesManager: React.FC = () => {
 
   // Form Fields
   const [name, setName] = useState<string>('');
-  const [category, setCategory] = useState<CategoryType>('Unha Raiz');
+  const [category, setCategory] = useState<CategoryType>('Unha Tradicional');
   const [description, setDescription] = useState<string>('');
   const [professionalId, setProfessionalId] = useState<string>('');
   const [durationMinutes, setDurationMinutes] = useState<number>(60);
@@ -307,7 +307,7 @@ export const ServicesManager: React.FC = () => {
                   <option value="Sobrancelhas & Cílios">Sobrancelhas & Cílios</option>
                   <option value="Micropigmentação">Micropigmentação</option>
                   <option value="Estética Labial">Estética Labial</option>
-                  <option value="Unha Raiz">Unha Raiz</option>
+                  <option value="Unha Tradicional">Unha Tradicional</option>
                   <option value="Maquiagem e Sobrancelhas">Maquiagem e Sobrancelhas</option>
                   <option value="Unhas em Gel">Unhas em Gel</option>
                   <option value="Outros">Outros</option>

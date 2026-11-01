@@ -18,6 +18,7 @@ import { ProfessionalAccessManager } from './components/professionals/Profession
 import { CloudServiceCatalog } from './services/cloudServiceCatalog';
 import { StorageService } from './services/storage';
 import { LegalPage } from './components/legal/LegalPage';
+import { PortfolioPage } from './components/public/PortfolioPage';
 
 // Views - eager load only essential views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
@@ -46,6 +47,10 @@ export default function App() {
 
   if (normalizedPath === '/exclusao-de-dados') {
     return <LegalPage kind="data-deletion" />;
+  }
+
+  if (normalizedPath === '/portfolio') {
+    return <PortfolioPage />;
   }
 
   return <Application />;
@@ -192,7 +197,11 @@ function Application() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-[#050505] text-white font-sans flex flex-col selection:bg-[#c4b491]/30 selection:text-white">
+      <div className={`min-h-screen font-sans flex flex-col ${
+        isClientOrGuest
+          ? 'bg-[#FCF9F2] text-[#3D312A] selection:bg-[#E6D7C3] selection:text-[#3D312A]'
+          : 'bg-[#050505] text-white selection:bg-[#c4b491]/30 selection:text-white'
+      }`}>
       {/* Header */}
       <Header
         currentUser={currentUser}
