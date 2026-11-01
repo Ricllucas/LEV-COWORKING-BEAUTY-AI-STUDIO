@@ -7,7 +7,9 @@ import { getSpecialtyIcon } from '../common/SpecialtyIcons';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { CloudServiceCatalog } from '../../services/cloudServiceCatalog';
-import { X, Calendar, Clock, Check, Sparkles, MessageCircle, AlertCircle, ChevronRight, ChevronLeft, XCircle } from 'lucide-react';
+import { CloudClientService } from '../../services/cloudClients';
+import { findClientMatches } from '../../utils/clientSearch';
+import { X, Calendar, Clock, Check, Sparkles, MessageCircle, AlertCircle, ChevronRight, ChevronLeft, XCircle, UserCheck } from 'lucide-react';
 
 interface PublicBookingModalProps {
   isOpen: boolean;
@@ -41,6 +43,11 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
   const [clientEmail, setClientEmail] = useState<string>('');
   const [clientNotes, setClientNotes] = useState<string>('');
   const [acceptedPolicy, setAcceptedPolicy] = useState<boolean>(true);
+
+  // Base de clientes para a equipe reaproveitar cadastros ao agendar
+  const [knownClients, setKnownClients] = useState<Client[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [showClientSuggestions, setShowClientSuggestions] = useState(false);
 
   // Results
   const [availableSlots, setAvailableSlots] = useState<SlotAvailability[]>([]);
@@ -84,8 +91,48 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
         setClientEmail('');
         setClientNotes('');
       }
+      setSelectedClientId('');
     }
   }, [isOpen, initialProfId, initialServiceId]);
+
+  useEffect(() => {
+    if (!isOpen || !isStaffBooking) return;
+    let active = true;
+    setKnownClients(StorageService.getClients());
+    CloudClientService.list()
+      .then(shared => {
+        if (!active) return;
+        const merged = new Map<string, Client>();
+        [...StorageService.getClients(), ...shared].forEach(client => {
+          const key = client.phone.replace(/\D/g, '').slice(-11) || client.id;
+          merged.set(key, client);
+        });
+        const all = Array.from(merged.values());
+        StorageService.replaceClients(all);
+        setKnownClients(all);
+      })
+      .catch(error => console.error('Erro ao carregar a base de clientes:', error));
+    return () => { active = false; };
+  }, [isOpen, isStaffBooking]);
+
+  const clientSuggestions = isStaffBooking && showClientSuggestions && !selectedClientId
+    ? findClientMatches(knownClients, clientName)
+    : [];
+
+  const handleSelectClient = (client: Client) => {
+    setSelectedClientId(client.id);
+    setClientName(client.fullName);
+    setClientPhone(client.phone);
+    setClientEmail(client.email || '');
+    setShowClientSuggestions(false);
+  };
+
+  const handleClearSelectedClient = () => {
+    setSelectedClientId('');
+    setClientName('');
+    setClientPhone('');
+    setClientEmail('');
+  };
 
   useEffect(() => {
     if (!isOpen || !selectedDate) return;
@@ -146,7 +193,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     // Get or create client
     const existingClients = StorageService.getClients();
     const normalizedClientPhone = clientPhone.replace(/\D/g, '');
-    let client = existingClients.find(c => c.phone.replace(/\D/g, '') === normalizedClientPhone);
+    let client = existingClients.find(c => c.id === selectedClientId)
+      || existingClients.find(c => c.phone.replace(/\D/g, '') === normalizedClientPhone);
 
     if (!client) {
       const newClient: Client = {
@@ -271,6 +319,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     setClientPhone('');
     setClientEmail('');
     setClientNotes('');
+    setSelectedClientId('');
     onClose();
   };
 
@@ -537,22 +586,58 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
 
               {/* Orientação para clientes sem necessidade de cadastro */}
               <div className="p-3 rounded-xl bg-[#3D312A]/[0.03] border border-[#3D312A]/10 text-xs text-[#3D312A]/70">
-                Preencha seu nome e telefone para concluir a solicitação. O e-mail é opcional e não é necessário criar uma conta.
+                {isStaffBooking
+                  ? 'Digite o nome ou telefone da cliente. Se ela já tiver cadastro, escolha na lista e os dados são preenchidos automaticamente.'
+                  : 'Preencha seu nome e telefone para concluir a solicitação. O e-mail é opcional e não é necessário criar uma conta.'}
               </div>
 
               <div className="space-y-3">
                 <div>
                   <label className="text-xs font-semibold text-[#3D312A]/60 block mb-1">
-                    Seu Nome Completo *
+                    {isStaffBooking ? 'Nome da Cliente *' : 'Seu Nome Completo *'}
                   </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Ex: Nome completo"
-                    value={clientName}
-                    onChange={e => setClientName(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl border border-[#3D312A]/10 bg-[#FCF9F2] text-xs font-medium text-[#3D312A] focus:outline-hidden focus:border-[#A1865B]"
-                  />
+                  <div className="relative">
+                    <input
+                      type="text"
+                      required
+                      autoComplete="off"
+                      placeholder={isStaffBooking ? 'Buscar por nome ou telefone' : 'Ex: Nome completo'}
+                      value={clientName}
+                      onChange={e => {
+                        setClientName(e.target.value);
+                        setSelectedClientId('');
+                        setShowClientSuggestions(true);
+                      }}
+                      onFocus={() => setShowClientSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowClientSuggestions(false), 150)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-[#3D312A]/10 bg-[#FCF9F2] text-xs font-medium text-[#3D312A] focus:outline-hidden focus:border-[#A1865B]"
+                    />
+                    {clientSuggestions.length > 0 && (
+                      <ul className="absolute z-10 left-0 right-0 mt-1 max-h-56 overflow-y-auto rounded-xl border border-[#3D312A]/10 bg-white shadow-xl">
+                        {clientSuggestions.map(client => (
+                          <li key={client.id}>
+                            <button
+                              type="button"
+                              onMouseDown={e => e.preventDefault()}
+                              onClick={() => handleSelectClient(client)}
+                              className="w-full text-left px-3.5 py-2 hover:bg-[#F3EBDD] flex flex-col"
+                            >
+                              <span className="text-xs font-semibold text-[#3D312A]">{client.fullName}</span>
+                              <span className="text-[11px] text-[#3D312A]/55">{client.phone}{client.email ? ` · ${client.email}` : ''}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                  {isStaffBooking && selectedClientId && (
+                    <div className="mt-1.5 flex items-center justify-between gap-2 text-[11px] text-[#5B7A4A]">
+                      <span className="inline-flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Cliente já cadastrada — dados preenchidos</span>
+                      <button type="button" onClick={handleClearSelectedClient} className="underline text-[#3D312A]/55 hover:text-[#3D312A]">
+                        Trocar cliente
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
