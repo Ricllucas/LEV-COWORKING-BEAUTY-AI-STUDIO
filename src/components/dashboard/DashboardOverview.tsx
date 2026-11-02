@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { User, Appointment, Professional, Service, Client } from '../../types';
 import { StorageService } from '../../services/storage';
 import { formatCurrency, formatDateBR } from '../../utils/formatters';
+import { FollowUpsPanel } from './FollowUpsPanel';
 import {
   Calendar,
   DollarSign,
@@ -130,6 +131,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           </button>
         </div>
       </div>
+
+      {/* Follow-ups: lembretes, agradecimentos e manutenções */}
+      <FollowUpsPanel appointments={filteredApts} today={todayStr} />
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
