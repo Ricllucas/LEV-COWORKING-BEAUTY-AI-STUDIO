@@ -13,6 +13,7 @@ export type AutomatedAppointment = {
   startTime: string;
   endTime?: string;
   status: string;
+  createdAt?: string;
 };
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
@@ -52,6 +53,20 @@ export const isDueForThanks = (apt: AutomatedAppointment, now: Date) => {
   return apt.date === addDays(date, -1);
 };
 
+// Confirmação para a cliente: sai quando a equipe confirma o horário (nunca antes,
+// para o site público não disparar mensagens a números quaisquer). Só para
+// agendamentos feitos depois que a mensagem foi criada, para não reenviar a clientes antigas.
+export const CONFIRMATION_START = '2026-11-01T20:00:00-03:00';
+
+export const isDueForConfirmation = (apt: AutomatedAppointment, now: Date) => {
+  if (apt.status !== 'confirmado' || !apt.createdAt) return false;
+  const created = new Date(apt.createdAt).getTime();
+  if (!Number.isFinite(created) || created < new Date(CONFIRMATION_START).getTime()) return false;
+  const start = new Date(`${apt.date}T${apt.startTime}:00-03:00`).getTime();
+  // Se falta 70 minutos ou menos, o lembrete de 1 hora já avisa a cliente
+  return start - now.getTime() > 70 * 60_000;
+};
+
 const MAINTENANCE_WINDOW_DAYS = 30;
 // Decisão da LEV: ao ligar o robô, só chamar quem vencer a partir desta data
 export const MAINTENANCE_START_DATE = '2026-11-02';
@@ -86,6 +101,15 @@ export const findMaintenanceDue = (
 };
 
 export const messages = {
+  confirmation: (apt: AutomatedAppointment) =>
+    `Olá, ${firstName(apt.clientName)}! 💛 Seu horário no LEV Coworking Beauty está confirmado:
+
+🗓️ ${formatDate(apt.date)} às ${apt.startTime}
+💅 ${apt.serviceNames.join(', ')}
+👩 Com ${apt.professionalName || 'a sua profissional'}
+
+Vamos te lembrar na véspera. Se precisar remarcar, é só responder esta mensagem.`,
+
   reminder1Day: (apt: AutomatedAppointment) =>
     `Olá, ${firstName(apt.clientName)}! 💛 Passando para lembrar do seu horário amanhã (${formatDate(apt.date)}) às ${apt.startTime}, com ${apt.professionalName || 'a sua profissional'}, para ${apt.serviceNames.join(', ')}.\n\nTe esperamos no LEV Coworking Beauty! Se precisar remarcar, é só responder esta mensagem.`,
 

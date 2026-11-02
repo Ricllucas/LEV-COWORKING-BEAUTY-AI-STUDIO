@@ -5,6 +5,7 @@ import {
   addDays,
   brasiliaNow,
   findMaintenanceDue,
+  isDueForConfirmation,
   isDueForThanks,
   isWithinSendingHours,
   messages,
@@ -15,7 +16,7 @@ import {
 // WhatsApp da LEV: lembretes (1 dia e 1 hora antes), agradecimento e manutenção.
 
 type Row = { id: string; payload?: Record<string, any> | null; reminders_sent?: RemindersSent | null };
-type Kind = '1dia' | '1hora' | 'agradecimento' | 'manutencao';
+type Kind = 'confirmacao' | '1dia' | '1hora' | 'agradecimento' | 'manutencao';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const ACTIVE = new Set(['aguardando_confirmacao', 'confirmado']);
@@ -48,6 +49,7 @@ const toAppointment = (row: Row): (AutomatedAppointment & { sent: RemindersSent 
     startTime: p.startTime,
     endTime: p.endTime,
     status: p.status,
+    createdAt: p.createdAt,
     sent: row.reminders_sent || {}
   };
 };
@@ -89,6 +91,7 @@ export default async function handler(req: any, res: any) {
       if (apt.status === 'confirmado') {
         if (!apt.sent['1hora'] && isDueFor1Hour(apt, now)) queue.push({ apt, kind: '1hora', text: messages.reminder1Hour(apt) });
         else if (!apt.sent['1dia'] && isDueFor1Day(apt, now)) queue.push({ apt, kind: '1dia', text: messages.reminder1Day(apt) });
+        else if (!apt.sent.confirmacao && isDueForConfirmation(apt, now)) queue.push({ apt, kind: 'confirmacao', text: messages.confirmation(apt) });
       }
       if (!apt.sent.agradecimento && isDueForThanks(apt, now)) queue.push({ apt, kind: 'agradecimento', text: messages.thanks(apt) });
     });
@@ -104,10 +107,11 @@ export default async function handler(req: any, res: any) {
       if (apt && !apt.sent.manutencao) queue.push({ apt, kind: 'manutencao', text: messages.maintenance(due) });
     });
 
-    const sent: Record<Kind, number> = { '1dia': 0, '1hora': 0, agradecimento: 0, manutencao: 0 };
+    const sent: Record<Kind, number> = { confirmacao: 0, '1dia': 0, '1hora': 0, agradecimento: 0, manutencao: 0 };
     const failures: string[] = [];
-    // Lembretes primeiro: são os que têm hora certa
-    const ordered = queue.sort((a, b) => Number(a.kind !== '1hora' && a.kind !== '1dia') - Number(b.kind !== '1hora' && b.kind !== '1dia'));
+    // Lembretes e confirmações primeiro: são os que têm hora certa
+    const urgent = (kind: Kind) => kind === '1hora' || kind === '1dia' || kind === 'confirmacao';
+    const ordered = queue.sort((a, b) => Number(!urgent(a.kind)) - Number(!urgent(b.kind)));
     for (const [index, item] of ordered.slice(0, MAX_PER_RUN).entries()) {
       if (index > 0) await sleep(PAUSE_MS);
       try {

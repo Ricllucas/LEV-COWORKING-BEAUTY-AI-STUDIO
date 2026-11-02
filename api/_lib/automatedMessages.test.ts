@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findMaintenanceDue, isDueForThanks, isWithinSendingHours, messages, type AutomatedAppointment } from './automatedMessages';
+import { findMaintenanceDue, isDueForConfirmation, isDueForThanks, isWithinSendingHours, messages, type AutomatedAppointment } from './automatedMessages';
 import { toBrazilianNumber } from './openwa';
 
 const apt = (overrides: Partial<AutomatedAppointment>): AutomatedAppointment => ({
@@ -49,6 +49,31 @@ describe('mensagens automáticas', () => {
     const [due] = findMaintenanceDue([apt({ date: '2026-10-18' })], new Set(), '2026-11-02');
     expect(messages.maintenance(due)).toContain('Olá, Ana!');
     expect(messages.maintenance(due)).toContain('15 dias');
+  });
+
+  it('confirma para a cliente só depois que a equipe confirma o horário', () => {
+    const futuro = { date: '2026-11-05', startTime: '10:00', createdAt: '2026-11-02T16:00:00.000Z' };
+    const agora = at('2026-11-02T17:00:00Z');
+    expect(isDueForConfirmation(apt({ ...futuro, status: 'aguardando_confirmacao' }), agora)).toBe(false);
+    expect(isDueForConfirmation(apt({ ...futuro, status: 'confirmado' }), agora)).toBe(true);
+  });
+
+  it('não confirma horário passado, muito próximo ou criado antes do robô', () => {
+    const base = { status: 'confirmado', createdAt: '2026-11-02T16:00:00.000Z' };
+    // Começa em 1 hora: o lembrete de 1 hora já cobre
+    expect(isDueForConfirmation(apt({ ...base, date: '2026-11-02', startTime: '15:00' }), at('2026-11-02T17:00:00Z'))).toBe(false);
+    expect(isDueForConfirmation(apt({ ...base, date: '2026-11-01', startTime: '15:00' }), at('2026-11-02T17:00:00Z'))).toBe(false);
+    expect(isDueForConfirmation(apt({ ...base, date: '2026-11-05', createdAt: '2026-10-20T12:00:00.000Z' }), at('2026-11-02T17:00:00Z'))).toBe(false);
+    expect(isDueForConfirmation(apt({ ...base, date: '2026-11-05', createdAt: undefined }), at('2026-11-02T17:00:00Z'))).toBe(false);
+  });
+
+  it('monta a confirmação com data, horário, profissional e serviço', () => {
+    const text = messages.confirmation(apt({ date: '2026-11-05', startTime: '10:00', status: 'confirmado' }));
+    expect(text).toContain('Olá, Ana!');
+    expect(text).toContain('05/11/2026');
+    expect(text).toContain('10:00');
+    expect(text).toContain('Nayara');
+    expect(text).toContain('Esmaltação em Gel');
   });
 
   it('normaliza telefones brasileiros para o WhatsApp', () => {
