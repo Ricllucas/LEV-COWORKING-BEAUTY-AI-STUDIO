@@ -1,6 +1,6 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { notificationService } from '../_lib/notificationService.js';
-import { applyApiSecurity, rateLimit, safeText, validJsonRequest } from '../_lib/security.js';
+import { applyApiSecurity, rateLimit, safeText, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const digits = (value: string) => String(value || '').replace(/\D/g, '');
@@ -57,7 +57,7 @@ export default async function handler(req: any, res: any) {
 
     return json(res, 200, { appointment: updated, calendarSynced });
   } catch (error) {
-    return json(res, 500, { error: error instanceof Error ? error.message : 'Não foi possível cancelar o agendamento.' });
+    return json(res, 500, { error: publicErrorMessage(error, 'Não foi possível cancelar o agendamento.') });
   }
 }
 

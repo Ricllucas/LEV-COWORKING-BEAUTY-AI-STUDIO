@@ -1,6 +1,6 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
-import { applyApiSecurity, rateLimit, validJsonRequest } from '../_lib/security.js';
+import { applyApiSecurity, rateLimit, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const allowedStatuses = new Set([
@@ -105,7 +105,7 @@ export default async function handler(req: any, res: any) {
     return json(res, 200, { appointment, synced: true, ...calendar });
   } catch (error) {
     console.error('Google Calendar sync error:', error);
-    return json(res, 500, { error: error instanceof Error ? error.message : 'Falha ao sincronizar o Google Agenda.' });
+    return json(res, 500, { error: publicErrorMessage(error, 'Falha ao sincronizar o Google Agenda.') });
   }
 }
 

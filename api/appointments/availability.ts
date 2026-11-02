@@ -1,5 +1,5 @@
 import { listAppointmentsByDate } from '../_lib/appointmentService.js';
-import { applyApiSecurity, rateLimit } from '../_lib/security.js';
+import { applyApiSecurity, rateLimit, publicErrorMessage } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 
@@ -20,7 +20,7 @@ export default async function handler(req: any, res: any) {
     }));
     return json(res, 200, { appointments });
   } catch (error) {
-    return json(res, 500, { error: error instanceof Error ? error.message : 'Falha ao consultar a disponibilidade.' });
+    return json(res, 500, { error: publicErrorMessage(error, 'Falha ao consultar a disponibilidade.') });
   }
 }
 

@@ -46,7 +46,7 @@ const config = () => {
 export const CloudAppointmentService = {
   isConfigured: () => Boolean(SUPABASE_URL && SUPABASE_KEY),
 
-  async save(appointment: Appointment, user?: User): Promise<void> {
+  async save(appointment: Appointment, user?: User, turnstileToken?: string): Promise<void> {
     config();
     const isStaff = user?.role === 'admin' || user?.role === 'profissional';
     const accessToken = isStaff ? await getFreshAccessToken(user.role) : undefined;
@@ -56,7 +56,7 @@ export const CloudAppointmentService = {
         'Content-Type': 'application/json',
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {})
       },
-      body: JSON.stringify(appointment)
+      body: JSON.stringify(turnstileToken ? { ...appointment, turnstileToken } : appointment)
     });
 
     if (!response.ok) {

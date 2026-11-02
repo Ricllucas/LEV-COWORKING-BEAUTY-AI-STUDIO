@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { createSign } from 'node:crypto';
 import { authenticateStaff } from '../_lib/staffAuth.js';
-import { applyApiSecurity, constantTimeSecretEquals, rateLimit } from '../_lib/security.js';
+import { applyApiSecurity, constantTimeSecretEquals, rateLimit, publicErrorMessage } from '../_lib/security.js';
 
 const requireEnv = (name: string) => {
   const value = process.env[name];
@@ -132,7 +132,7 @@ export default async function handler(req: any, res: any) {
   } catch (error) {
     console.error('Calendar sync error:', error);
     return res.status(500).json({
-      error: error instanceof Error ? error.message : 'Falha ao sincronizar a agenda.'
+      error: publicErrorMessage(error, 'Falha ao sincronizar a agenda.')
     });
   }
 }

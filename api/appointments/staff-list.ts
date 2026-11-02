@@ -1,5 +1,5 @@
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
-import { applyApiSecurity, rateLimit } from '../_lib/security.js';
+import { applyApiSecurity, rateLimit, publicErrorMessage } from '../_lib/security.js';
 
 const config = () => {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
@@ -118,7 +118,7 @@ export default async function handler(req: any, res: any) {
     });
     return json(res, 200, { appointments });
   } catch (error) {
-    return json(res, 500, { error: error instanceof Error ? error.message : 'Falha ao carregar a agenda compartilhada.' });
+    return json(res, 500, { error: publicErrorMessage(error, 'Falha ao carregar a agenda compartilhada.') });
   }
 }
 

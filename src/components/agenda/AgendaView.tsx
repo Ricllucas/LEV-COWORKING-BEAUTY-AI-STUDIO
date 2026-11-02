@@ -262,7 +262,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
   );
 
   const statusLabel: Record<AppointmentStatus, string> = {
-    aguardando_confirmacao: 'Aguardando',
+    aguardando_confirmacao: 'Aguardando confirmação',
     confirmado: 'Confirmado',
     cliente_presente: 'Cliente presente',
     em_atendimento: 'Em atendimento',
@@ -293,7 +293,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
       prof_nayara: 'border-[#a98d7a]/80 bg-[#342923]/95 text-[#f5e9e1]'
     };
     const statusEffect = appointment.status === 'aguardando_confirmacao'
-        ? ' border-dashed'
+        ? ' border-dashed !border-amber-400 border-2'
         : '';
     return `${tones[appointment.professionalId] || 'border-[#c4b491]/80 bg-[#332d24]/95 text-[#f7f0e5]'}${statusEffect}`;
   };
@@ -524,6 +524,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                           style={{ top: top + 2, height }}
                           title={`${appointment.clientName} · ${appointment.serviceNames.join(', ')}`}
                         >
+                          {appointment.status === 'aguardando_confirmacao' && (
+                            <span className="mb-1 inline-block rounded-md bg-amber-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-black">⏳ Confirmar</span>
+                          )}
                           <div className="flex items-start justify-between gap-2">
                             <span className="font-bold text-xs leading-tight truncate">{appointment.clientName}</span>
                             <span className="text-[9px] opacity-70 whitespace-nowrap">{appointment.startTime}–{appointment.endTime}</span>
@@ -569,7 +572,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                         <p className={`text-xs mt-0.5 ${appointment.status === 'concluido' ? 'text-[#42533A]' : 'text-white/55'}`}>{appointment.serviceNames.join(', ')} · {appointment.professionalName}</p>
                       </div>
                     </div>
-                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${appointment.status === 'concluido' ? 'text-[#36502C]' : 'text-[#c4b491]'}`}>{statusLabel[appointment.status]}</span>
+                    <span className={`text-[10px] uppercase tracking-wider font-semibold ${appointment.status === 'concluido' ? 'text-[#36502C]' : appointment.status === 'aguardando_confirmacao' ? 'rounded-md bg-amber-400 px-2 py-1 text-black' : appointment.status === 'confirmado' ? 'text-emerald-400' : 'text-[#c4b491]'}`}>{appointment.status === 'aguardando_confirmacao' ? '⏳ ' : appointment.status === 'confirmado' ? '✓ ' : ''}{statusLabel[appointment.status]}</span>
                   </button>
                 );
               })}
@@ -631,7 +634,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                 </div>
                 <div className="flex justify-between text-white/60">
                   <span>Status do Atendimento:</span>
-                  <span className="font-bold text-[#c4b491] uppercase">{selectedApt.status.replace('_', ' ')}</span>
+                  <span className={`font-bold uppercase ${selectedApt.status === 'aguardando_confirmacao' ? 'text-amber-400' : selectedApt.status === 'confirmado' ? 'text-emerald-400' : 'text-[#c4b491]'}`}>{statusLabel[selectedApt.status]}</span>
                 </div>
                 {selectedApt.notes && (
                   <div className="pt-2 mt-2 border-t border-white/10 text-white/60">
@@ -682,6 +685,25 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
               )}
             </div>
 
+            {/* Confirmação: deixa claro se a cliente já foi avisada */}
+            {selectedApt.status === 'aguardando_confirmacao' && (
+              <div className="mb-4 rounded-xl border-2 border-amber-400 bg-amber-400/10 p-3 text-xs text-amber-100">
+                <p className="font-bold text-amber-300">⏳ Este horário ainda NÃO está confirmado</p>
+                <p className="mt-1">A cliente ainda não recebeu nenhuma mensagem. Ao confirmar, ela recebe a confirmação no WhatsApp em até 5 minutos.</p>
+                <button
+                  onClick={() => handleStatusChange(selectedApt.id, 'confirmado')}
+                  className="mt-3 w-full rounded-xl bg-amber-400 py-2.5 text-sm font-bold text-black hover:bg-amber-300 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <Check className="w-4 h-4" /> Confirmar horário e avisar a cliente
+                </button>
+              </div>
+            )}
+            {selectedApt.status === 'confirmado' && (
+              <div className="mb-4 rounded-xl border border-emerald-700 bg-emerald-950/50 p-3 text-xs text-emerald-200">
+                ✓ Horário confirmado. A cliente recebe a confirmação e os lembretes pelo WhatsApp automaticamente.
+              </div>
+            )}
+
             {/* Quick Actions */}
             <div className="space-y-2">
               <span className="text-xs font-semibold text-[#c4b491] block uppercase tracking-wider">
@@ -689,12 +711,12 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
               </span>
 
               <div className="grid grid-cols-2 gap-2">
-                <button
+                {!['aguardando_confirmacao', 'confirmado'].includes(selectedApt.status) && <button
                   onClick={() => handleStatusChange(selectedApt.id, 'confirmado')}
-                  className="py-2 px-3 rounded-xl bg-emerald-950/60 border border-emerald-800 hover:bg-emerald-900/80 text-emerald-300 text-xs font-medium transition-colors flex items-center justify-center gap-1"
+                  className="py-2 px-3 rounded-xl bg-[#050505] border border-white/15 hover:border-emerald-700 text-white/80 text-xs font-medium transition-colors flex items-center justify-center gap-1"
                 >
-                  <Check className="w-3.5 h-3.5" /> Confirmar
-                </button>
+                  Voltar para confirmado
+                </button>}
 
                 <button
                   onClick={() => handleStatusChange(selectedApt.id, 'cliente_presente')}

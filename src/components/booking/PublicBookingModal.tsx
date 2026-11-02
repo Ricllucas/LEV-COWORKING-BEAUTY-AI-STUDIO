@@ -6,6 +6,7 @@ import { formatCurrency, formatDateBR, generateWhatsAppMessage, buildWhatsAppLin
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
+import { TurnstileWidget, TURNSTILE_SITE_KEY } from './TurnstileWidget';
 import { CloudServiceCatalog } from '../../services/cloudServiceCatalog';
 import { CloudClientService } from '../../services/cloudClients';
 import { findClientMatches } from '../../utils/clientSearch';
@@ -43,6 +44,9 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
   const [clientEmail, setClientEmail] = useState<string>('');
   const [clientNotes, setClientNotes] = useState<string>('');
   const [acceptedPolicy, setAcceptedPolicy] = useState<boolean>(true);
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileRound, setTurnstileRound] = useState(0);
+  const needsTurnstile = !isStaffBooking && Boolean(TURNSTILE_SITE_KEY);
 
   // Base de clientes para a equipe reaproveitar cadastros ao agendar
   const [knownClients, setKnownClients] = useState<Client[]>([]);
@@ -269,7 +273,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
 
     try {
       setIsSubmitting(true);
-      await StorageService.saveAppointmentToCloud(newApt, currentUser);
+      await StorageService.saveAppointmentToCloud(newApt, currentUser, needsTurnstile ? turnstileToken : undefined);
       StorageService.saveAppointment(newApt, false);
       if (!isStaffBooking) StorageService.rememberClientBooking(newApt.id);
       StorageService.syncClientsFromAppointments([newApt]);
@@ -278,6 +282,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       // A profissional é avisada pelo robô de WhatsApp da LEV; a cliente recebe a
       // confirmação automática quando o horário for confirmado. Sem redirecionar.
     } catch (error) {
+      // A verificação anti-robô vale uma vez: gera outra para a próxima tentativa
+      if (needsTurnstile) { setTurnstileToken(''); setTurnstileRound(round => round + 1); }
       alert(error instanceof Error ? error.message : 'Não foi possível concluir o agendamento.');
     } finally {
       setIsSubmitting(false);
@@ -713,6 +719,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                 </span>
               </label>
 
+              {needsTurnstile && step === 4 && <TurnstileWidget key={turnstileRound} onToken={setTurnstileToken} />}
+
               <div className="pt-2 flex items-center justify-between">
                 <button
                   onClick={() => setStep(3)}
@@ -723,7 +731,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
 
                 <button
                   onClick={handleConfirmBooking}
-                  disabled={!clientName || !clientPhone || !acceptedPolicy || isSubmitting}
+                  disabled={!clientName || !clientPhone || !acceptedPolicy || isSubmitting || (needsTurnstile && !turnstileToken)}
                   className="px-6 py-2.5 rounded-xl bg-[#A1865B] hover:bg-[#8C7249] disabled:opacity-50 text-white font-semibold text-xs transition-colors flex items-center gap-1.5 shadow-md"
                 >
                   {isSubmitting ? 'Salvando...' : 'Confirmar Agendamento'} <Check className="w-4 h-4" />

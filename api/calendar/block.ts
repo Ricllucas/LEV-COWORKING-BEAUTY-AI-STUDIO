@@ -1,6 +1,6 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
-import { applyApiSecurity, rateLimit, safeText, secureId, validJsonRequest } from '../_lib/security.js';
+import { applyApiSecurity, rateLimit, safeText, secureId, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 
@@ -36,6 +36,12 @@ export default async function handler(req: any, res: any) {
     if (!block?.id || !block?.professionalId || !block?.date || !block?.startTime || !block?.endTime) {
       return json(res, 400, { error: 'Dados do bloqueio incompletos.' });
     }
+    const invalid = validateBlock(block);
+    if (invalid) return json(res, 400, { error: invalid });
+    // Cada profissional só bloqueia a própria agenda; o admin bloqueia qualquer uma
+    if (staff.role === 'profissional' && staff.professionalId !== block.professionalId) {
+      return json(res, 403, { error: 'Você só pode bloquear a sua própria agenda.' });
+    }
 
     const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -47,15 +53,15 @@ export default async function handler(req: any, res: any) {
     const blockData: TimeBlock = {
       id: secureId('block'),
       professionalId: block.professionalId,
-      professionalName: block.professionalName,
+      professionalName: safeText(block.professionalName, 80),
       date: block.date,
       startTime: block.startTime,
       endTime: block.endTime,
       title: safeText(block.title || 'Bloqueio', 120),
       type: block.type || 'bloqueio',
       status: 'confirmado',
-      serviceNames: [block.title || 'Bloqueio'],
-      clientName: `[${block.type?.toUpperCase() || 'BLOQUEIO'}]`,
+      serviceNames: [safeText(block.title || 'Bloqueio', 120)],
+      clientName: `[${String(block.type || 'bloqueio').toUpperCase()}]`,
       clientPhone: '',
       value: 0,
       duration: calculateDuration(block.startTime, block.endTime)
@@ -105,9 +111,23 @@ export default async function handler(req: any, res: any) {
   } catch (error) {
     console.error('Time block creation error:', error);
     return json(res, 500, {
-      error: error instanceof Error ? error.message : 'Não foi possível criar o bloqueio.'
+      error: publicErrorMessage(error, 'Não foi possível criar o bloqueio.')
     });
   }
+}
+
+const PROFESSIONALS = new Set(['prof_elisangela', 'prof_talitha', 'prof_nayara']);
+const BLOCK_TYPES = new Set(['pausa', 'indisponivel', 'bloqueio']);
+
+export function validateBlock(block: any): string | null {
+  if (!PROFESSIONALS.has(block.professionalId)) return 'Profissional inválida.';
+  if (typeof block.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(block.date)) return 'Data inválida.';
+  const time = /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (typeof block.startTime !== 'string' || !time.test(block.startTime)) return 'Horário inicial inválido.';
+  if (typeof block.endTime !== 'string' || !time.test(block.endTime)) return 'Horário final inválido.';
+  if (block.endTime <= block.startTime) return 'O horário final precisa ser depois do inicial.';
+  if (block.type !== undefined && !BLOCK_TYPES.has(block.type)) return 'Tipo de bloqueio inválido.';
+  return null;
 }
 
 function calculateDuration(startTime: string, endTime: string): number {

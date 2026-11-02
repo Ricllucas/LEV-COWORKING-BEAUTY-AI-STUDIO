@@ -1,5 +1,5 @@
 import { authenticateStaff, serviceHeaders, supabaseConfig } from '../_lib/staffAuth.js';
-import { applyApiSecurity, rateLimit, safeText, validJsonRequest } from '../_lib/security.js';
+import { applyApiSecurity, rateLimit, safeText, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
 
 // GET lista as clientes; POST cria ou atualiza. Uma só função para caber no limite do plano Hobby.
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
@@ -20,7 +20,7 @@ const listClients = async (req: any, res: any) => {
     const clients = rows.map(row => ({ ...row.payload, id: row.id }));
     return json(res, 200, { clients });
   } catch (error) {
-    return json(res, 500, { error: error instanceof Error ? error.message : 'Falha ao carregar clientes.' });
+    return json(res, 500, { error: publicErrorMessage(error, 'Falha ao carregar clientes.') });
   }
 };
 
@@ -66,7 +66,7 @@ const saveClient = async (req: any, res: any) => {
     }
     return json(res, 200, { client });
   } catch (error) {
-    return json(res, 500, { error: error instanceof Error ? error.message : 'Falha ao salvar cliente.' });
+    return json(res, 500, { error: publicErrorMessage(error, 'Falha ao salvar cliente.') });
   }
 };
 

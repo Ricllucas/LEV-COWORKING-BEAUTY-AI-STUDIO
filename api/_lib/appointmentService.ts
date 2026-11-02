@@ -178,3 +178,35 @@ export const createUnifiedAppointment = async (
   return { saved: true, calendar, appointment: payload };
 };
 
+
+// Limite do site público: cada telefone pode ter poucos pedidos aguardando
+// confirmação, para ninguém lotar a agenda com agendamentos falsos.
+export const MAX_PENDING_PER_PHONE = 2;
+export const phoneKey = (phone: string) => String(phone || '').replace(/\D/g, '').replace(/^55(?=\d{10,11}$)/, '');
+
+export const countPendingForPhone = (appointments: Array<Pick<UnifiedAppointment, 'clientPhone' | 'status'>>, phone: string) => {
+  const key = phoneKey(phone);
+  return appointments.filter(item => item?.status === 'aguardando_confirmacao' && phoneKey(item.clientPhone) === key).length;
+};
+
+export const assertPublicBookingLimit = async (phone: string) => {
+  const key = phoneKey(phone);
+  if (key.length < 10 || key.length > 11) {
+    const error = new Error('Informe um celular válido com DDD.');
+    (error as Error & { status?: number }).status = 400;
+    throw error;
+  }
+  const { url, key: serviceKey } = config();
+  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const response = await fetch(
+    `${url}/rest/v1/appointments?appointment_date=gte.${today}&status=eq.aguardando_confirmacao&select=payload`,
+    { headers: authHeaders(serviceKey) }
+  );
+  if (!response.ok) throw new Error('Não foi possível consultar a agenda.');
+  const rows = await response.json() as Array<{ payload: UnifiedAppointment }>;
+  if (countPendingForPhone(rows.map(row => row.payload), phone) >= MAX_PENDING_PER_PHONE) {
+    const error = new Error('Você já tem pedidos de agendamento aguardando confirmação. Aguarde a profissional confirmar ou fale com a LEV pelo WhatsApp.');
+    (error as Error & { status?: number }).status = 429;
+    throw error;
+  }
+};

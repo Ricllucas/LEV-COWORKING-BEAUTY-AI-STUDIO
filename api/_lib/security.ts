@@ -3,7 +3,7 @@ import { randomUUID, timingSafeEqual } from 'node:crypto';
 type Bucket = { count: number; resetAt: number };
 const buckets = new Map<string, Bucket>();
 
-const requestIp = (req: any) => String(
+export const requestIp = (req: any) => String(
   req.headers?.['x-vercel-forwarded-for'] || req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown'
 ).split(',')[0].trim();
 
@@ -67,3 +67,10 @@ export const constantTimeSecretEquals = (provided: unknown, expected: unknown) =
 };
 
 
+
+// Erros com status < 500 são mensagens pensadas para a usuária; o resto pode
+// conter detalhes internos do servidor e vira uma mensagem genérica.
+export const publicErrorMessage = (error: unknown, fallback: string) => {
+  const status = Number((error as { status?: number })?.status || 500);
+  return status < 500 && error instanceof Error ? error.message : fallback;
+};

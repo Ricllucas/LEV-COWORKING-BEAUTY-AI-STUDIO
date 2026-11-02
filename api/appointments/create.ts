@@ -1,6 +1,7 @@
-import { createUnifiedAppointment } from '../_lib/appointmentService.js';
+import { assertPublicBookingLimit, createUnifiedAppointment } from '../_lib/appointmentService.js';
+import { verifyTurnstile } from '../_lib/turnstile.js';
 import { sendProfessionalNotification } from '../_lib/whatsappProfessionalNotification.js';
-import { applyApiSecurity, rateLimit, safeText, secureId, validJsonRequest } from '../_lib/security.js';
+import { applyApiSecurity, publicErrorMessage, rateLimit, requestIp, safeText, secureId, validJsonRequest } from '../_lib/security.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const valid = (a: any) => Boolean(a?.id && a?.professionalId && a?.clientName && a?.clientPhone && /^\d{4}-\d{2}-\d{2}$/.test(a?.date || '') && /^\d{2}:\d{2}$/.test(a?.startTime || '') && /^\d{2}:\d{2}$/.test(a?.endTime || ''));
@@ -14,6 +15,7 @@ export default async function handler(req: any, res: any) {
     const allowedProfessionals = new Set(['prof_elisangela', 'prof_talitha', 'prof_nayara']);
     const appointment = {
       ...raw,
+      turnstileToken: undefined,
       id: secureId('apt'),
       clientName: safeText(raw?.clientName, 100),
       clientPhone: safeText(raw?.clientPhone, 24),
@@ -26,6 +28,13 @@ export default async function handler(req: any, res: any) {
     };
     if (!allowedProfessionals.has(appointment.professionalId)) return json(res, 400, { error: 'Profissional inválida.' });
     if (!valid(appointment)) return json(res, 400, { error: 'Dados do agendamento incompletos.' });
+    if (!staff) {
+      // Site público: prova de que não é robô e limite de pedidos por telefone
+      if (!await verifyTurnstile(raw?.turnstileToken, requestIp(req))) {
+        return json(res, 403, { error: 'Não foi possível confirmar que você não é um robô. Atualize a página e tente de novo.' });
+      }
+      await assertPublicBookingLimit(appointment.clientPhone);
+    }
     const result = await createUnifiedAppointment(
       { ...appointment, source: staff ? 'staff' : 'site' },
       {
@@ -55,7 +64,8 @@ export default async function handler(req: any, res: any) {
     return json(res, 201, result);
   } catch (error) {
     const status = Number((error as Error & { status?: number })?.status || 500);
-    return json(res, status, { error: error instanceof Error ? error.message : 'Não foi possível salvar o agendamento.' });
+    if (status >= 500) console.error('[AGENDAMENTO] Erro:', error);
+    return json(res, status, { error: publicErrorMessage(error, 'Não foi possível salvar o agendamento. Tente novamente.') });
   }
 }
 
