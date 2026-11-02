@@ -84,7 +84,9 @@ export default async function handler(req: any, res: any) {
 
     const queue: Array<{ apt: (typeof appointments)[number]; kind: Kind; text: string }> = [];
     appointments.forEach(apt => {
-      if (ACTIVE.has(apt.status)) {
+      // Lembrete só para horários confirmados pela profissional: um número digitado
+      // no site público não recebe mensagens até a equipe confirmar o agendamento.
+      if (apt.status === 'confirmado') {
         if (!apt.sent['1hora'] && isDueFor1Hour(apt, now)) queue.push({ apt, kind: '1hora', text: messages.reminder1Hour(apt) });
         else if (!apt.sent['1dia'] && isDueFor1Day(apt, now)) queue.push({ apt, kind: '1dia', text: messages.reminder1Day(apt) });
       }

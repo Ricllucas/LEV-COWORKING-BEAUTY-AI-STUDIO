@@ -21,6 +21,14 @@ const PROFESSIONAL_PHONES: Record<string, string> = {
 
 const formatDateBR = (date: string) => date.split('-').reverse().join('/');
 
+// Texto vindo do site público: sem links nem formatação, para não virar propaganda no WhatsApp
+const plain = (value: unknown, max: number) => String(value || '')
+  .replace(/https?:\/\/\S+|www\.\S+/gi, '')
+  .replace(/[*_~`]/g, '')
+  .replace(/\s+/g, ' ')
+  .trim()
+  .slice(0, max);
+
 // Avisa a profissional pelo robô de WhatsApp da LEV quando entra um agendamento.
 export const sendProfessionalNotification = async (appointment: AppointmentData): Promise<boolean> => {
   const professionalPhone = PROFESSIONAL_PHONES[appointment.professionalId];
@@ -29,9 +37,9 @@ export const sendProfessionalNotification = async (appointment: AppointmentData)
   const price = Number(appointment.totalPrice || 0).toFixed(2).replace('.', ',');
   const message = `📅 *Novo agendamento — LEV*
 
-👤 *Cliente:* ${appointment.clientName}
-📞 *Telefone:* ${appointment.clientPhone}
-💅 *Serviço:* ${appointment.serviceNames.join(', ')}
+👤 *Cliente:* ${plain(appointment.clientName, 80)}
+📞 *Telefone:* ${plain(appointment.clientPhone, 24)}
+💅 *Serviço:* ${plain(appointment.serviceNames.join(', '), 200)}
 🗓️ *Data:* ${formatDateBR(appointment.date)}
 ⏰ *Horário:* ${appointment.startTime} às ${appointment.endTime}
 💰 *Valor:* R$ ${price}

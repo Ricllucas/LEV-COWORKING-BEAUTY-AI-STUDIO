@@ -37,16 +37,18 @@ export default async function handler(req: any, res: any) {
     // Avisa a profissional pelo WhatsApp da LEV, exceto quando ela mesma lançou o horário
     const bookedByOwnProfessional = staff?.role === 'profissional' && staff.professionalId === appointment.professionalId;
     if (result?.appointment && !bookedByOwnProfessional) {
+      // Usa os dados conferidos e salvos pelo servidor (serviços e preço do catálogo)
+      const saved = result.appointment;
       await sendProfessionalNotification({
-        clientName: appointment.clientName,
-        clientPhone: appointment.clientPhone,
-        professionalId: appointment.professionalId,
-        professionalName: appointment.professionalName,
-        date: appointment.date,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
-        serviceNames: appointment.serviceNames,
-        totalPrice: appointment.totalPrice,
+        clientName: saved.clientName,
+        clientPhone: saved.clientPhone,
+        professionalId: saved.professionalId,
+        professionalName: saved.professionalName,
+        date: saved.date,
+        startTime: saved.startTime,
+        endTime: saved.endTime,
+        serviceNames: saved.serviceNames,
+        totalPrice: saved.totalPrice,
       });
     }
 
