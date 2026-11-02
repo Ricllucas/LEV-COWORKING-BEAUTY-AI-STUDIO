@@ -195,19 +195,19 @@ npm run test:coverage    # Coverage report
 
 ## 🔄 Git Workflow
 
-**Branch principal:** `claude/beauty-project-continuation-4g1tc2`
+**Branch principal:** `main` (deploy automático na Vercel)
 
 ```bash
 # Sincronizar
 git fetch origin
-git pull origin claude/beauty-project-continuation-4g1tc2
+git pull origin main
 
 # Fazer mudanças
 git add .
 git commit -m "feat: descrição da feature"
 
 # Push
-git push origin claude/beauty-project-continuation-4g1tc2
+git push origin main
 ```
 
 ---

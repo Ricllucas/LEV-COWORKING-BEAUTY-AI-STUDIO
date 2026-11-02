@@ -275,20 +275,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       StorageService.syncClientsFromAppointments([newApt]);
       setConfirmedApt(newApt);
       setStep(5); // Final Success Step
-      if (!isStaffBooking) {
-        const whatsappMessage = generateWhatsAppMessage('solicitacao_agendamento_cliente', {
-          clientName: newApt.clientName,
-          professionalName: newApt.professionalName,
-          serviceName: newApt.serviceNames.join(', '),
-          date: newApt.date,
-          time: newApt.startTime,
-          totalPrice: newApt.totalPrice,
-          depositValue: totalDeposit,
-          pixKey: currentProf.pixKey
-        });
-        const professionalWhatsApp = getProfessionalWhatsApp(newApt.professionalId, currentProf);
-        if (professionalWhatsApp) window.location.assign(buildWhatsAppLink(professionalWhatsApp, whatsappMessage));
-      }
+      // A profissional é avisada pelo robô de WhatsApp da LEV; a cliente recebe a
+      // confirmação automática quando o horário for confirmado. Sem redirecionar.
     } catch (error) {
       alert(error instanceof Error ? error.message : 'Não foi possível concluir o agendamento.');
     } finally {
@@ -759,6 +747,10 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                 Seu horário para <strong>{confirmedApt.serviceNames.join(', ')}</strong> com <strong>{confirmedApt.professionalName}</strong> em <strong>{formatDateBR(confirmedApt.date)} às {confirmedApt.startTime}</strong> foi registrado.
               </p>
 
+              {!isStaffBooking && <p className="text-xs text-[#3D312A]/60 max-w-md mx-auto leading-relaxed">
+                {confirmedApt.professionalName} já foi avisada. Assim que ela confirmar, você recebe a confirmação no seu WhatsApp. 💖
+              </p>}
+
               {totalDeposit > 0 && (
                 <div className="p-4 rounded-xl bg-amber-50/40 border border-amber-800 text-left max-w-md mx-auto text-xs space-y-1">
                   <p className="font-semibold text-amber-200">
@@ -774,7 +766,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
               )}
 
               <div className="pt-4 flex flex-col sm:flex-row sm:flex-wrap items-center justify-center gap-3">
-                {getProfessionalWhatsApp(confirmedApt.professionalId, currentProf) && <a
+                {totalDeposit > 0 && getProfessionalWhatsApp(confirmedApt.professionalId, currentProf) && <a
                   href={buildWhatsAppLink(
                     getProfessionalWhatsApp(confirmedApt.professionalId, currentProf),
                     generateWhatsAppMessage('solicitacao_agendamento_cliente', {
@@ -793,7 +785,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                   className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-[#3D312A] font-medium text-xs transition-colors shadow-md flex items-center justify-center gap-2"
                 >
                   <MessageCircle className="w-4 h-4" />
-                  Avisar {confirmedApt.professionalName} no WhatsApp
+                  Enviar comprovante a {confirmedApt.professionalName}
                 </a>}
 
 

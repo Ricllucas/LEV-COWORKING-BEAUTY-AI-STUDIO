@@ -47,7 +47,8 @@ describe('mensagens automáticas', () => {
 
   it('monta a mensagem de manutenção com o primeiro nome e o prazo', () => {
     const [due] = findMaintenanceDue([apt({ date: '2026-10-18' })], new Set(), '2026-11-02');
-    expect(messages.maintenance(due)).toContain('Olá, Ana!');
+    expect(messages.maintenance(due)).toContain('Ana, maravilhosa');
+    expect(messages.maintenance(due)).toContain('linda');
     expect(messages.maintenance(due)).toContain('15 dias');
   });
 
@@ -69,11 +70,21 @@ describe('mensagens automáticas', () => {
 
   it('monta a confirmação com data, horário, profissional e serviço', () => {
     const text = messages.confirmation(apt({ date: '2026-11-05', startTime: '10:00', status: 'confirmado' }));
-    expect(text).toContain('Olá, Ana!');
+    expect(text).toContain('Ana, maravilhosa');
+    expect(text).toContain('linda');
     expect(text).toContain('05/11/2026');
     expect(text).toContain('10:00');
     expect(text).toContain('Nayara');
     expect(text).toContain('Esmaltação em Gel');
+  });
+
+  it('todas as mensagens para a cliente são carinhosas e elogiam a cliente', () => {
+    const a = apt({ date: '2026-11-05', startTime: '10:00', status: 'confirmado' });
+    for (const text of [messages.confirmation(a), messages.reminder1Day(a), messages.reminder1Hour(a), messages.thanks(a)]) {
+      expect(text).toContain('Ana');
+      expect(text).toMatch(/maravilhosa|linda/);
+      expect(text).toMatch(/deslumbrante|linda/);
+    }
   });
 
   it('normaliza telefones brasileiros para o WhatsApp', () => {

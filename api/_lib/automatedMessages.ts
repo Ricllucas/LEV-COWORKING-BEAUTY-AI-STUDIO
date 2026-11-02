@@ -100,25 +100,33 @@ export const findMaintenanceDue = (
   });
 };
 
+// Tom da LEV para as clientes: alegre, carinhoso e entusiasmado.
 export const messages = {
   confirmation: (apt: AutomatedAppointment) =>
-    `Olá, ${firstName(apt.clientName)}! 💛 Seu horário no LEV Coworking Beauty está confirmado:
+    `Olá, ${firstName(apt.clientName)}, maravilhosa! 💖✨ Que alegria: seu horário no LEV Coworking Beauty está confirmadíssimo!
 
 🗓️ ${formatDate(apt.date)} às ${apt.startTime}
 💅 ${apt.serviceNames.join(', ')}
 👩 Com ${apt.professionalName || 'a sua profissional'}
 
-Vamos te lembrar na véspera. Se precisar remarcar, é só responder esta mensagem.`,
+Prepare-se para sair daqui ainda mais linda e deslumbrante! 😍 Na véspera a gente te lembra. Se precisar remarcar, é só responder esta mensagem.`,
 
   reminder1Day: (apt: AutomatedAppointment) =>
-    `Olá, ${firstName(apt.clientName)}! 💛 Passando para lembrar do seu horário amanhã (${formatDate(apt.date)}) às ${apt.startTime}, com ${apt.professionalName || 'a sua profissional'}, para ${apt.serviceNames.join(', ')}.\n\nTe esperamos no LEV Coworking Beauty! Se precisar remarcar, é só responder esta mensagem.`,
+    `Oi, ${firstName(apt.clientName)}, linda! 💖 Amanhã é o seu dia de brilhar! ✨ Seu horário no LEV Coworking Beauty é ${formatDate(apt.date)} às ${apt.startTime}, com ${apt.professionalName || 'a sua profissional'}, para ${apt.serviceNames.join(', ')}.
+
+Estamos ansiosas para te deixar ainda mais deslumbrante! 😍 Se precisar remarcar, é só responder esta mensagem.`,
 
   reminder1Hour: (apt: AutomatedAppointment) =>
-    `Olá, ${firstName(apt.clientName)}! ✨ Seu horário no LEV Coworking Beauty é hoje às ${apt.startTime}, com ${apt.professionalName || 'a sua profissional'}. Até já!`,
+    `${firstName(apt.clientName)}, maravilhosa! ✨ Falta pouquinho: seu horário no LEV Coworking Beauty é hoje às ${apt.startTime}, com ${apt.professionalName || 'a sua profissional'}. Venha preparada para sair ainda mais linda e deslumbrante! 💖 Até já!`,
 
   thanks: (apt: AutomatedAppointment) =>
-    `Olá, ${firstName(apt.clientName)}! 💛 Obrigada por escolher o LEV Coworking Beauty para o seu ${apt.serviceNames.join(', ')}. Foi um prazer te atender!\n\nQualquer dúvida sobre os cuidados, é só chamar por aqui.`,
+    `${firstName(apt.clientName)}, que linda você ficou! 😍💖 Muito obrigada por escolher o LEV Coworking Beauty para o seu atendimento de ${apt.serviceNames.join(', ')}. Foi um prazer cuidar de você, maravilhosa!
+
+Qualquer dúvida sobre os cuidados, é só chamar por aqui. ✨`,
 
   maintenance: ({ appointment, serviceName, days }: MaintenanceDue) =>
-    `Olá, ${firstName(appointment.clientName)}! ✨ Já faz ${days} dias do seu ${serviceName} aqui no LEV, e chegou o momento ideal da manutenção para manter tudo lindo.\n\nQuer que a ${appointment.professionalName || 'sua profissional'} reserve um horário para você? É só responder esta mensagem.`
+    `Oi, ${firstName(appointment.clientName)}, maravilhosa! 💖 Já faz ${days} dias do seu atendimento de ${serviceName} aqui no LEV, e chegou o momento perfeito da manutenção para você continuar linda e deslumbrante! ✨
+
+Quer que a ${appointment.professionalName || 'sua profissional'} reserve um horário especial para você? É só responder esta mensagem. 😍`
 };
+
