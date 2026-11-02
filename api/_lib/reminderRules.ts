@@ -1,7 +1,7 @@
 import { constantTimeSecretEquals } from './security.js';
 
 export type ReminderType = '1dia' | '1hora';
-export type RemindersSent = Partial<Record<ReminderType | 'confirmacao', boolean>>;
+export type RemindersSent = Partial<Record<ReminderType | 'confirmacao' | 'agradecimento' | 'manutencao', boolean>>;
 
 export type ReminderCandidate = {
   id: string;

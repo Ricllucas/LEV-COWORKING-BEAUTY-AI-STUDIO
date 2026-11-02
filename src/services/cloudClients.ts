@@ -23,7 +23,7 @@ const getToken = async () => {
   throw new Error('Sua sessão expirou. Entre novamente para acessar a base de clientes.');
 };
 
-const authorizedFetch = async (url: string, init?: RequestInit) => {
+export const authorizedFetch = async (url: string, init?: RequestInit) => {
   const token = await getToken();
   return fetch(url, {
     ...init,

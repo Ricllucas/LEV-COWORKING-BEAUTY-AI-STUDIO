@@ -1,4 +1,4 @@
-import { whatsappService } from './whatsappService.js';
+import { isOpenWaConfigured, sendOpenWaText } from './openwa.js';
 
 interface AppointmentData {
   clientName: string;
@@ -14,55 +14,35 @@ interface AppointmentData {
 
 // Números de WhatsApp das profissionais
 const PROFESSIONAL_PHONES: Record<string, string> = {
-  prof_elisangela: '+5541992461203',
-  prof_talitha: '+5541999983228',
-  prof_nayara: '+5541996556742',
+  prof_elisangela: '5541992461203',
+  prof_talitha: '5541999983228',
+  prof_nayara: '5541996556742',
 };
 
-const formatDateBR = (date: string): string => {
-  const [year, month, day] = date.split('-');
-  const monthNames = [
-    'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
-    'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
-  ];
-  return `${day} de ${monthNames[parseInt(month) - 1]} de ${year}`;
-};
+const formatDateBR = (date: string) => date.split('-').reverse().join('/');
 
+// Avisa a profissional pelo robô de WhatsApp da LEV quando entra um agendamento.
 export const sendProfessionalNotification = async (appointment: AppointmentData): Promise<boolean> => {
-  try {
-    const professionalPhone = PROFESSIONAL_PHONES[appointment.professionalId];
+  const professionalPhone = PROFESSIONAL_PHONES[appointment.professionalId];
+  if (!professionalPhone || !isOpenWaConfigured()) return false;
 
-    if (!professionalPhone) {
-      console.error(`Phone not found for professional: ${appointment.professionalId}`);
-      return false;
-    }
-
-    const message = `📱 *NOVO AGENDAMENTO CONFIRMADO*
+  const price = Number(appointment.totalPrice || 0).toFixed(2).replace('.', ',');
+  const message = `📅 *Novo agendamento — LEV*
 
 👤 *Cliente:* ${appointment.clientName}
 📞 *Telefone:* ${appointment.clientPhone}
-
-💆‍♀️ *Serviço:* ${appointment.serviceNames.join(', ')}
-📅 *Data:* ${formatDateBR(appointment.date)}
+💅 *Serviço:* ${appointment.serviceNames.join(', ')}
+🗓️ *Data:* ${formatDateBR(appointment.date)}
 ⏰ *Horário:* ${appointment.startTime} às ${appointment.endTime}
-💰 *Valor:* R$ ${appointment.totalPrice.toFixed(2).replace('.', ',')}
+💰 *Valor:* R$ ${price}
 
-✅ Agendamento confirmado e sincronizado com Google Agenda
-🔔 Lembretes automáticos serão enviados 1 dia e 1 hora antes
+Confira e confirme pelo painel da LEV.`;
 
-Responda por aqui se precisar confirmar ou ajustar algo! 💬`;
-
-    const success = await whatsappService.sendMessage(professionalPhone, message);
-
-    if (success) {
-      console.log(`[NOTIFICATION] Professional notification sent to ${appointment.professionalName}`);
-    } else {
-      console.error(`[NOTIFICATION] Failed to send notification to ${appointment.professionalName}`);
-    }
-
-    return success;
+  try {
+    await sendOpenWaText(professionalPhone, message);
+    return true;
   } catch (error) {
-    console.error('[NOTIFICATION] Error sending professional notification:', error);
+    console.error(`[AVISO PROFISSIONAL] Falha ao avisar ${appointment.professionalName}:`, error instanceof Error ? error.message : error);
     return false;
   }
 };

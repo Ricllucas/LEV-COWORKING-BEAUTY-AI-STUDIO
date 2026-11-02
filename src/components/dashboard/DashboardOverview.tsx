@@ -133,7 +133,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       </div>
 
       {/* Follow-ups: lembretes, agradecimentos e manutenções */}
-      <FollowUpsPanel appointments={filteredApts} today={todayStr} />
+      <FollowUpsPanel appointments={filteredApts} today={todayStr} isAdmin={currentUser.role === 'admin'} />
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -34,8 +34,9 @@ export default async function handler(req: any, res: any) {
       }
     );
 
-    // Enviar notificação automática para a profissional via WhatsApp
-    if (result?.appointment) {
+    // Avisa a profissional pelo WhatsApp da LEV, exceto quando ela mesma lançou o horário
+    const bookedByOwnProfessional = staff?.role === 'profissional' && staff.professionalId === appointment.professionalId;
+    if (result?.appointment && !bookedByOwnProfessional) {
       await sendProfessionalNotification({
         clientName: appointment.clientName,
         clientPhone: appointment.clientPhone,
