@@ -49,6 +49,8 @@ export default async function handler(req: any, res: any) {
       // Usa os dados conferidos e salvos pelo servidor (serviços e preço do catálogo)
       const saved = result.appointment;
       await sendProfessionalNotification({
+        id: saved.id,
+        status: saved.status,
         clientName: saved.clientName,
         clientPhone: saved.clientPhone,
         professionalId: saved.professionalId,

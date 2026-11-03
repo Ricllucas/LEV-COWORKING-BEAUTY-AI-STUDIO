@@ -19,6 +19,7 @@ import { CloudServiceCatalog } from './services/cloudServiceCatalog';
 import { StorageService } from './services/storage';
 import { LegalPage } from './components/legal/LegalPage';
 import { PortfolioPage } from './components/public/PortfolioPage';
+import { ConfirmAppointmentPage } from './components/public/ConfirmAppointmentPage';
 
 // Views - eager load only essential views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
@@ -47,6 +48,10 @@ export default function App() {
 
   if (normalizedPath === '/exclusao-de-dados') {
     return <LegalPage kind="data-deletion" />;
+  }
+
+  if (normalizedPath === '/confirmar') {
+    return <ConfirmAppointmentPage />;
   }
 
   if (normalizedPath === '/portfolio') {

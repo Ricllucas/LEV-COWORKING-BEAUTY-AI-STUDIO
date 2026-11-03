@@ -1,6 +1,9 @@
+import { buildConfirmUrl } from './confirmLink.js';
 import { isOpenWaConfigured, sendOpenWaText } from './openwa.js';
 
 interface AppointmentData {
+  id?: string;
+  status?: string;
   clientName: string;
   clientPhone: string;
   professionalId: string;
@@ -29,6 +32,17 @@ const plain = (value: unknown, max: number) => String(value || '')
   .trim()
   .slice(0, max);
 
+// Link assinado para a profissional confirmar direto do WhatsApp
+export const confirmFooter = (appointment: AppointmentData): string => {
+  const url = appointment.id && appointment.status === 'aguardando_confirmacao'
+    ? buildConfirmUrl(appointment.id, appointment.date, appointment.startTime)
+    : null;
+  return url
+    ? `✅ *Para confirmar e avisar a cliente, toque no link:*
+${url}`
+    : 'Confira e confirme pelo painel da LEV.';
+};
+
 // Avisa a profissional pelo robô de WhatsApp da LEV quando entra um agendamento.
 export const sendProfessionalNotification = async (appointment: AppointmentData): Promise<boolean> => {
   const professionalPhone = PROFESSIONAL_PHONES[appointment.professionalId];
@@ -44,7 +58,7 @@ export const sendProfessionalNotification = async (appointment: AppointmentData)
 ⏰ *Horário:* ${appointment.startTime} às ${appointment.endTime}
 💰 *Valor:* R$ ${price}
 
-Confira e confirme pelo painel da LEV.`;
+${confirmFooter(appointment)}`;
 
   try {
     await sendOpenWaText(professionalPhone, message);
