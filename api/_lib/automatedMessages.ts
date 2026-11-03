@@ -39,10 +39,11 @@ const toMinutes = (time: string) => {
   return h * 60 + m;
 };
 
-// Nada de mensagem de madrugada: só entre 8h e 20h.
+// Nada de mensagem de madrugada: só entre 8h e 23h. Fora disso fica na fila
+// e sai na primeira rodada das 8h do dia seguinte.
 export const isWithinSendingHours = (now: Date) => {
   const { minutes } = brasiliaNow(now);
-  return minutes >= 8 * 60 && minutes < 20 * 60;
+  return minutes >= 8 * 60 && minutes < 23 * 60;
 };
 
 // Agradecimento: 1 hora depois do fim do atendimento concluído, até o dia seguinte.

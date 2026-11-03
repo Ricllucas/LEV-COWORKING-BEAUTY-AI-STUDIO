@@ -20,10 +20,12 @@ const apt = (overrides: Partial<AutomatedAppointment>): AutomatedAppointment => 
 const at = (iso: string) => new Date(iso);
 
 describe('mensagens automáticas', () => {
-  it('só envia entre 8h e 20h de Brasília', () => {
+  it('só envia entre 8h e 23h de Brasília', () => {
     expect(isWithinSendingHours(at('2026-11-02T10:59:00Z'))).toBe(false);
     expect(isWithinSendingHours(at('2026-11-02T11:00:00Z'))).toBe(true);
-    expect(isWithinSendingHours(at('2026-11-02T23:00:00Z'))).toBe(false);
+    expect(isWithinSendingHours(at('2026-11-02T23:00:00Z'))).toBe(true);
+    expect(isWithinSendingHours(at('2026-11-03T01:59:00Z'))).toBe(true);
+    expect(isWithinSendingHours(at('2026-11-03T02:00:00Z'))).toBe(false);
   });
 
   it('agradece 1 hora depois do fim do atendimento concluído', () => {
