@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Logo } from '../brand/Logo';
-import { Professional, Service, CoworkingSettings, Review, Appointment } from '../../types';
+import { Professional, Service, CoworkingSettings, Appointment } from '../../types';
 import { StorageService } from '../../services/storage';
+import { GOOGLE_REVIEWS, GOOGLE_REVIEWS_SUMMARY, GOOGLE_REVIEWS_URL } from '../../data/initialData';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { formatCurrency, buildProfessionalWhatsAppLink } from '../../utils/formatters';
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
@@ -35,7 +36,6 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
   const [settings, setSettings] = useState<CoworkingSettings>(() => StorageService.getSettings());
   const [professionals, setProfessionals] = useState<Professional[]>(() => StorageService.getProfessionals());
   const [services, setServices] = useState<Service[]>(() => StorageService.getServices());
-  const [reviews, setReviews] = useState<Review[]>(() => StorageService.getReviews().filter(r => r.approved));
   const [selectedProfCategory, setSelectedProfCategory] = useState<string>('todas');
   const [localAppointments, setLocalAppointments] = useState<Appointment[]>(() => StorageService.getClientBookings());
   const [cancellingId, setCancellingId] = useState<string>('');
@@ -71,7 +71,6 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           setSettings(StorageService.getSettings());
           setProfessionals(StorageService.getProfessionals());
           setServices(StorageService.getServices());
-          setReviews(StorageService.getReviews().filter(r => r.approved));
           setLocalAppointments(StorageService.getClientBookings());
         }
       });
@@ -552,34 +551,55 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
       </section>
 
       {/* Reviews Section */}
-      {reviews.length > 0 && (
+      {GOOGLE_REVIEWS.length > 0 && (
         <section className="py-12 bg-white border-t border-[#3D312A]/10 px-4">
           <div className="max-w-5xl mx-auto text-center">
             <span className="text-xs font-semibold tracking-widest text-[#8C7249] uppercase">
-              Depoimentos de Clientes
+              Avaliações reais no Google
             </span>
-            <h2 className="text-2xl font-serif text-[#3D312A] font-medium mt-1 mb-8">
+            <h2 className="text-2xl font-serif text-[#3D312A] font-medium mt-1 mb-2">
               O que dizem sobre nosso espaço
             </h2>
+            <a
+              href={GOOGLE_REVIEWS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-[#3D312A]/70 hover:text-[#8C7249] mb-8"
+            >
+              <Star className="w-4 h-4 fill-amber-400 stroke-amber-400" />
+              <span className="font-semibold text-[#3D312A]">{GOOGLE_REVIEWS_SUMMARY.rating.toFixed(1).replace('.', ',')}</span>
+              <span>· {GOOGLE_REVIEWS_SUMMARY.total} avaliações no Google</span>
+            </a>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {reviews.map(rev => (
-                <div key={rev.id} className="bg-[#FCF9F2] p-5 rounded-2xl border border-[#3D312A]/10 text-left shadow-2xs">
+            <div className="flex flex-wrap justify-center gap-4">
+              {GOOGLE_REVIEWS.map(rev => (
+                <div key={rev.id} className="w-full md:w-[calc(33.333%-0.75rem)] bg-[#FCF9F2] p-5 rounded-2xl border border-[#3D312A]/10 text-left shadow-2xs flex flex-col">
                   <div className="flex items-center gap-1 text-amber-600 mb-2">
                     {[...Array(rev.rating)].map((_, i) => (
                       <Star key={i} className="w-4 h-4 fill-amber-400 stroke-amber-400" />
                     ))}
                   </div>
-                  <p className="text-xs text-[#3D312A]/70 italic leading-relaxed">
+                  <p className="text-xs text-[#3D312A]/70 italic leading-relaxed flex-1">
                     "{rev.comment}"
                   </p>
-                  <div className="mt-4 pt-3 border-t border-[#3D312A]/10 flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-[#3D312A]/10 flex items-center justify-between gap-2">
                     <span className="text-xs font-semibold text-[#3D312A]">{rev.clientName}</span>
-                    <span className="text-[10px] text-[#8C7249]">{rev.professionalName} ({rev.serviceName})</span>
+                    <span className="text-[10px] text-[#8C7249] text-right">
+                      {rev.serviceName || 'Avaliação no Google'}
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
+
+            <a
+              href={GOOGLE_REVIEWS_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 mt-6 text-xs font-medium text-[#8C7249] hover:underline"
+            >
+              Ver todas as avaliações no Google <ChevronRight className="w-3.5 h-3.5" />
+            </a>
           </div>
         </section>
       )}

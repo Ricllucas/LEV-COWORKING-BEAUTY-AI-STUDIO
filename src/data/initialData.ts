@@ -518,41 +518,70 @@ export const INITIAL_CLIENTS: Client[] = [];
 
 export const INITIAL_APPOINTMENTS: Appointment[] = [];
 
-export const INITIAL_REVIEWS: Review[] = [
+// Avaliações reais do Google (perfil "LEV Coworking Beauty" no Google Maps).
+// Nota 5,0 com 24 avaliações em 03/11/2026. Textos copiados como as clientes escreveram.
+export const GOOGLE_REVIEWS_URL = "https://maps.google.com/?cid=3202453615435869673";
+export const GOOGLE_REVIEWS_SUMMARY = { rating: 5.0, total: 24 };
+
+export const GOOGLE_REVIEWS: Review[] = [
   {
-    id: "rev_1",
-    clientName: "Mariana Souza",
+    id: "google_agnes",
+    clientName: "Agnes Eduarda",
     professionalId: "prof_nayara",
     professionalName: "Nayara",
-    serviceName: "Alongamento em Gel",
+    serviceName: "Alongamento de unhas",
     rating: 5,
-    comment: "A Nayara é incrível! Unhas em gel com acabamento natural, super fininhas e extremamente resistentes. O espaço é impecável!",
-    date: "2026-07-18",
+    comment: "Que lugar incrível! Aconchegante, cheiroso e acolhedor, a gente realmente se sente em casa. Todas as profissionais são maravilhosas, mas quero destacar em especial a Nayara, que fez o alongamento das minhas unhas. Além de um trabalho impecável, ela me recepcionou super bem e fez exatamente o que eu pedi. Não troco por nada! 🥰✨",
+    date: "2026-09-03",
     approved: true
   },
   {
-    id: "rev_2",
-    clientName: "Patrícia B.",
-    professionalId: "prof_elisangela",
-    professionalName: "Elisangela",
-    serviceName: "Spa dos Pés",
+    id: "google_leticia",
+    clientName: "Letícia Antunes",
+    professionalId: "",
+    professionalName: "",
+    serviceName: "",
     rating: 5,
-    comment: "Atendimento maravilhoso com a Elisangela! Cutilagem sem machucar e o spa dos pés me fez renovar as energias. Recomendadíssima!",
-    date: "2026-07-22",
+    comment: "Nada melhor do que encontrar um lugar que você saia se amando mais ainda. Atendimento único e exclusivo, além de muito profissionalismo das meninas, amei não somente o atendimento mas também o ambiente, tudo pensado com muito carinho.",
+    date: "2026-09-03",
     approved: true
   },
   {
-    id: "rev_3",
-    clientName: "Beatriz M.",
-    professionalId: "prof_talitha",
-    professionalName: "Talitha",
-    serviceName: "Design de Sobrancelhas",
+    id: "google_claudia",
+    clientName: "Claudia Gouvea Aguiar",
+    professionalId: "",
+    professionalName: "",
+    serviceName: "",
     rating: 5,
-    comment: "A Talitha tem as mãos de fada! Minhas sobrancelhas nunca ficaram tão alinhadas e com aspecto natural. Virei cliente fiel.",
-    date: "2026-07-25",
+    comment: "Amo o atendimento, em cada detalhe, desde a qualidade das profissionais até o cuidado com o conforto e bem estar de nós clientes. Tudo pensado com carinho para garantir uma excelente experiência.",
+    date: "2026-09-03",
+    approved: true
+  },
+  {
+    id: "google_gislaine",
+    clientName: "Gislaine do Rocio",
+    professionalId: "",
+    professionalName: "",
+    serviceName: "Pé, mão e sobrancelha",
+    rating: 5,
+    comment: "Atendimento impecável, espaço aconchegante e muito lindo!!! Fiz o pé e a mão e a sobrancelha, simplesmente amei! Voltarei mais vezes",
+    date: "2026-09-03",
+    approved: true
+  },
+  {
+    id: "google_kamilly",
+    clientName: "Kamilly Ibane",
+    professionalId: "",
+    professionalName: "",
+    serviceName: "Unhas",
+    rating: 5,
+    comment: "Lugar extremamente receptivo, aconchegante e confortável. A nail designer faz muito bem a unha, caprichosa e perfeccionista, as unhas ficam LINDAS. Recomendo demais!",
+    date: "2026-10-20",
     approved: true
   }
 ];
+
+export const INITIAL_REVIEWS: Review[] = GOOGLE_REVIEWS;
 
 export const INITIAL_AUDIT_LOGS: AuditLog[] = [
   {
