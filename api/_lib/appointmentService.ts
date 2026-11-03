@@ -1,6 +1,7 @@
 import { syncGoogleCalendarEvent } from './googleCalendar.js';
 import { notificationService } from './notificationService.js';
 import { BOOKING_SERVICES } from './bookingCatalog.js';
+import { RETIRED_SERVICE_IDS } from '../../src/data/retiredServices.js';
 
 export type UnifiedAppointment = {
   id: string; clientId: string; clientName: string; clientPhone: string; clientEmail?: string;
@@ -31,7 +32,7 @@ const worksOnDate = (professionalId: string, date: string) => {
 type CatalogService = {
   id: string; name: string; professionalId: string; professionalName: string;
   durationMinutes: number; price: number; promotionalPrice?: number;
-  active?: boolean; onlineBookingEnabled?: boolean;
+  active?: boolean; onlineBookingEnabled?: boolean; catalogVersion?: number;
 };
 
 const canonicalServices = async (ids: string[]): Promise<CatalogService[]> => {
@@ -46,6 +47,7 @@ const canonicalServices = async (ids: string[]): Promise<CatalogService[]> => {
     `${url}/rest/v1/catalog_services?select=id,payload,deleted&id=in.(${requested.join(',')})`,
     { headers: authHeaders(key) }
   );
+  if (!response.ok) console.error('[CATALOGO] Não foi possível ler catalog_services:', response.status);
   const cloudRows = response.ok
     ? await response.json() as Array<{ id: string; payload?: CatalogService; deleted?: boolean }>
     : [];
@@ -53,7 +55,14 @@ const canonicalServices = async (ids: string[]): Promise<CatalogService[]> => {
   const fallback = new Map(BOOKING_SERVICES.map(service => [service.id, {
     ...service, durationMinutes: service.duration, active: true, onlineBookingEnabled: true
   }]));
-  const services = requested.map(id => cloud.get(id) || fallback.get(id)).filter(Boolean) as CatalogService[];
+  // Mesma regra do site: a versão oficial do código vence um registro online mais antigo
+  const pick = (id: string) => {
+    const online = cloud.get(id);
+    const bundled = fallback.get(id);
+    if (online && bundled && (bundled.catalogVersion || 0) > (online.catalogVersion || 0)) return bundled;
+    return online || bundled;
+  };
+  const services = requested.filter(id => !RETIRED_SERVICE_IDS.has(id)).map(pick).filter(Boolean) as CatalogService[];
   if (services.length !== requested.length || services.some(service => service.active === false || service.onlineBookingEnabled === false)) {
     const error = new Error('Um dos serviços selecionados não está disponível para agendamento online.');
     (error as Error & { status?: number }).status = 400;

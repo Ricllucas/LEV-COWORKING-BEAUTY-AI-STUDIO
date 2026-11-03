@@ -177,15 +177,8 @@ export const INITIAL_SERVICES: Service[] = [
     id: "srv_eli_7", catalogVersion: 2026081202, name: "SPA dos Pés", category: "Unha Tradicional",
     description: "Experiência completa com escalda-pés, esfoliação, hidratação e massagem relaxante.",
     professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 60,
-    bufferAfterMinutes: 10, price: 65, depositRequired: true, depositValue: 20, color: "#D4AF37",
+    bufferAfterMinutes: 10, price: 80, depositRequired: true, depositValue: 20, color: "#D4AF37",
     active: true, onlineBookingEnabled: true, minNoticeHours: 2, maxCancellationNoticeHours: 24
-  },
-  {
-    id: "srv_eli_8", catalogVersion: 2026081202, name: "Combo Pé Tradicional + SPA dos Pés", category: "Unha Tradicional",
-    description: "Esmaltação tradicional dos pés combinada ao SPA dos Pés para uma experiência completa de cuidado e relaxamento.",
-    professionalId: "prof_elisangela", professionalName: "Elisangela", durationMinutes: 105,
-    bufferAfterMinutes: 10, price: 105, depositRequired: true, depositValue: 30, color: "#D4AF37",
-    active: true, onlineBookingEnabled: true, minNoticeHours: 4, maxCancellationNoticeHours: 24
   },
 
   // Talitha - catálogo oficial (31/07/2026)
@@ -319,6 +312,7 @@ export const INITIAL_SERVICES: Service[] = [
   },
   {
     id: "srv_tal_8",
+    catalogVersion: 2026110301,
     name: "Brow Lamination",
     category: "Brows",
     description: "Procedimento estético semipermanente que alinha e fixa os fios na direção desejada, deixando as sobrancelhas definidas e com efeito mais cheio.",
@@ -326,7 +320,7 @@ export const INITIAL_SERVICES: Service[] = [
     professionalName: "Talitha",
     durationMinutes: 60,
     bufferAfterMinutes: 10,
-    price: 200.00,
+    price: 130.00,
     depositRequired: true,
     depositValue: 60.00,
     color: "#B8860B",
@@ -410,16 +404,17 @@ export const INITIAL_SERVICES: Service[] = [
   // Nayara - Unhas em Gel
   {
     id: "srv_nay_1",
-    name: "Alongamento",
+    catalogVersion: 2026110301,
+    name: "Aplicação de Alongamento",
     category: "Unhas em Gel",
     description: "Alongamento em gel com estrutura resistente, formato personalizado e acabamento natural e elegante.",
     professionalId: "prof_nayara",
     professionalName: "Nayara",
-    durationMinutes: 150,
+    durationMinutes: 120,
     bufferAfterMinutes: 15,
-    price: 130.00,
+    price: 160.00,
     depositRequired: true,
-    depositValue: 39.00,
+    depositValue: 48.00,
     color: "#996515",
     active: true,
     onlineBookingEnabled: true,
@@ -428,6 +423,7 @@ export const INITIAL_SERVICES: Service[] = [
   },
   {
     id: "srv_nay_2",
+    catalogVersion: 2026110301,
     name: "Manutenção em Gel",
     category: "Unhas em Gel",
     description: "Manutenção da estrutura em gel, com correção do crescimento, nivelamento, acabamento e renovação da esmaltação.",
@@ -435,9 +431,9 @@ export const INITIAL_SERVICES: Service[] = [
     professionalName: "Nayara",
     durationMinutes: 120,
     bufferAfterMinutes: 15,
-    price: 100.00,
+    price: 145.00,
     depositRequired: true,
-    depositValue: 30.00,
+    depositValue: 43.50,
     color: "#996515",
     active: true,
     onlineBookingEnabled: true,
