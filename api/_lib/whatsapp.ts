@@ -1,3 +1,5 @@
+import { salonIdFromRow } from './staffAuth.js';
+
 const requireEnv = (name: string): string => {
   const value = process.env[name];
   if (!value) throw new Error(`Variável obrigatória ausente: ${name}`);
@@ -34,6 +36,7 @@ export type StaffActor = {
   role: 'admin' | 'profissional';
   name: string;
   professionalId?: string;
+  salonId: string;
 };
 
 export const authenticateStaff = async (authorization?: string): Promise<StaffActor | null> => {
@@ -46,24 +49,35 @@ export const authenticateStaff = async (authorization?: string): Promise<StaffAc
   if (!userResponse.ok) return null;
   const user = await userResponse.json() as { id: string; email?: string };
 
+  // tenant-guard: sem-filtro busca por user_id para descobrir o salão
   const adminResponse = await supabaseRequest(
-    `admin_users?user_id=eq.${encodeURIComponent(user.id)}&select=display_name&limit=1`
+    `admin_users?user_id=eq.${encodeURIComponent(user.id)}&select=display_name,salon_id&limit=1`
   );
-  const admins = adminResponse.ok ? await adminResponse.json() as Array<{ display_name: string }> : [];
-  if (admins[0]) return { userId: user.id, role: 'admin', name: admins[0].display_name || 'Administração LEV' };
+  const admins = adminResponse.ok
+    ? await adminResponse.json() as Array<{ display_name: string; salon_id?: unknown }>
+    : [];
+  if (admins[0]) {
+    const salonId = salonIdFromRow(admins[0]);
+    if (!salonId) return null;
+    return { userId: user.id, role: 'admin', name: admins[0].display_name || 'Administração LEV', salonId };
+  }
 
+  // tenant-guard: sem-filtro busca por user_id para descobrir o salão
   const professionalResponse = await supabaseRequest(
-    `professional_access?user_id=eq.${encodeURIComponent(user.id)}&status=eq.approved&select=professional_id,display_name&limit=1`
+    `professional_access?user_id=eq.${encodeURIComponent(user.id)}&status=eq.approved&select=professional_id,display_name,salon_id&limit=1`
   );
   const professionals = professionalResponse.ok
-    ? await professionalResponse.json() as Array<{ professional_id: string; display_name: string }>
+    ? await professionalResponse.json() as Array<{ professional_id: string; display_name: string; salon_id?: unknown }>
     : [];
   if (!professionals[0]) return null;
+  const salonId = salonIdFromRow(professionals[0]);
+  if (!salonId) return null;
   return {
     userId: user.id,
     role: 'profissional',
     name: professionals[0].display_name,
-    professionalId: professionals[0].professional_id
+    professionalId: professionals[0].professional_id,
+    salonId
   };
 };
 

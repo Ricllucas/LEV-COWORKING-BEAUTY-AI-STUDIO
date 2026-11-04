@@ -1,4 +1,21 @@
-export type StaffIdentity = { userId: string; role: 'admin' | 'profissional'; professionalId?: string };
+import { assertSalonId } from './tenant.js';
+
+export type StaffIdentity = {
+  userId: string;
+  role: 'admin' | 'profissional';
+  professionalId?: string;
+  salonId: string;
+};
+
+// Lê e valida o salon_id de uma linha de admin_users/professional_access.
+// Ausente ou inválido devolve null: o acesso é negado, nunca cai para 'lev'.
+export const salonIdFromRow = (row: { salon_id?: unknown } | undefined): string | null => {
+  try {
+    return assertSalonId(row?.salon_id as string);
+  } catch {
+    return null;
+  }
+};
 
 export const supabaseConfig = () => {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
@@ -27,16 +44,22 @@ export const authenticateStaff = async (authorization?: string): Promise<StaffId
   const user = await userResponse.json() as { id: string };
 
   const [adminResponse, professionalResponse] = await Promise.all([
-    fetch(`${url}/rest/v1/admin_users?user_id=eq.${encodeURIComponent(user.id)}&select=user_id&limit=1`, { headers }),
-    fetch(`${url}/rest/v1/professional_access?user_id=eq.${encodeURIComponent(user.id)}&status=eq.approved&select=professional_id&limit=1`, { headers })
+    // tenant-guard: sem-filtro busca por user_id para descobrir o salão
+    fetch(`${url}/rest/v1/admin_users?user_id=eq.${encodeURIComponent(user.id)}&select=user_id,salon_id&limit=1`, { headers }),
+    // tenant-guard: sem-filtro busca por user_id para descobrir o salão
+    fetch(`${url}/rest/v1/professional_access?user_id=eq.${encodeURIComponent(user.id)}&status=eq.approved&select=professional_id,salon_id&limit=1`, { headers })
   ]);
-  const admins = adminResponse.ok ? await adminResponse.json() as unknown[] : [];
-  if (admins.length) return { userId: user.id, role: 'admin' };
+  const admins = adminResponse.ok ? await adminResponse.json() as Array<{ salon_id?: unknown }> : [];
+  if (admins.length) {
+    const salonId = salonIdFromRow(admins[0]);
+    return salonId ? { userId: user.id, role: 'admin', salonId } : null;
+  }
   const professionals = professionalResponse.ok
-    ? await professionalResponse.json() as Array<{ professional_id: string }>
+    ? await professionalResponse.json() as Array<{ professional_id: string; salon_id?: unknown }>
     : [];
-  return professionals[0]
-    ? { userId: user.id, role: 'profissional', professionalId: professionals[0].professional_id }
+  if (!professionals[0]) return null;
+  const salonId = salonIdFromRow(professionals[0]);
+  return salonId
+    ? { userId: user.id, role: 'profissional', professionalId: professionals[0].professional_id, salonId }
     : null;
 };
-
