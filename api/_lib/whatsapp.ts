@@ -49,8 +49,8 @@ export const authenticateStaff = async (authorization?: string): Promise<StaffAc
   if (!userResponse.ok) return null;
   const user = await userResponse.json() as { id: string; email?: string };
 
-  // tenant-guard: sem-filtro busca por user_id para descobrir o salão
-  const adminResponse = await supabaseRequest(
+    const adminResponse = await supabaseRequest(
+    // tenant-guard: sem-filtro busca por user_id para descobrir o salão
     `admin_users?user_id=eq.${encodeURIComponent(user.id)}&select=display_name,salon_id&limit=1`
   );
   const admins = adminResponse.ok
@@ -62,8 +62,8 @@ export const authenticateStaff = async (authorization?: string): Promise<StaffAc
     return { userId: user.id, role: 'admin', name: admins[0].display_name || 'Administração LEV', salonId };
   }
 
-  // tenant-guard: sem-filtro busca por user_id para descobrir o salão
-  const professionalResponse = await supabaseRequest(
+    const professionalResponse = await supabaseRequest(
+    // tenant-guard: sem-filtro busca por user_id para descobrir o salão
     `professional_access?user_id=eq.${encodeURIComponent(user.id)}&status=eq.approved&select=professional_id,display_name,salon_id&limit=1`
   );
   const professionals = professionalResponse.ok

@@ -63,3 +63,4 @@ export const authenticateStaff = async (authorization?: string): Promise<StaffId
     ? { userId: user.id, role: 'profissional', professionalId: professionals[0].professional_id, salonId }
     : null;
 };
+
