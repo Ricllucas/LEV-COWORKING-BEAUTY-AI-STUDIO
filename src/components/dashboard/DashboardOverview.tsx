@@ -3,6 +3,8 @@ import { User, Appointment, Professional, Service, Client } from '../../types';
 import { StorageService } from '../../services/storage';
 import { formatCurrency, formatDateBR } from '../../utils/formatters';
 import { FollowUpsPanel } from './FollowUpsPanel';
+import { SHARED_AGENDA } from '../../config/salon';
+import { canSeeAppointmentPrice, visibleAgendaAppointments } from '../../utils/agendaVisibility';
 import {
   Calendar,
   DollarSign,
@@ -67,13 +69,14 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   };
 
   // Filter appointments based on role & user
-  let filteredApts = deduplicateAppointments(appointments);
-  if (currentUser.role === 'profissional' && currentUser.professionalId) {
-    filteredApts = filteredApts.filter(a => a.professionalId === currentUser.professionalId);
-  }
+  // Lembretes e tarefas: cada profissional cuida só dos próprios atendimentos
+  const allApts = deduplicateAppointments(appointments);
+  const filteredApts = visibleAgendaAppointments(allApts, currentUser, false);
+  // Agenda do dia e contadores: na LEV, as profissionais veem as colegas também
+  const agendaApts = visibleAgendaAppointments(allApts, currentUser, SHARED_AGENDA);
 
-  const todayApts = filteredApts.filter(a => a.date === todayStr && a.status !== 'cancelado_cliente' && a.status !== 'cancelado_coworking');
-  const pendingConfirmations = filteredApts.filter(a => a.status === 'aguardando_confirmacao');
+  const todayApts = agendaApts.filter(a => a.date === todayStr && a.status !== 'cancelado_cliente' && a.status !== 'cancelado_coworking');
+  const pendingConfirmations = agendaApts.filter(a => a.status === 'aguardando_confirmacao');
 
   // Revenue Calculations
   const calcRevenueForProf = (profId?: string) => {
@@ -100,7 +103,9 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
           <p className="text-xs text-white/60 mt-1">
             {currentUser.role === 'admin'
               ? 'Visão consolidada das agendas de Elisangela, Talitha e Nayara, com acompanhamento financeiro individual.'
-              : `Ambiente profissional exclusivo de ${currentUser.name}`}
+              : SHARED_AGENDA
+                ? 'Agenda do dia com todas as profissionais da LEV. O faturamento mostrado é só o seu.'
+                : `Ambiente profissional exclusivo de ${currentUser.name}`}
           </p>
         </div>
 
@@ -294,9 +299,11 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     {apt.status.replace('_', ' ').toUpperCase()}
                   </span>
 
-                  <span className="font-serif font-bold text-xs text-[#c4b491]">
-                    {formatCurrency(apt.totalPrice)}
-                  </span>
+                  {canSeeAppointmentPrice(apt, currentUser) && (
+                    <span className="font-serif font-bold text-xs text-[#c4b491]">
+                      {formatCurrency(apt.totalPrice)}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

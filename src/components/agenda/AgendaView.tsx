@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Appointment, Professional, Service, User, ScheduleBlock, AppointmentStatus, PaymentStatus } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
+import { canSeeAppointmentPrice } from '../../utils/agendaVisibility';
 import { formatCurrency, formatDateBR, getDayOfWeekName, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
 import {
   Calendar as CalendarIcon,
@@ -656,7 +657,8 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                 </div>
               </div>
 
-              {/* Financial Status Box */}
+              {/* Financial Status Box (só da própria profissional ou da admin) */}
+              {canSeeAppointmentPrice(selectedApt, currentUser) && (
               <div className="p-3 bg-[#050505] rounded-xl border border-white/10 space-y-1.5">
                 <div className="flex justify-between font-bold text-sm text-white">
                   <span>Valor Total:</span>
@@ -671,6 +673,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                   <span className="text-rose-400 font-semibold">{formatCurrency(selectedApt.remainingPrice)}</span>
                 </div>
               </div>
+              )}
 
               {/* Reschedule History */}
               {selectedApt.rescheduleHistory && selectedApt.rescheduleHistory.length > 0 && (
