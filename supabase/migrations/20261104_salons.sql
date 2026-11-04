@@ -20,6 +20,10 @@ alter table public.salons add constraint salons_id_format_check check (id ~ '^[a
 
 -- Só a chave de serviço (servidor) lê/escreve; sem policies para anon/authenticated.
 alter table public.salons enable row level security;
+-- Neste projeto, tabela nova não recebe permissão automática: sem esta linha a
+-- chave de serviço recebe "permission denied for table salons" e o cron das
+-- mensagens automáticas para de enviar.
+grant select, insert, update, delete on public.salons to service_role;
 
 insert into public.salons (id, slug, name)
 values ('lev', 'lev', 'LEV Coworking Beauty')
