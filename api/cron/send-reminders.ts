@@ -71,13 +71,20 @@ const markSent = async (apt: { id: string; sent: RemindersSent; salonId: string 
 
 type QueueItem = { apt: CronAppointment; kind: Kind; text: string };
 
+// Sem a lista de salões não há o que processar: a rodada falha com mensagem clara.
+// Um id inválido não derruba a rodada; ele falha só no próprio salão (queueForSalon).
 const activeSalonIds = async (): Promise<string[]> => {
-  const rows = await (await query('salons?status=eq.ativo&select=id&order=id.asc')).json() as Array<{ id: string }>;
-  return rows.map(row => assertSalonId(row.id));
+  try {
+    const rows = await (await query('salons?status=eq.ativo&select=id&order=id.asc')).json() as Array<{ id: unknown }>;
+    return rows.map(row => String(row.id));
+  } catch (error) {
+    throw new Error(`Não foi possível ler a lista de salões ativos: ${error instanceof Error ? error.message : 'falha'}`);
+  }
 };
 
 // Monta a fila de mensagens de um salão, só com os agendamentos dele.
-const queueForSalon = async (salonId: string, now: Date, today: string): Promise<QueueItem[]> => {
+const queueForSalon = async (rawSalonId: string, now: Date, today: string): Promise<QueueItem[]> => {
+  const salonId = assertSalonId(rawSalonId);
   const from = addDays(today, -75);
   const until = addDays(today, 2);
   const rows = await (await query(
@@ -126,13 +133,20 @@ export default async function handler(req: any, res: any) {
 
   try {
     const today = brasiliaNow(now).date;
+    const failures: string[] = [];
     const queue: QueueItem[] = [];
-    for (const salonId of await activeSalonIds()) {
-      queue.push(...await queueForSalon(salonId, now, today));
+    const salonIds = await activeSalonIds();
+    if (!salonIds.length) console.warn('[MENSAGENS AUTOMATICAS] Nenhum salão ativo encontrado; nada a enviar.');
+    for (const salonId of salonIds) {
+      // A falha de um salão não impede os outros de receberem as mensagens
+      try {
+        queue.push(...await queueForSalon(salonId, now, today));
+      } catch (error) {
+        failures.push(`salao:${salonId}: ${error instanceof Error ? error.message : 'falha'}`);
+      }
     }
 
     const sent: Record<Kind, number> = { confirmacao: 0, '1dia': 0, '1hora': 0, agradecimento: 0, manutencao: 0 };
-    const failures: string[] = [];
     // Lembretes e confirmações primeiro: são os que têm hora certa
     const urgent = (kind: Kind) => kind === '1hora' || kind === '1dia' || kind === 'confirmacao';
     const ordered = queue.sort((a, b) => Number(!urgent(a.kind)) - Number(!urgent(b.kind)));

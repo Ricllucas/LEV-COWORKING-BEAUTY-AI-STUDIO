@@ -54,12 +54,15 @@ describe('cron de mensagens: salão por salão', () => {
     vi.unstubAllGlobals();
   });
 
-  const run = async (rowsBySalon: Record<string, unknown[]>) => {
+  const failed: MockResponse = { ok: false, status: 500, json: async () => ({}) };
+
+  const run = async (rowsBySalon: Record<string, unknown[] | 'falha'>, salonsResponse?: MockResponse) => {
     fetchMock.mockImplementation(async (url, init) => {
-      if (url.includes('/rest/v1/salons?')) return reply(Object.keys(rowsBySalon).map(id => ({ id })));
+      if (url.includes('/rest/v1/salons?')) return salonsResponse ?? reply(Object.keys(rowsBySalon).map(id => ({ id })));
       if (init?.method === 'PATCH') return reply([]);
       const salon = url.match(/salon_id=eq\.([a-z0-9-]+)/)?.[1] ?? '';
-      return reply(rowsBySalon[salon] ?? []);
+      const rows = rowsBySalon[salon];
+      return rows === 'falha' ? failed : reply(rows ?? []);
     });
     const handler = (await import('../cron/send-reminders')).default;
     const res = makeRes();
@@ -94,5 +97,38 @@ describe('cron de mensagens: salão por salão', () => {
     const body = res.body as { sent: Record<string, number>; pending: number };
     expect(body.sent['1dia']).toBe(6);
     expect(body.pending).toBe(2);
+  });
+
+  it('a falha ao ler um salão não impede o outro de receber as mensagens', async () => {
+    const res = await run({ lev: 'falha', outro: [row('apt_outro')] });
+    expect(res.statusCode).toBe(200);
+    const body = res.body as { sent: Record<string, number>; failures: string[] };
+    expect(body.sent['1dia']).toBe(1);
+    expect(body.failures).toHaveLength(1);
+    expect(body.failures[0]).toMatch(/^salao:lev: /);
+    const writes = fetchMock.mock.calls.filter(([, init]) => init?.method === 'PATCH').map(([url]) => url);
+    expect(writes).toEqual(['https://db.exemplo/rest/v1/appointments?id=eq.apt_outro&salon_id=eq.outro']);
+  });
+
+  it('um id de salão inválido falha só naquele salão', async () => {
+    const res = await run({ 'ID INVALIDO': [row('apt_x')], lev: [row('apt_lev')] });
+    expect(res.statusCode).toBe(200);
+    const body = res.body as { sent: Record<string, number>; failures: string[] };
+    expect(body.sent['1dia']).toBe(1);
+    expect(body.failures).toEqual(['salao:ID INVALIDO: salon_id inválido']);
+  });
+
+  it('sem salões ativos avisa no log e não envia nada', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const res = await run({});
+    expect(res.statusCode).toBe(200);
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining('Nenhum salão ativo'));
+    warn.mockRestore();
+  });
+
+  it('se a lista de salões não puder ser lida, a rodada falha com mensagem clara', async () => {
+    const res = await run({}, failed);
+    expect(res.statusCode).toBe(500);
+    expect((res.body as { error: string }).error).toContain('lista de salões ativos');
   });
 });

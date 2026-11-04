@@ -1,3 +1,5 @@
+// Também é usado pelo site (navegador), via src/config/salon.ts.
+// Precisa continuar puro: sem process.env, sem segredos e sem imports do Node.
 export const DEFAULT_SALON_ID = 'lev';
 
 const SALON_ID_PATTERN = /^[a-z0-9-]{2,40}$/;

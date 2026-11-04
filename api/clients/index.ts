@@ -1,5 +1,6 @@
 import { authenticateStaff, serviceHeaders, supabaseConfig } from '../_lib/staffAuth.js';
 import { salonFilter, withSalon } from '../_lib/tenant.js';
+import { clientProfileId } from '../_lib/clientProfileId.js';
 import { applyApiSecurity, rateLimit, safeText, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
 
 // GET lista as clientes; POST cria ou atualiza. Uma só função para caber no limite do plano Hobby.
@@ -36,7 +37,7 @@ const saveClient = async (req: any, res: any) => {
       return json(res, 400, { error: 'Informe o nome e um telefone válido.' });
     }
     const { url, serviceKey } = supabaseConfig();
-    const id = `cli_${phoneDigits}`;
+    const id = clientProfileId(staff.salonId, phoneDigits);
     const now = new Date().toISOString();
     const client = {
       ...input,
