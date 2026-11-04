@@ -17,8 +17,8 @@ security definer
 set search_path = public
 as $$
   select coalesce(
-    (select a.salon_id from public.admin_users a where a.user_id = auth.uid() limit 1),
-    (select p.salon_id from public.professional_access p where p.user_id = auth.uid() and p.status = 'approved' limit 1)
+    (select a.salon_id from public.admin_users a where a.user_id = auth.uid() order by a.salon_id limit 1),
+    (select p.salon_id from public.professional_access p where p.user_id = auth.uid() and p.status = 'approved' order by p.salon_id, p.professional_id limit 1)
   );
 $$;
 
@@ -44,12 +44,47 @@ set search_path = public
 as $$
   select p.professional_id from public.professional_access p
   where p.user_id = auth.uid() and p.status = 'approved'
+  order by p.salon_id, p.professional_id
   limit 1;
+$$;
+
+create or replace function public.is_salon_professional(target_salon text, target_professional text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.professional_access p
+    where p.user_id = auth.uid()
+      and p.status = 'approved'
+      and p.salon_id = target_salon
+      and p.professional_id = target_professional
+  );
+$$;
+
+create or replace function public.is_salon_staff(target_salon text)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select public.is_salon_admin(target_salon)
+    or exists (
+      select 1 from public.professional_access p
+      where p.user_id = auth.uid()
+        and p.status = 'approved'
+        and p.salon_id = target_salon
+    );
 $$;
 
 grant execute on function public.staff_salon_id() to anon, authenticated, service_role;
 grant execute on function public.is_salon_admin(text) to anon, authenticated, service_role;
 grant execute on function public.staff_professional_id() to anon, authenticated, service_role;
+grant execute on function public.is_salon_professional(text, text) to anon, authenticated, service_role;
+grant execute on function public.is_salon_staff(text) to anon, authenticated, service_role;
 
 -- ----------------------------------------------------------------------------
 -- Tabelas (todas com o mesmo formato)
@@ -159,7 +194,7 @@ grant delete                 on public.schedule_blocks      to authenticated;
 -- Regras (RLS)
 -- "admin do salão, ou a própria profissional" =
 --   public.is_salon_admin(salon_id)
---   or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+--   or public.is_salon_professional(salon_id, professional_id)
 -- ----------------------------------------------------------------------------
 
 -- salon_settings: todos leem; só admin do salão grava.
@@ -186,7 +221,7 @@ drop policy if exists "professionals_write_insert" on public.professionals;
 create policy "professionals_write_insert" on public.professionals
 for insert to authenticated with check (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or (id = professional_id and public.is_salon_professional(salon_id, professional_id))
 );
 
 drop policy if exists "professionals_write_update" on public.professionals;
@@ -194,11 +229,11 @@ create policy "professionals_write_update" on public.professionals
 for update to authenticated
 using (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or (id = professional_id and public.is_salon_professional(salon_id, professional_id))
 )
 with check (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or (id = professional_id and public.is_salon_professional(salon_id, professional_id))
 );
 
 -- professional_private: admin do salão ou a própria (lê e grava).
@@ -206,14 +241,14 @@ drop policy if exists "professional_private_read" on public.professional_private
 create policy "professional_private_read" on public.professional_private
 for select to authenticated using (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or (id = professional_id and public.is_salon_professional(salon_id, professional_id))
 );
 
 drop policy if exists "professional_private_write_insert" on public.professional_private;
 create policy "professional_private_write_insert" on public.professional_private
 for insert to authenticated with check (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or (id = professional_id and public.is_salon_professional(salon_id, professional_id))
 );
 
 drop policy if exists "professional_private_write_update" on public.professional_private;
@@ -221,11 +256,11 @@ create policy "professional_private_write_update" on public.professional_private
 for update to authenticated
 using (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or (id = professional_id and public.is_salon_professional(salon_id, professional_id))
 )
 with check (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or (id = professional_id and public.is_salon_professional(salon_id, professional_id))
 );
 
 -- payments: admin do salão ou a profissional dona do lançamento (lê e grava).
@@ -233,14 +268,14 @@ drop policy if exists "payments_read" on public.payments;
 create policy "payments_read" on public.payments
 for select to authenticated using (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or public.is_salon_professional(salon_id, professional_id)
 );
 
 drop policy if exists "payments_write_insert" on public.payments;
 create policy "payments_write_insert" on public.payments
 for insert to authenticated with check (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or public.is_salon_professional(salon_id, professional_id)
 );
 
 drop policy if exists "payments_write_update" on public.payments;
@@ -248,23 +283,23 @@ create policy "payments_write_update" on public.payments
 for update to authenticated
 using (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or public.is_salon_professional(salon_id, professional_id)
 )
 with check (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or public.is_salon_professional(salon_id, professional_id)
 );
 
 -- schedule_blocks: equipe do salão lê; admin ou a dona grava e apaga.
 drop policy if exists "schedule_blocks_read" on public.schedule_blocks;
 create policy "schedule_blocks_read" on public.schedule_blocks
-for select to authenticated using (salon_id = public.staff_salon_id());
+for select to authenticated using (public.is_salon_staff(salon_id));
 
 drop policy if exists "schedule_blocks_write_insert" on public.schedule_blocks;
 create policy "schedule_blocks_write_insert" on public.schedule_blocks
 for insert to authenticated with check (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or public.is_salon_professional(salon_id, professional_id)
 );
 
 drop policy if exists "schedule_blocks_write_update" on public.schedule_blocks;
@@ -272,34 +307,34 @@ create policy "schedule_blocks_write_update" on public.schedule_blocks
 for update to authenticated
 using (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or public.is_salon_professional(salon_id, professional_id)
 )
 with check (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or public.is_salon_professional(salon_id, professional_id)
 );
 
 drop policy if exists "schedule_blocks_write_delete" on public.schedule_blocks;
 create policy "schedule_blocks_write_delete" on public.schedule_blocks
 for delete to authenticated using (
   public.is_salon_admin(salon_id)
-  or (professional_id = public.staff_professional_id() and salon_id = public.staff_salon_id())
+  or public.is_salon_professional(salon_id, professional_id)
 );
 
 -- waitlist: equipe do salão lê e grava.
 drop policy if exists "waitlist_read" on public.waitlist;
 create policy "waitlist_read" on public.waitlist
-for select to authenticated using (salon_id = public.staff_salon_id());
+for select to authenticated using (public.is_salon_staff(salon_id));
 
 drop policy if exists "waitlist_write_insert" on public.waitlist;
 create policy "waitlist_write_insert" on public.waitlist
-for insert to authenticated with check (salon_id = public.staff_salon_id());
+for insert to authenticated with check (public.is_salon_staff(salon_id));
 
 drop policy if exists "waitlist_write_update" on public.waitlist;
 create policy "waitlist_write_update" on public.waitlist
 for update to authenticated
-using (salon_id = public.staff_salon_id())
-with check (salon_id = public.staff_salon_id());
+using (public.is_salon_staff(salon_id))
+with check (public.is_salon_staff(salon_id));
 
 -- audit_logs: equipe inclui; só admin do salão lê; ninguém altera ou apaga.
 drop policy if exists "audit_logs_read" on public.audit_logs;
@@ -308,7 +343,10 @@ for select to authenticated using (public.is_salon_admin(salon_id));
 
 drop policy if exists "audit_logs_insert" on public.audit_logs;
 create policy "audit_logs_insert" on public.audit_logs
-for insert to authenticated with check (salon_id = public.staff_salon_id());
+for insert to authenticated with check (
+  public.is_salon_admin(salon_id)
+  or public.is_salon_professional(salon_id, professional_id)
+);
 
 -- ----------------------------------------------------------------------------
 -- Catálogo: só mexe em serviço do próprio salão (mantém admin / própria profissional)
@@ -316,29 +354,20 @@ for insert to authenticated with check (salon_id = public.staff_salon_id());
 drop policy if exists "catalog_staff_insert" on public.catalog_services;
 create policy "catalog_staff_insert" on public.catalog_services
 for insert to authenticated with check (
-  catalog_services.salon_id = public.staff_salon_id()
-  and (
-    exists (select 1 from public.admin_users a where a.user_id = auth.uid())
-    or exists (select 1 from public.professional_access p where p.user_id = auth.uid() and p.status = 'approved' and p.professional_id = catalog_services.professional_id)
-  )
+  public.is_salon_admin(catalog_services.salon_id)
+  or public.is_salon_professional(catalog_services.salon_id, catalog_services.professional_id)
 );
 
 drop policy if exists "catalog_staff_update" on public.catalog_services;
 create policy "catalog_staff_update" on public.catalog_services
 for update to authenticated
 using (
-  catalog_services.salon_id = public.staff_salon_id()
-  and (
-    exists (select 1 from public.admin_users a where a.user_id = auth.uid())
-    or exists (select 1 from public.professional_access p where p.user_id = auth.uid() and p.status = 'approved' and p.professional_id = catalog_services.professional_id)
-  )
+  public.is_salon_admin(catalog_services.salon_id)
+  or public.is_salon_professional(catalog_services.salon_id, catalog_services.professional_id)
 )
 with check (
-  catalog_services.salon_id = public.staff_salon_id()
-  and (
-    exists (select 1 from public.admin_users a where a.user_id = auth.uid())
-    or exists (select 1 from public.professional_access p where p.user_id = auth.uid() and p.status = 'approved' and p.professional_id = catalog_services.professional_id)
-  )
+  public.is_salon_admin(catalog_services.salon_id)
+  or public.is_salon_professional(catalog_services.salon_id, catalog_services.professional_id)
 );
 
 -- O PostgREST precisa enxergar as tabelas novas.
@@ -360,7 +389,7 @@ notify pgrst, 'reload schema';
 --    and tablename in ('salon_settings','professionals','professional_private','payments','schedule_blocks','waitlist','audit_logs')
 --  group by 1 order by 1;
 --
--- -- Esperado: 3 funções
+-- -- Esperado: 5 funções
 -- select proname from pg_proc
 --  where pronamespace = 'public'::regnamespace
---    and proname in ('staff_salon_id','is_salon_admin','staff_professional_id');
+--    and proname in ('staff_salon_id','is_salon_admin','staff_professional_id','is_salon_professional','is_salon_staff');
