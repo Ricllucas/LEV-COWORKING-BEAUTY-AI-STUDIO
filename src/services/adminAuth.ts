@@ -1,4 +1,5 @@
 import { PasskeyAuthService } from './passkeyAuth';
+import { CURRENT_SALON_ID, salonFilter } from '../config/salon';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
@@ -23,7 +24,7 @@ const requireConfig = () => {
 const verifyAdmin = async (accessToken: string, userId: string) => {
   const { url, key } = requireConfig();
   const response = await fetch(
-    `${url}/rest/v1/admin_users?user_id=eq.${encodeURIComponent(userId)}&select=user_id,display_name&limit=1`,
+    `${url}/rest/v1/admin_users?user_id=eq.${encodeURIComponent(userId)}&select=user_id,display_name&limit=1&${salonFilter(CURRENT_SALON_ID)}`,
     {
       headers: {
         apikey: key,

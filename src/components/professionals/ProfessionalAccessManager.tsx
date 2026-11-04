@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Clock3, ShieldX } from 'lucide-react';
+import { CURRENT_SALON_ID, salonFilter } from '../../config/salon';
 
 type Request = {
   user_id: string;
@@ -24,7 +25,7 @@ export const ProfessionalAccessManager: React.FC = () => {
   const load = async () => {
     const token = adminToken();
     if (!url || !key || !token) return setLoading(false);
-    const response = await fetch(`${url}/rest/v1/professional_access?select=*&order=created_at.desc`, {
+    const response = await fetch(`${url}/rest/v1/professional_access?select=*&order=created_at.desc&${salonFilter(CURRENT_SALON_ID)}`, {
       headers: { apikey: key, Authorization: `Bearer ${token}` }
     });
     if (response.ok) setRequests(await response.json());
@@ -36,7 +37,7 @@ export const ProfessionalAccessManager: React.FC = () => {
   const update = async (request: Request, status: 'approved' | 'blocked') => {
     const token = adminToken();
     if (!url || !key || !token) return;
-    await fetch(`${url}/rest/v1/professional_access?user_id=eq.${request.user_id}`, {
+    await fetch(`${url}/rest/v1/professional_access?user_id=eq.${request.user_id}&${salonFilter(CURRENT_SALON_ID)}`, {
       method: 'PATCH',
       headers: { apikey: key, Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({

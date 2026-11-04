@@ -1,4 +1,5 @@
 import { PasskeyAuthService } from './passkeyAuth';
+import { CURRENT_SALON_ID, salonFilter, withSalon } from '../config/salon';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
@@ -34,7 +35,7 @@ const requestHeaders = (token: string) => {
 
 const readAccess = async (token: string, userId: string): Promise<ProfessionalAccess | null> => {
   const { url } = config();
-  const response = await fetch(`${url}/rest/v1/professional_access?user_id=eq.${userId}&select=*&limit=1`, {
+  const response = await fetch(`${url}/rest/v1/professional_access?user_id=eq.${userId}&select=*&limit=1&${salonFilter(CURRENT_SALON_ID)}`, {
     headers: requestHeaders(token)
   });
   if (!response.ok) return null;
@@ -47,7 +48,7 @@ const createPendingAccess = async (token: string, userId: string, request: Omit<
   const response = await fetch(`${url}/rest/v1/professional_access`, {
     method: 'POST',
     headers: { ...requestHeaders(token), Prefer: 'return=representation' },
-    body: JSON.stringify({ user_id: userId, ...request, status: 'pending' })
+    body: JSON.stringify(withSalon({ user_id: userId, ...request, status: 'pending' }, CURRENT_SALON_ID))
   });
   if (!response.ok) throw new Error('Não foi possível enviar a solicitação para aprovação.');
   const rows = await response.json() as ProfessionalAccess[];

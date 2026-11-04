@@ -1,4 +1,5 @@
 import { User, WhatsAppConversation, WhatsAppMessage, WhatsAppConversationStatus } from '../types';
+import { CURRENT_SALON_ID, salonFilter } from '../config/salon';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
@@ -65,7 +66,7 @@ export const WhatsAppConversationService = {
   async list(user: User): Promise<WhatsAppConversation[]> {
     const { url } = config();
     const response = await fetch(
-      `${url}/rest/v1/whatsapp_conversations?select=*&order=last_message_at.desc&limit=100`,
+      `${url}/rest/v1/whatsapp_conversations?select=*&order=last_message_at.desc&limit=100&${salonFilter(CURRENT_SALON_ID)}`,
       { headers: headers(user) }
     );
     if (!response.ok) {
@@ -78,7 +79,7 @@ export const WhatsAppConversationService = {
   async messages(user: User, conversationId: string): Promise<WhatsAppMessage[]> {
     const { url } = config();
     const response = await fetch(
-      `${url}/rest/v1/whatsapp_messages?conversation_id=eq.${encodeURIComponent(conversationId)}&select=*&order=sent_at.asc&limit=300`,
+      `${url}/rest/v1/whatsapp_messages?conversation_id=eq.${encodeURIComponent(conversationId)}&select=*&order=sent_at.asc&limit=300&${salonFilter(CURRENT_SALON_ID)}`,
       { headers: headers(user) }
     );
     if (!response.ok) throw new Error('Não foi possível carregar as mensagens desta conversa.');
@@ -109,7 +110,7 @@ export const WhatsAppConversationService = {
     if (changes.status) payload.status = changes.status;
     if (typeof changes.botEnabled === 'boolean') payload.bot_enabled = changes.botEnabled;
     const response = await fetch(
-      `${url}/rest/v1/whatsapp_conversations?id=eq.${encodeURIComponent(conversationId)}`,
+      `${url}/rest/v1/whatsapp_conversations?id=eq.${encodeURIComponent(conversationId)}&${salonFilter(CURRENT_SALON_ID)}`,
       { method: 'PATCH', headers: { ...headers(user), Prefer: 'return=minimal' }, body: JSON.stringify(payload) }
     );
     if (!response.ok) throw new Error('Não foi possível atualizar esta conversa.');
@@ -117,7 +118,7 @@ export const WhatsAppConversationService = {
 
   async markRead(user: User, conversationId: string): Promise<void> {
     const { url } = config();
-    await fetch(`${url}/rest/v1/whatsapp_conversations?id=eq.${encodeURIComponent(conversationId)}`, {
+    await fetch(`${url}/rest/v1/whatsapp_conversations?id=eq.${encodeURIComponent(conversationId)}&${salonFilter(CURRENT_SALON_ID)}`, {
       method: 'PATCH',
       headers: { ...headers(user), Prefer: 'return=minimal' },
       body: JSON.stringify({ unread_count: 0, updated_at: new Date().toISOString() })

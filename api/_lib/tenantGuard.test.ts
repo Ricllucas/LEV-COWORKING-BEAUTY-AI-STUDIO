@@ -322,7 +322,7 @@ describe('tenantGuard: código do projeto', () => {
     expect(first).toEqual(second);
   });
 
-  // A Tarefa 1.5 transforma este it.todo em it normal:
-  //   expect(scanCodebase().map(formatViolation)).toEqual([]);
-  it.todo('nenhuma consulta em tabela de salão sem filtro de salão');
+  it('nenhuma consulta em tabela de salão sem filtro de salão', () => {
+    expect(scanCodebase().map(formatViolation)).toEqual([]);
+  });
 });

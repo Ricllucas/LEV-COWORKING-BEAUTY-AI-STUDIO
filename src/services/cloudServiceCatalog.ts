@@ -1,6 +1,7 @@
 import { INITIAL_SERVICES } from '../data/initialData';
 import { Service, User } from '../types';
 import { RETIRED_SERVICE_IDS } from '../data/retiredServices';
+import { CURRENT_SALON_ID, salonFilter, withSalon } from '../config/salon';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
@@ -36,7 +37,7 @@ const upsert = async (items: CatalogRecord[], role: User['role']) => {
   const response = await fetch(`${url}/rest/v1/catalog_services?on_conflict=id`, {
     method: 'POST',
     headers: { ...headers(token), Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify(items.map(item => ({ ...item, updated_at: new Date().toISOString() })))
+    body: JSON.stringify(items.map(item => withSalon({ ...item, updated_at: new Date().toISOString() }, CURRENT_SALON_ID)))
   });
   if (!response.ok) {
     const details = await response.text().catch(() => '');
@@ -51,7 +52,7 @@ export const CloudServiceCatalog = {
   async load(): Promise<Service[]> {
     if (!this.isConfigured()) return INITIAL_SERVICES;
     const { url } = config();
-    const response = await fetch(`${url}/rest/v1/catalog_services?select=id,professional_id,payload,deleted`, {
+    const response = await fetch(`${url}/rest/v1/catalog_services?select=id,professional_id,payload,deleted&${salonFilter(CURRENT_SALON_ID)}`, {
       headers: headers(),
       cache: 'no-store'
     });
