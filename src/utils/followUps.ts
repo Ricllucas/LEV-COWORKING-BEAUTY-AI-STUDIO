@@ -20,8 +20,12 @@ const addDays = (date: string, days: number) => {
   return d.toISOString().slice(0, 10);
 };
 
-const formatDate = (date: string) => date.split('-').reverse().join('/');
 const firstName = (name: string) => name.trim().split(/\s+/)[0] || name;
+// "17:30" → "17h30"; "09:00" → "9h"
+const formatHour = (time: string) => {
+  const [h, m] = time.split(':');
+  return `${Number(h)}h${m && m !== '00' ? m : ''}`;
+};
 const phoneKey = (phone: string) => phone.replace(/\D/g, '').slice(-11);
 
 const ACTIVE_STATUSES = new Set(['aguardando_confirmacao', 'confirmado']);
@@ -41,7 +45,8 @@ export const buildFollowUps = (appointments: Appointment[], today: string, sent:
         key: `lembrete:${apt.id}`,
         kind: 'lembrete',
         appointment: apt,
-        message: `Olá, ${firstName(apt.clientName)}! Passando para lembrar do seu horário ${when} (${formatDate(apt.date)}) às ${apt.startTime}, com ${apt.professionalName}, para ${apt.serviceNames.join(', ')}. Te esperamos no LEV Coworking Beauty! 💛 Se precisar remarcar, é só me avisar por aqui.`
+        // Mesmo texto do lembrete automático (aprovado pela LEV em 04/11/2026)
+        message: `Olá, ${firstName(apt.clientName)}! Passando para lembrar que seu horário no LEV é ${when}, às ${formatHour(apt.startTime)}, com ${apt.professionalName}. Esperamos você! Até mais. 🤍`
       });
     });
 

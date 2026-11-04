@@ -84,32 +84,39 @@ describe('mensagens automáticas', () => {
     expect(isDueForConfirmation(apt({ ...base, date: '2026-11-05', createdAt: undefined }), at('2026-11-02T17:00:00Z'))).toBe(false);
   });
 
-  it('monta a confirmação com data, horário, profissional e serviço', () => {
-    const text = messages.confirmation(apt({ date: '2026-11-05', startTime: '10:00', status: 'confirmado' }));
-    expect(text).toContain('Ana, maravilhosa');
-    expect(text).toContain('linda');
-    expect(text).toContain('05/11/2026');
-    expect(text).toContain('10:00');
-    expect(text).toContain('Nayara');
-    expect(text).toContain('Esmaltação em Gel');
+  it('confirmação no texto aprovado pela LEV', () => {
+    const a = apt({ clientName: 'Erica Souza', date: '2026-11-04', startTime: '17:30', status: 'confirmado', professionalName: 'Elisangela', serviceNames: ['Mão tradicional'] });
+    expect(messages.confirmation(a)).toBe(
+      'Olá, Erica! Tudo bem? Seu horário no LEV Coworking Beauty está confirmado!\n\n' +
+      '📅 04/11/2026\n' +
+      '🕒 Às 17h30\n' +
+      '💅 Serviço: Mão tradicional\n' +
+      '👩 Profissional: Elisangela\n\n' +
+      'Agradecemos pela preferência! Será um prazer recebê-la. ✨\n' +
+      'Caso precise remarcar, pedimos que nos avise com antecedência.'
+    );
   });
 
-  it('confirmação para hoje não promete lembrete na véspera', () => {
-    const hoje = apt({ date: '2026-11-02', startTime: '14:30', status: 'confirmado' });
-    const text = messages.confirmation(hoje, at('2026-11-02T17:14:00Z'));
-    expect(text).not.toContain('véspera');
-    expect(text).toContain('daqui a pouco');
-    const outroDia = messages.confirmation(apt({ date: '2026-11-05', status: 'confirmado' }), at('2026-11-02T17:14:00Z'));
-    expect(outroDia).toContain('véspera');
+  it('confirmação com mais de um serviço e hora cheia', () => {
+    const text = messages.confirmation(apt({ date: '2026-11-05', startTime: '09:00', status: 'confirmado', serviceNames: ['Pé', 'Mão'] }));
+    expect(text).toContain('🕒 Às 9h\n');
+    expect(text).toContain('💅 Serviços: Pé, Mão\n');
   });
 
-  it('todas as mensagens para a cliente são carinhosas e elogiam a cliente', () => {
-    const a = apt({ date: '2026-11-05', startTime: '10:00', status: 'confirmado' });
-    for (const text of [messages.confirmation(a), messages.reminder1Day(a), messages.reminder1Hour(a), messages.thanks(a)]) {
-      expect(text).toContain('Ana');
-      expect(text).toMatch(/maravilhosa|linda/);
-      expect(text).toMatch(/deslumbrante|linda/);
-    }
+  it('lembrete de 1 hora no texto aprovado pela LEV', () => {
+    const a = apt({ clientName: 'Erica Souza', date: '2026-11-04', startTime: '17:30', professionalName: 'Elisangela' });
+    expect(messages.reminder1Hour(a)).toBe('Olá, Erica! Passando para lembrar que seu horário no LEV é hoje, às 17h30, com Elisangela. Esperamos você! Até mais. 🤍');
+  });
+
+  it('lembrete da véspera no mesmo estilo', () => {
+    const a = apt({ clientName: 'Erica Souza', date: '2026-11-05', startTime: '17:30', professionalName: 'Elisangela' });
+    expect(messages.reminder1Day(a)).toBe('Olá, Erica! Passando para lembrar que seu horário no LEV é amanhã, às 17h30, com Elisangela. Esperamos você! Até mais. 🤍');
+  });
+
+  it('agradecimento continua carinhoso e elogia a cliente', () => {
+    const text = messages.thanks(apt({ date: '2026-11-05', startTime: '10:00' }));
+    expect(text).toContain('Ana');
+    expect(text).toMatch(/maravilhosa|linda/);
   });
 
   it('normaliza telefones brasileiros para o WhatsApp', () => {
