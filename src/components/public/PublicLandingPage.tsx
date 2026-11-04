@@ -269,7 +269,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
             { url: "/portfolio/talitha/noiva-leticia-janela.webp", alt: "Noiva Letícia produzida no LEV" },
-            { url: "/portfolio/videos/unhas-macaron.webp", video: "/portfolio/videos/unhas-macaron.mp4", alt: "Unhas Macaron de Amora" },
+            { url: "/portfolio/videos/unhas-macaron-limpo.webp", video: "/portfolio/videos/unhas-macaron-limpo.mp4", alt: "Unhas Macaron de Amora" },
             { url: "/portfolio/videos/make-penteado.webp", video: "/portfolio/videos/make-penteado.mp4", alt: "Maquiagem e penteado" },
             { url: "/portfolio/lev/make-fox-2.webp", alt: "Maquiagem fox" }
           ].map(item => (
