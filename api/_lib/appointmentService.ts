@@ -2,6 +2,7 @@ import { syncGoogleCalendarEvent } from './googleCalendar.js';
 import { notificationService } from './notificationService.js';
 import { BOOKING_SERVICES } from './bookingCatalog.js';
 import { RETIRED_SERVICE_IDS } from '../../src/data/retiredServices.js';
+import { salonFilter, withSalon } from './tenant.js';
 
 export type UnifiedAppointment = {
   id: string; clientId: string; clientName: string; clientPhone: string; clientEmail?: string;
@@ -35,7 +36,7 @@ type CatalogService = {
   active?: boolean; onlineBookingEnabled?: boolean; catalogVersion?: number;
 };
 
-const canonicalServices = async (ids: string[]): Promise<CatalogService[]> => {
+const canonicalServices = async (salonId: string, ids: string[]): Promise<CatalogService[]> => {
   const requested = [...new Set(ids)].slice(0, 12);
   if (!requested.length || requested.some(id => !/^[a-zA-Z0-9_-]{1,80}$/.test(id))) {
     const error = new Error('Selecione ao menos um serviço válido.');
@@ -44,7 +45,7 @@ const canonicalServices = async (ids: string[]): Promise<CatalogService[]> => {
   }
   const { url, key } = config();
   const response = await fetch(
-    `${url}/rest/v1/catalog_services?select=id,payload,deleted&id=in.(${requested.join(',')})`,
+    `${url}/rest/v1/catalog_services?select=id,payload,deleted&id=in.(${requested.join(',')})&${salonFilter(salonId)}`,
     { headers: authHeaders(key) }
   );
   if (!response.ok) console.error('[CATALOGO] Não foi possível ler catalog_services:', response.status);
@@ -71,8 +72,8 @@ const canonicalServices = async (ids: string[]): Promise<CatalogService[]> => {
   return services;
 };
 
-const canonicalizePublicAppointment = async (appointment: UnifiedAppointment): Promise<UnifiedAppointment> => {
-  const services = await canonicalServices(appointment.serviceIds);
+const canonicalizePublicAppointment = async (salonId: string, appointment: UnifiedAppointment): Promise<UnifiedAppointment> => {
+  const services = await canonicalServices(salonId, appointment.serviceIds);
   if (services.some(service => service.professionalId !== appointment.professionalId)) {
     const error = new Error('Os serviços selecionados não pertencem à profissional informada.');
     (error as Error & { status?: number }).status = 400;
@@ -105,15 +106,16 @@ const canonicalizePublicAppointment = async (appointment: UnifiedAppointment): P
   };
 };
 
-export const listAppointmentsByDate = async (date: string): Promise<UnifiedAppointment[]> => {
+export const listAppointmentsByDate = async (salonId: string, date: string): Promise<UnifiedAppointment[]> => {
   const { url, key } = config();
-  const response = await fetch(`${url}/rest/v1/appointments?appointment_date=eq.${encodeURIComponent(date)}&select=payload`, { headers: authHeaders(key) });
+  const response = await fetch(`${url}/rest/v1/appointments?appointment_date=eq.${encodeURIComponent(date)}&select=payload&${salonFilter(salonId)}`, { headers: authHeaders(key) });
   if (!response.ok) throw new Error('Não foi possível consultar a agenda.');
   const rows = await response.json() as Array<{ payload: UnifiedAppointment }>;
   return rows.map(row => row.payload).filter(item => item && active(item.status));
 };
 
 export const assertAvailable = async (
+  salonId: string,
   appointment: UnifiedAppointment,
   options?: { allowStaffMonday?: boolean; allowStaffRetrospective?: boolean }
 ) => {
@@ -135,7 +137,7 @@ export const assertAvailable = async (
     (error as Error & { status?: number }).status = 400;
     throw error;
   }
-  const occupied = await listAppointmentsByDate(appointment.date);
+  const occupied = await listAppointmentsByDate(salonId, appointment.date);
   if (occupied.some(current =>
     current.id !== appointment.id &&
     current.professionalId === appointment.professionalId &&
@@ -147,9 +149,9 @@ export const assertAvailable = async (
   }
 };
 
-export const availableStartTimes = async (date: string, duration: number, professionalId?: string) => {
+export const availableStartTimes = async (salonId: string, date: string, duration: number, professionalId?: string) => {
   if (professionalId && !worksOnDate(professionalId, date)) return [];
-  const occupied = (await listAppointmentsByDate(date)).filter(item =>
+  const occupied = (await listAppointmentsByDate(salonId, date)).filter(item =>
     !professionalId || item.professionalId === professionalId
   );
   const result: string[] = [];
@@ -163,17 +165,18 @@ export const availableStartTimes = async (date: string, duration: number, profes
 };
 
 export const createUnifiedAppointment = async (
+  salonId: string,
   appointment: UnifiedAppointment,
   options?: { allowStaffMonday?: boolean; allowStaffRetrospective?: boolean }
 ) => {
   const payload = appointment.source === 'site' || !appointment.source
-    ? await canonicalizePublicAppointment(appointment)
+    ? await canonicalizePublicAppointment(salonId, appointment)
     : appointment;
-  await assertAvailable(payload, options);
+  await assertAvailable(salonId, payload, options);
   const { url, key } = config();
   const response = await fetch(`${url}/rest/v1/appointments?on_conflict=id`, {
     method: 'POST', headers: { ...authHeaders(key), 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
-    body: JSON.stringify({ id: payload.id, professional_id: payload.professionalId, appointment_date: payload.date, start_time: payload.startTime, status: payload.status, payload, updated_at: new Date().toISOString() })
+    body: JSON.stringify(withSalon({ id: payload.id, professional_id: payload.professionalId, appointment_date: payload.date, start_time: payload.startTime, status: payload.status, payload, updated_at: new Date().toISOString() }, salonId))
   });
   if (!response.ok) {
     const error = new Error(response.status === 409 ? 'Este horário acabou de ser reservado. Escolha outro horário disponível.' : `O servidor recusou o agendamento (${response.status}).`);
@@ -198,7 +201,7 @@ export const countPendingForPhone = (appointments: Array<Pick<UnifiedAppointment
   return appointments.filter(item => item?.status === 'aguardando_confirmacao' && phoneKey(item.clientPhone) === key).length;
 };
 
-export const assertPublicBookingLimit = async (phone: string) => {
+export const assertPublicBookingLimit = async (salonId: string, phone: string) => {
   const key = phoneKey(phone);
   if (key.length < 10 || key.length > 11) {
     const error = new Error('Informe um celular válido com DDD.');
@@ -208,7 +211,7 @@ export const assertPublicBookingLimit = async (phone: string) => {
   const { url, key: serviceKey } = config();
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
   const response = await fetch(
-    `${url}/rest/v1/appointments?appointment_date=gte.${today}&status=eq.aguardando_confirmacao&select=payload`,
+    `${url}/rest/v1/appointments?appointment_date=gte.${today}&status=eq.aguardando_confirmacao&select=payload&${salonFilter(salonId)}`,
     { headers: authHeaders(serviceKey) }
   );
   if (!response.ok) throw new Error('Não foi possível consultar a agenda.');

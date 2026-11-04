@@ -1,5 +1,6 @@
 import { listAppointmentsByDate } from '../_lib/appointmentService.js';
 import { applyApiSecurity, rateLimit, publicErrorMessage } from '../_lib/security.js';
+import { DEFAULT_SALON_ID } from '../_lib/tenant.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 
@@ -10,7 +11,7 @@ export default async function handler(req: any, res: any) {
   const date = String(req.query?.date || '');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json(res, 400, { error: 'Data inválida.' });
   try {
-    const appointments = (await listAppointmentsByDate(date)).map(item => ({
+    const appointments = (await listAppointmentsByDate(DEFAULT_SALON_ID, date)).map(item => ({
       id: item.id,
       professionalId: item.professionalId,
       date: item.date,

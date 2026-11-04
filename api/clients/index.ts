@@ -1,4 +1,5 @@
 import { authenticateStaff, serviceHeaders, supabaseConfig } from '../_lib/staffAuth.js';
+import { salonFilter, withSalon } from '../_lib/tenant.js';
 import { applyApiSecurity, rateLimit, safeText, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
 
 // GET lista as clientes; POST cria ou atualiza. Uma só função para caber no limite do plano Hobby.
@@ -12,7 +13,7 @@ const listClients = async (req: any, res: any) => {
     if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
     const { url, serviceKey } = supabaseConfig();
     const response = await fetch(
-      `${url}/rest/v1/client_profiles?select=id,phone_digits,payload,created_at,updated_at&order=created_at.desc`,
+      `${url}/rest/v1/client_profiles?select=id,phone_digits,payload,created_at,updated_at&order=created_at.desc&${salonFilter(staff.salonId)}`,
       { headers: serviceHeaders(serviceKey) }
     );
     if (!response.ok) throw new Error(`Não foi possível consultar clientes (${response.status}).`);
@@ -47,17 +48,17 @@ const saveClient = async (req: any, res: any) => {
       active: input.active !== false,
       createdAt: input.createdAt || now.slice(0, 10)
     };
-    const response = await fetch(`${url}/rest/v1/client_profiles?on_conflict=phone_digits`, {
+    const response = await fetch(`${url}/rest/v1/client_profiles?on_conflict=salon_id,phone_digits`, {
       method: 'POST',
       headers: { ...serviceHeaders(serviceKey), Prefer: 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({
+      body: JSON.stringify(withSalon({
         id,
         phone_digits: phoneDigits,
         professional_id: staff.professionalId || input.preferredProfessionalId || null,
         payload: client,
         created_by: staff.userId,
         updated_at: now
-      })
+      }, staff.salonId))
     });
     if (!response.ok) {
       const details = await response.text().catch(() => '');

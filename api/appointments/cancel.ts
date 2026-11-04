@@ -1,6 +1,7 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { notificationService } from '../_lib/notificationService.js';
 import { applyApiSecurity, rateLimit, safeText, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
+import { DEFAULT_SALON_ID, salonFilter } from '../_lib/tenant.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const digits = (value: string) => String(value || '').replace(/\D/g, '');
@@ -22,7 +23,9 @@ export default async function handler(req: any, res: any) {
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !key) throw new Error('Servidor de agendamentos não configurado.');
     const headers = { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
-    const lookup = await fetch(`${url}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}&select=payload&limit=1`, { headers });
+    // Site público: LEV por enquanto (a fase 4 usa o endereço)
+    const salonId = DEFAULT_SALON_ID;
+    const lookup = await fetch(`${url}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}&select=payload&limit=1&${salonFilter(salonId)}`, { headers });
     if (!lookup.ok) throw new Error('Não foi possível localizar o agendamento.');
     const rows = await lookup.json() as Array<{ payload: any }>;
     const current = rows[0]?.payload;
@@ -35,7 +38,7 @@ export default async function handler(req: any, res: any) {
       cancellationReason: String(reason || 'Cancelado pela cliente pelo site'),
       updatedAt: new Date().toISOString()
     };
-    const save = await fetch(`${url}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}`, {
+    const save = await fetch(`${url}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}&${salonFilter(salonId)}`, {
       method: 'PATCH', headers: { ...headers, Prefer: 'return=minimal' },
       body: JSON.stringify({ status: updated.status, payload: updated, updated_at: updated.updatedAt })
     });
@@ -50,7 +53,7 @@ export default async function handler(req: any, res: any) {
       professionalName: updated.professionalName, serviceNames: updated.serviceNames,
       date: updated.date, startTime: updated.startTime, endTime: updated.endTime, status: updated.status
     }).catch(error => console.error('Cancellation notification error:', error));
-    fetch(`${url}/rest/v1/whatsapp_conversations?appointment_id=eq.${encodeURIComponent(appointmentId)}`, {
+    fetch(`${url}/rest/v1/whatsapp_conversations?appointment_id=eq.${encodeURIComponent(appointmentId)}&${salonFilter(salonId)}`, {
       method: 'PATCH', headers: { ...headers, Prefer: 'return=minimal' },
       body: JSON.stringify({ status: 'encerrada', last_message: 'Agendamento cancelado pela cliente', updated_at: updated.updatedAt })
     }).catch(error => console.error('WhatsApp conversation cancellation error:', error));

@@ -1,4 +1,5 @@
 import { supabaseConfig, serviceHeaders } from '../_lib/staffAuth.js';
+import { assertSalonId, salonFilter } from '../_lib/tenant.js';
 import { isOpenWaConfigured, sendOpenWaText } from '../_lib/openwa.js';
 import { isCronAuthorized, isDueFor1Day, isDueFor1Hour, type RemindersSent } from '../_lib/reminderRules.js';
 import {
@@ -14,6 +15,8 @@ import {
 
 // Disparado a cada 5 minutos pelo Supabase (pg_cron). Envia pelo robô de
 // WhatsApp da LEV: lembretes (1 dia e 1 hora antes), agradecimento e manutenção.
+// Processa salão por salão (só os ativos); o limite de envios por rodada vale
+// para todos juntos, porque hoje todos usam o mesmo número de WhatsApp.
 
 type Row = { id: string; payload?: Record<string, any> | null; reminders_sent?: RemindersSent | null };
 type Kind = 'confirmacao' | '1dia' | '1hora' | 'agradecimento' | 'manutencao';
@@ -35,7 +38,9 @@ const query = async (path: string, init: RequestInit = {}) => {
   return response;
 };
 
-const toAppointment = (row: Row): (AutomatedAppointment & { sent: RemindersSent }) | null => {
+type CronAppointment = AutomatedAppointment & { sent: RemindersSent; salonId: string };
+
+const toAppointment = (row: Row, salonId: string): CronAppointment | null => {
   const p = row.payload;
   if (!p?.clientPhone || !p?.date || !p?.startTime) return null;
   return {
@@ -50,17 +55,61 @@ const toAppointment = (row: Row): (AutomatedAppointment & { sent: RemindersSent 
     endTime: p.endTime,
     status: p.status,
     createdAt: p.createdAt,
-    sent: row.reminders_sent || {}
+    sent: row.reminders_sent || {},
+    salonId
   };
 };
 
-const markSent = async (apt: { id: string; sent: RemindersSent }, kind: Kind) => {
+const markSent = async (apt: { id: string; sent: RemindersSent; salonId: string }, kind: Kind) => {
   apt.sent = { ...apt.sent, [kind]: true };
-  await query(`appointments?id=eq.${encodeURIComponent(apt.id)}`, {
+  await query(`appointments?id=eq.${encodeURIComponent(apt.id)}&${salonFilter(apt.salonId)}`, {
     method: 'PATCH',
     headers: { Prefer: 'return=minimal' },
     body: JSON.stringify({ reminders_sent: apt.sent })
   });
+};
+
+type QueueItem = { apt: CronAppointment; kind: Kind; text: string };
+
+const activeSalonIds = async (): Promise<string[]> => {
+  const rows = await (await query('salons?status=eq.ativo&select=id&order=id.asc')).json() as Array<{ id: string }>;
+  return rows.map(row => assertSalonId(row.id));
+};
+
+// Monta a fila de mensagens de um salão, só com os agendamentos dele.
+const queueForSalon = async (salonId: string, now: Date, today: string): Promise<QueueItem[]> => {
+  const from = addDays(today, -75);
+  const until = addDays(today, 2);
+  const rows = await (await query(
+    `appointments?select=id,payload,reminders_sent&appointment_date=gte.${from}&appointment_date=lte.${until}&${salonFilter(salonId)}`
+  )).json() as Row[];
+  const appointments = rows
+    .map(row => toAppointment(row, salonId))
+    .filter((apt): apt is CronAppointment => apt !== null);
+
+  const queue: QueueItem[] = [];
+  appointments.forEach(apt => {
+    // Lembrete só para horários confirmados pela profissional: um número digitado
+    // no site público não recebe mensagens até a equipe confirmar o agendamento.
+    if (apt.status === 'confirmado') {
+      if (!apt.sent['1hora'] && isDueFor1Hour(apt, now)) queue.push({ apt, kind: '1hora', text: messages.reminder1Hour(apt) });
+      else if (!apt.sent['1dia'] && isDueFor1Day(apt, now)) queue.push({ apt, kind: '1dia', text: messages.reminder1Day(apt) });
+      else if (!apt.sent.confirmacao && isDueForConfirmation(apt, now)) queue.push({ apt, kind: 'confirmacao', text: messages.confirmation(apt) });
+    }
+    if (!apt.sent.agradecimento && isDueForThanks(apt, now)) queue.push({ apt, kind: 'agradecimento', text: messages.thanks(apt) });
+  });
+
+  const upcomingPhones = new Set(
+    appointments
+      .filter(apt => apt.date >= today && ACTIVE.has(apt.status))
+      .map(apt => apt.clientPhone.replace(/\D/g, '').slice(-8))
+  );
+  const done = appointments.filter(apt => apt.status === 'concluido' && apt.date <= today);
+  findMaintenanceDue(done, upcomingPhones, today).forEach(due => {
+    const apt = appointments.find(item => item.id === due.appointment.id);
+    if (apt && !apt.sent.manutencao) queue.push({ apt, kind: 'manutencao', text: messages.maintenance(due) });
+  });
+  return queue;
 };
 
 export const config = { maxDuration: 60 };
@@ -77,35 +126,10 @@ export default async function handler(req: any, res: any) {
 
   try {
     const today = brasiliaNow(now).date;
-    const from = addDays(today, -75);
-    const until = addDays(today, 2);
-    const rows = await (await query(
-      `appointments?select=id,payload,reminders_sent&appointment_date=gte.${from}&appointment_date=lte.${until}`
-    )).json() as Row[];
-    const appointments = rows.map(toAppointment).filter((apt): apt is NonNullable<typeof apt> => apt !== null);
-
-    const queue: Array<{ apt: (typeof appointments)[number]; kind: Kind; text: string }> = [];
-    appointments.forEach(apt => {
-      // Lembrete só para horários confirmados pela profissional: um número digitado
-      // no site público não recebe mensagens até a equipe confirmar o agendamento.
-      if (apt.status === 'confirmado') {
-        if (!apt.sent['1hora'] && isDueFor1Hour(apt, now)) queue.push({ apt, kind: '1hora', text: messages.reminder1Hour(apt) });
-        else if (!apt.sent['1dia'] && isDueFor1Day(apt, now)) queue.push({ apt, kind: '1dia', text: messages.reminder1Day(apt) });
-        else if (!apt.sent.confirmacao && isDueForConfirmation(apt, now)) queue.push({ apt, kind: 'confirmacao', text: messages.confirmation(apt) });
-      }
-      if (!apt.sent.agradecimento && isDueForThanks(apt, now)) queue.push({ apt, kind: 'agradecimento', text: messages.thanks(apt) });
-    });
-
-    const upcomingPhones = new Set(
-      appointments
-        .filter(apt => apt.date >= today && ACTIVE.has(apt.status))
-        .map(apt => apt.clientPhone.replace(/\D/g, '').slice(-8))
-    );
-    const done = appointments.filter(apt => apt.status === 'concluido' && apt.date <= today);
-    findMaintenanceDue(done, upcomingPhones, today).forEach(due => {
-      const apt = appointments.find(item => item.id === due.appointment.id);
-      if (apt && !apt.sent.manutencao) queue.push({ apt, kind: 'manutencao', text: messages.maintenance(due) });
-    });
+    const queue: QueueItem[] = [];
+    for (const salonId of await activeSalonIds()) {
+      queue.push(...await queueForSalon(salonId, now, today));
+    }
 
     const sent: Record<Kind, number> = { confirmacao: 0, '1dia': 0, '1hora': 0, agradecimento: 0, manutencao: 0 };
     const failures: string[] = [];

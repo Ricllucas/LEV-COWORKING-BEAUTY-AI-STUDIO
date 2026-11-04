@@ -1,6 +1,7 @@
 import { verifyConfirmToken } from '../_lib/confirmLink.js';
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { applyApiSecurity, publicErrorMessage, rateLimit, validJsonRequest } from '../_lib/security.js';
+import { DEFAULT_SALON_ID, salonFilter } from '../_lib/tenant.js';
 
 // Confirmação do horário pela profissional, a partir do link enviado no WhatsApp.
 // GET  ?t=<token>  → mostra o resumo do horário (não altera nada; o WhatsApp abre links sozinho para gerar prévia)
@@ -41,8 +42,10 @@ export default async function handler(req: any, res: any) {
     if (!supabaseUrl || !serviceKey) throw new Error('Servidor de agendamentos não configurado.');
     const headers = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
     const id = encodeURIComponent(check.appointmentId);
+    // Link público: LEV por enquanto (a fase 4 usa o endereço)
+    const salonId = DEFAULT_SALON_ID;
 
-    const found = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${id}&select=id,status,payload&limit=1`, { headers });
+    const found = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${id}&select=id,status,payload&limit=1&${salonFilter(salonId)}`, { headers });
     const rows = found.ok ? await found.json() as StoredRow[] : [];
     if (!rows[0]) return json(res, 404, { error: 'Agendamento não encontrado. Ele pode ter sido cancelado.' });
 
@@ -62,7 +65,7 @@ export default async function handler(req: any, res: any) {
       updatedAt
     };
     // Só confirma se ainda estiver pendente (evita sobrescrever um cancelamento feito ao mesmo tempo)
-    const update = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${id}&status=eq.aguardando_confirmacao`, {
+    const update = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${id}&status=eq.aguardando_confirmacao&${salonFilter(salonId)}`, {
       method: 'PATCH',
       headers: { ...headers, 'Content-Type': 'application/json', Prefer: 'return=representation' },
       body: JSON.stringify({ status: 'confirmado', payload: appointment, updated_at: updatedAt })

@@ -1,5 +1,6 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
+import { salonFilter } from '../_lib/tenant.js';
 import { applyApiSecurity, rateLimit, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
@@ -22,7 +23,7 @@ export default async function handler(req: any, res: any) {
     const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !serviceKey) throw new Error('Servidor de agendamentos não configurado.');
-    const storedResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}&select=id,professional_id,payload&limit=1`, {
+    const storedResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}&select=id,professional_id,payload&limit=1&${salonFilter(staff.salonId)}`, {
       headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` }
     });
     const rows = storedResponse.ok ? await storedResponse.json() as Array<{ id: string; professional_id: string; payload: any }> : [];
@@ -65,7 +66,7 @@ export default async function handler(req: any, res: any) {
         remainingPrice: numeric(changes.remainingPrice, appointment.remainingPrice),
         updatedAt
       };
-      const updateResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}`, {
+      const updateResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}&${salonFilter(staff.salonId)}`, {
         method: 'PATCH',
         headers: {
           apikey: serviceKey,
@@ -88,7 +89,7 @@ export default async function handler(req: any, res: any) {
         cancellationReason: input.cancellationReason || appointment.cancellationReason,
         updatedAt
       };
-      const updateResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}`, {
+      const updateResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}&${salonFilter(staff.salonId)}`, {
         method: 'PATCH',
         headers: {
           apikey: serviceKey,

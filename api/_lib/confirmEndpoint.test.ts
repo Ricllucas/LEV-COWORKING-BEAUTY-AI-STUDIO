@@ -39,6 +39,7 @@ describe('endpoint de confirmação pelo link', () => {
     expect(res.body.clientFirstName).toBe('Ana');
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(fetchMock.mock.calls[0][1]?.method).toBeUndefined();
+    expect(fetchMock.mock.calls[0][0]).toContain('salon_id=eq.lev');
   });
 
   it('o botão (POST) confirma apenas se ainda estiver pendente', async () => {
@@ -51,6 +52,7 @@ describe('endpoint de confirmação pelo link', () => {
     expect(res.body.confirmed).toBe(true);
     const [url, init] = fetchMock.mock.calls[1];
     expect(url).toContain('status=eq.aguardando_confirmacao');
+    expect(url).toContain('salon_id=eq.lev');
     expect(init.method).toBe('PATCH');
     expect(JSON.parse(init.body).status).toBe('confirmado');
   });

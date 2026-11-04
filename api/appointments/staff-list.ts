@@ -1,5 +1,7 @@
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 import { applyApiSecurity, rateLimit, publicErrorMessage } from '../_lib/security.js';
+import { authenticateStaff } from '../_lib/staffAuth.js';
+import { salonFilter } from '../_lib/tenant.js';
 
 const config = () => {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
@@ -26,32 +28,6 @@ const addMinutes = (time: string, minutes: number) => {
   return `${String(Math.floor(total / 60) % 24).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 };
 
-const authenticateStaff = async (authorization?: string) => {
-  const token = authorization?.replace(/^Bearer\s+/i, '').trim();
-  if (!token) return null;
-  const { url, key } = config();
-  const publicKey = process.env.SUPABASE_PUBLISHABLE_KEY
-    || process.env.VITE_SUPABASE_PUBLISHABLE_KEY
-    || key;
-  const userHeaders = { apikey: publicKey, Authorization: `Bearer ${token}`, Accept: 'application/json' };
-  const userResponse = await fetch(`${url}/auth/v1/user`, {
-    headers: userHeaders
-  });
-  if (!userResponse.ok) {
-    console.error('Staff token validation failed:', userResponse.status, await userResponse.text().catch(() => ''));
-    return null;
-  }
-  const user = await userResponse.json() as { id: string; email?: string };
-
-  const [adminResponse, professionalResponse] = await Promise.all([
-    fetch(`${url}/rest/v1/admin_users?user_id=eq.${encodeURIComponent(user.id)}&select=user_id&limit=1`, { headers: userHeaders }),
-    fetch(`${url}/rest/v1/professional_access?user_id=eq.${encodeURIComponent(user.id)}&status=eq.approved&select=user_id&limit=1`, { headers: userHeaders })
-  ]);
-  const admins = adminResponse.ok ? await adminResponse.json() as unknown[] : [];
-  const professionals = professionalResponse.ok ? await professionalResponse.json() as unknown[] : [];
-  return admins.length > 0 || professionals.length > 0 ? user : null;
-};
-
 export default async function handler(req: any, res: any) {
   applyApiSecurity(req, res);
   if (req.method !== 'GET') return json(res, 405, { error: 'Método não permitido.' });
@@ -62,7 +38,7 @@ export default async function handler(req: any, res: any) {
 
     const { url, key } = config();
     const response = await fetch(
-      `${url}/rest/v1/appointments?select=id,professional_id,appointment_date,start_time,status,payload,updated_at&order=appointment_date.asc,start_time.asc`,
+      `${url}/rest/v1/appointments?select=id,professional_id,appointment_date,start_time,status,payload,updated_at&order=appointment_date.asc,start_time.asc&${salonFilter(staff.salonId)}`,
       { headers: headers(key) }
     );
     if (!response.ok) {

@@ -3,6 +3,7 @@ import { verifyTurnstile } from '../_lib/turnstile.js';
 import { sendProfessionalNotification } from '../_lib/whatsappProfessionalNotification.js';
 import { applyApiSecurity, publicErrorMessage, rateLimit, requestIp, safeText, secureId, validJsonRequest } from '../_lib/security.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
+import { DEFAULT_SALON_ID } from '../_lib/tenant.js';
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const valid = (a: any) => Boolean(a?.id && a?.professionalId && a?.clientName && a?.clientPhone && /^\d{4}-\d{2}-\d{2}$/.test(a?.date || '') && /^\d{2}:\d{2}$/.test(a?.startTime || '') && /^\d{2}:\d{2}$/.test(a?.endTime || ''));
 export default async function handler(req: any, res: any) {
@@ -11,6 +12,8 @@ export default async function handler(req: any, res: any) {
   if (!rateLimit(req, res, 'booking-create', 12, 10 * 60_000) || !validJsonRequest(req, res)) return;
   try {
     const staff = await authenticateStaff(req.headers?.authorization);
+    // Equipe: salão do login. Site público: LEV por enquanto (a fase 4 usa o endereço).
+    const salonId = staff ? staff.salonId : DEFAULT_SALON_ID;
     const raw = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const allowedProfessionals = new Set(['prof_elisangela', 'prof_talitha', 'prof_nayara']);
     const appointment = {
@@ -33,9 +36,10 @@ export default async function handler(req: any, res: any) {
       if (!await verifyTurnstile(raw?.turnstileToken, requestIp(req))) {
         return json(res, 403, { error: 'Não foi possível confirmar que você não é um robô. Atualize a página e tente de novo.' });
       }
-      await assertPublicBookingLimit(appointment.clientPhone);
+      await assertPublicBookingLimit(salonId, appointment.clientPhone);
     }
     const result = await createUnifiedAppointment(
+      salonId,
       { ...appointment, source: staff ? 'staff' : 'site' },
       {
         allowStaffMonday: Boolean(staff),

@@ -1,5 +1,6 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
+import { withSalon } from '../_lib/tenant.js';
 import { applyApiSecurity, rateLimit, safeText, secureId, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
@@ -68,14 +69,7 @@ export default async function handler(req: any, res: any) {
     };
 
     const saveResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?on_conflict=id`, {
-      method: 'POST',
-      headers: {
-        apikey: serviceKey,
-        Authorization: `Bearer ${serviceKey}`,
-        'Content-Type': 'application/json',
-        Prefer: 'resolution=merge-duplicates,return=minimal'
-      },
-      body: JSON.stringify({
+      body: JSON.stringify(withSalon({
         id: blockData.id,
         professional_id: blockData.professionalId,
         appointment_date: blockData.date,
@@ -83,7 +77,14 @@ export default async function handler(req: any, res: any) {
         status: blockData.status,
         payload: blockData,
         updated_at: new Date().toISOString()
-      })
+      }, staff.salonId)),
+      method: 'POST',
+      headers: {
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+        Prefer: 'resolution=merge-duplicates,return=minimal'
+      }
     });
 
     if (!saveResponse.ok) {

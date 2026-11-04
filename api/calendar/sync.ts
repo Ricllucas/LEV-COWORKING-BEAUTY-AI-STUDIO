@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { createSign } from 'node:crypto';
 import { authenticateStaff } from '../_lib/staffAuth.js';
+import { DEFAULT_SALON_ID, salonFilter } from '../_lib/tenant.js';
 import { applyApiSecurity, constantTimeSecretEquals, rateLimit, publicErrorMessage } from '../_lib/security.js';
 
 const requireEnv = (name: string) => {
@@ -48,6 +49,8 @@ export default async function handler(req: any, res: any) {
   const isCron = constantTimeSecretEquals(bearer, process.env.CRON_SECRET);
   const staff = isCron ? null : await authenticateStaff(req.headers?.authorization);
   if (!isCron && !staff) return res.status(401).json({ error: 'Acesso restrito à equipe LEV.' });
+  // Equipe: salão do login. Tarefa agendada: o Google Agenda configurado é o da LEV.
+  const salonId = staff ? staff.salonId : DEFAULT_SALON_ID;
 
   try {
     const calendarId = requireEnv('GOOGLE_CALENDAR_ID');
@@ -92,7 +95,7 @@ export default async function handler(req: any, res: any) {
         const endTime = `${String(end.getHours()).padStart(2, '0')}:${String(end.getMinutes()).padStart(2, '0')}`;
 
         const updateResponse = await fetch(
-          `${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(levAppointmentId)}`,
+          `${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(levAppointmentId)}&${salonFilter(salonId)}`,
           {
             method: 'PATCH',
             headers: {
