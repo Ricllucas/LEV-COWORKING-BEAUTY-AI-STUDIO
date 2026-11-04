@@ -71,6 +71,9 @@ export function getAvailableSlots(
   const dayEndMinutes = timeToMinutes(workConfig.endTime);
   const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
   const isRetrospectiveStaffEntry = staffMode && dateStr <= today;
+  // Hoje, para a cliente, só vale horário que ainda não começou (hora de Brasília)
+  const nowMinutes = timeToMinutes(new Date().toLocaleTimeString('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false }));
+  const hidePastSlots = !isRetrospectiveStaffEntry && dateStr === today;
 
   // Cada profissional possui agenda independente. Um compromisso bloqueia
   // somente os horários da profissional responsável pelo atendimento.
@@ -105,6 +108,12 @@ export function getAvailableSlots(
 
     let available = true;
     let reason = "";
+
+    // 0. Horário que já passou
+    if (hidePastSlots && current <= nowMinutes) {
+      available = false;
+      reason = 'Este horário já passou';
+    }
 
     // 1. Check Existing Appointments
     if (available) {

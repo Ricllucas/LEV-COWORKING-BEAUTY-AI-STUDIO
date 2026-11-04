@@ -24,6 +24,9 @@ export const addMinutes = (time: string, duration: number) => {
   const total = toMinutes(time) + duration;
   return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
 };
+// Data de hoje e minutos desde a meia-noite, em Brasília
+const brasiliaToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+const brasiliaNowMinutes = () => toMinutes(new Date().toLocaleTimeString('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false }));
 const active = (status: string) => !['cancelado_cliente', 'cancelado_coworking'].includes(status);
 const worksOnDate = (professionalId: string, date: string) => {
   const weekday = new Date(`${date}T12:00:00-03:00`).getDay();
@@ -119,10 +122,11 @@ export const assertAvailable = async (
   appointment: UnifiedAppointment,
   options?: { allowStaffMonday?: boolean; allowStaffRetrospective?: boolean }
 ) => {
-  const today = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' });
+  const today = brasiliaToday();
   const start = toMinutes(appointment.startTime); const end = toMinutes(appointment.endTime);
   const retrospectiveStaffEntry = options?.allowStaffRetrospective === true && appointment.date <= today;
-  const invalidDate = appointment.date < today && !retrospectiveStaffEntry;
+  const alreadyStarted = appointment.date === today && start <= brasiliaNowMinutes();
+  const invalidDate = (appointment.date < today || alreadyStarted) && !retrospectiveStaffEntry;
   const invalidHours = start < 9 * 60 || start >= 18 * 60 || end <= start || (!retrospectiveStaffEntry && end > 18 * 60);
   if (invalidDate || invalidHours) {
     const error = new Error('Escolha uma data futura e um horário entre 09:00 e 18:00.');
@@ -155,7 +159,9 @@ export const availableStartTimes = async (salonId: string, date: string, duratio
     !professionalId || item.professionalId === professionalId
   );
   const result: string[] = [];
+  const firstStart = date === brasiliaToday() ? brasiliaNowMinutes() + 1 : 0;
   for (let start = 9 * 60; start + duration <= 18 * 60; start += 30) {
+    if (start < firstStart) continue;
     const end = start + duration;
     if (!occupied.some(item => start < toMinutes(item.endTime) && end > toMinutes(item.startTime))) {
       result.push(`${String(Math.floor(start / 60)).padStart(2, '0')}:${String(start % 60).padStart(2, '0')}`);
