@@ -91,6 +91,9 @@ begin
 end
 $$;
 
+-- O PostgREST precisa enxergar a coluna salon_id nova; sem isto os filtros devolvem erro 400.
+notify pgrst, 'reload schema';
+
 commit;
 
 -- ============================================================================

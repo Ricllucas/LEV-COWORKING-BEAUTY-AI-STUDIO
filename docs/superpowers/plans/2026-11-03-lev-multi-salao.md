@@ -76,6 +76,7 @@ Erros que os testes de cada tarefa podem deixar passar, do mais provável ao men
   - em `client_profiles`: remover a restrição única de `phone_digits` e criar `unique (salon_id, phone_digits)`;
   - `check (id ~ '^[a-z0-9-]{2,40}$')` em `salons.id`.
   A migração precisa poder rodar duas vezes sem erro.
+  Observação: a regra antiga `unique(phone_digits)` é mantida nesta migração (o código antigo ainda precisa dela) e só é removida depois, pela migração `20261104b` (Tarefa 1.5). A tabela `salons` fica com RLS ligado e sem nenhuma policy (só o servidor acessa).
 - [ ] **Passo 2:** a dona do projeto roda a migração no Supabase (SQL Editor). Em seguida, rodar a verificação:
   ```sql
   select table_name from information_schema.columns
@@ -151,7 +152,7 @@ Regra para escolher o salão em cada rota:
 
 - [ ] **Passo 1:** trocar cada consulta. Em leituras, acrescentar `&${salonFilter(id)}`. Em gravações, usar `withSalon(row, id)`.
 - [ ] **Passo 2:** trocar os `it.todo` da Tarefa 1.3 por `it` e rodar `npx vitest run api/_lib/tenantGuard.test.ts` → PASSA
-- [ ] **Passo 3:** `npm run test` → todos os testes antigos continuam passando (hoje são 284)
+- [ ] **Passo 3:** `npm run test` → todos os testes antigos continuam passando (hoje são 153)
 - [ ] **Passo 4:** `npm run lint` e `npm run build` sem erros em `src/` e `api/`
 - [ ] **Passo 5:** commit `feat: todas as consultas filtradas por salao`
 
@@ -163,7 +164,9 @@ Regra para escolher o salão em cada rota:
   - fazer um agendamento → aparece no painel da admin, no Google Agenda e chega o aviso do WhatsApp;
   - tentar agendar o mesmo horário de novo → recusado;
   - cancelar → horário volta a ficar livre.
-- [ ] **Passo 4:** teste de isolamento, no Supabase: criar o salão `teste-isolamento` com um agendamento falso. Conferir que ele **não** aparece no painel da LEV. Depois apagar os dois (pedir aprovação antes de apagar).
+- [ ] **Passo 4:** teste de isolamento, no Supabase: criar o salão `teste-isolamento` com `status = 'inativo'`, um telefone falso que não existe e um agendamento com status diferente de `confirmado` e `aguardando_confirmacao`, para o cron nunca mandar WhatsApp por causa dele. Conferir que ele **não** aparece no painel da LEV. Depois apagar os dois (pedir aprovação antes de apagar).
+- [ ] **Passo 5:** depois de publicar, entrar como admin e como profissional e confirmar que o acesso continua funcionando.
+- [ ] **Passo 6:** rodar `20261104b` (remove a regra antiga do telefone) só alguns dias depois de publicar, quando não houver mais chance de voltar o site para a versão antiga.
 
 ---
 
@@ -176,6 +179,10 @@ Regra para escolher o salão em cada rota:
 - **Tarefa 2.3:** `StorageService` passa a ler da nuvem e guarda o `localStorage` só como cópia para abrir rápido. Ao primeiro acesso, enviar os dados que existirem no aparelho, sem duplicar.
 - **Tarefa 2.4:** levar o financeiro da LEV que estiver nos aparelhos da Elisangela, da Talitha e da Nayara. Precisa abrir o painel uma vez em cada aparelho depois da publicação. Conferir os totais antes e depois.
 - **Aceite:** um lançamento financeiro feito no celular aparece no computador.
+
+**Condição de entrada (antes de ter um segundo salão de verdade):**
+- Os ids de `catalog_services` (ex.: `srv_tal_1`) se repetem entre salões. É preciso chave composta ou ids com o salão no nome.
+- RLS por salão em todas as tabelas (hoje o navegador ainda consegue escolher o `salon_id`).
 
 ## Fase 3 — Tirar a LEV de dentro do código
 

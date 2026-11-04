@@ -1,6 +1,10 @@
 -- Multi-salão, Fase 1 / Tarefa 1.5: remove a regra antiga "um telefone por
 -- cliente no sistema inteiro" (único só em phone_digits).
 --
+-- Rodar este arquivo só alguns dias depois de o código novo estar no ar e quando
+-- não houver chance de voltar o site para a versão antiga (o código antigo faz
+-- upsert com on_conflict=phone_digits e quebraria).
+--
 -- ATENÇÃO: rodar SOMENTE depois que o código da Tarefa 1.5 estiver no ar em
 -- produção. O código antigo faz upsert com on_conflict=phone_digits e QUEBRA
 -- sem esta regra. O código novo usa on_conflict=salon_id,phone_digits, que
@@ -55,6 +59,9 @@ begin
 end
 $$;
 
+-- Faz o PostgREST reler o esquema do banco.
+notify pgrst, 'reload schema';
+
 commit;
 
 -- ============================================================================
@@ -68,3 +75,13 @@ commit;
 -- -- criado como índice e não como restrição; avisar antes de remover à mão)
 -- select indexname, indexdef from pg_indexes
 --  where schemaname = 'public' and tablename = 'client_profiles' and indexdef ilike '%unique%';
+--
+-- -- Prova de que o mesmo telefone pode existir em dois salões (desfaz tudo no fim).
+-- -- Esperado: sem erro
+-- begin;
+-- insert into public.salons (id, slug, name, status)
+--   values ('teste-tel', 'teste-tel', 'Teste telefone', 'inativo');
+-- insert into public.client_profiles (id, phone_digits, salon_id, payload)
+--   select 'cli_teste-tel_' || phone_digits, phone_digits, 'teste-tel', payload
+--   from public.client_profiles where salon_id = 'lev' limit 1;
+-- rollback;
