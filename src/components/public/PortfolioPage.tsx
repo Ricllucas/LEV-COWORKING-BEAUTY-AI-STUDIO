@@ -230,7 +230,7 @@ export const PortfolioPage: React.FC = () => {
       <section className="px-6 py-20 bg-white border-y border-[#3D312A]/[0.06]">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <img
-            src="/portfolio/lev/equipe-brinde.webp"
+            src="/portfolio/lev/equipe-tres-especialistas.webp"
             alt="Elisangela, Talitha e Nayara no LEV Coworking Beauty"
             loading="lazy"
             className="w-full aspect-[3/2] object-cover rounded-[2rem]"

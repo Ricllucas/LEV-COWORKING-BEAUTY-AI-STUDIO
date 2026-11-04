@@ -434,9 +434,9 @@ export class StorageService {
   static getProfessionals(): Professional[] {
     const list = getStored<Professional[]>(STORAGE_KEYS.PROFESSIONALS, INITIAL_PROFESSIONALS);
     const officialAvatars: Record<string, string> = {
-      prof_elisangela: '/profiles/elisangela.webp',
+      prof_elisangela: '/profiles/elisangela-2026.webp',
       prof_talitha: '/profiles/talitha.webp',
-      prof_nayara: '/profiles/nayara.webp'
+      prof_nayara: '/profiles/nayara-2026.webp'
     };
 
     const officialPixKeys: Record<string, string> = {

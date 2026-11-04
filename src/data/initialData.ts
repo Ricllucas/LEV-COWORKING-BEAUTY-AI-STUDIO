@@ -41,7 +41,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     whatsapp: "5541992461203",
     email: "elisangela@levcoworkingbeauty.com.br",
     bio: "Especialista em manicure e pedicure tradicional, cutilagem técnica funda sem agressão e spa dos pés relaxante. Cuidado clássico e impecável.",
-    avatarUrl: "/profiles/elisangela.webp",
+    avatarUrl: "/profiles/elisangela-2026.webp",
     categories: ["Unha Tradicional"],
     color: "#D4AF37", // Warm Gold
     workingHours: {
@@ -99,7 +99,7 @@ export const INITIAL_PROFESSIONALS: Professional[] = [
     whatsapp: "5541996556742",
     email: "nayara@levcoworkingbeauty.com.br",
     bio: "Nail designer especialista em alongamento em gel, banho de gel, blindagem de alta resistência e nail art minimalista e elegante.",
-    avatarUrl: "/profiles/nayara.webp",
+    avatarUrl: "/profiles/nayara-2026.webp",
     categories: ["Unhas em Gel"],
     color: "#996515", // Warm Bronze Gold
     workingHours: {
