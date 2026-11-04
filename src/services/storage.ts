@@ -40,6 +40,8 @@ const STORAGE_KEYS = {
   PIX_KEYS_VERSION: 'lev_pix_keys_2026_08_25',
   PROFESSIONAL_CONTACT_VERSION: 'lev_professional_contact_2026_08_05',
   PROFESSIONAL_WORKDAYS_VERSION: 'lev_professional_workdays_2026_08_24',
+  // Trocar este nome quando houver fotos oficiais novas: força a foto oficial uma vez em cada aparelho
+  PROFESSIONAL_AVATARS_VERSION: 'lev_professional_avatars_2026_11_04',
   SERVICES: 'lev_coworking_services_v2',
   TALITHA_CATALOG_VERSION: 'lev_talitha_catalog_2026_07_31',
   ELISANGELA_CATALOG_VERSION: 'lev_elisangela_catalog_2026_08_12_v2',
@@ -447,6 +449,7 @@ export class StorageService {
     const shouldMigratePixKeys = !localStorage.getItem(STORAGE_KEYS.PIX_KEYS_VERSION);
     const shouldMigrateContact = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_CONTACT_VERSION);
     const shouldMigrateWorkdays = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_WORKDAYS_VERSION);
+    const shouldForceOfficialAvatars = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_AVATARS_VERSION);
 
     let updated = false;
     const sanitized = list.map(p => {
@@ -454,6 +457,7 @@ export class StorageService {
       const officialPixKey = officialPixKeys[p.id];
       const shouldUseOfficialAvatar = Boolean(
         officialAvatar && (
+          shouldForceOfficialAvatars ||
           !p.avatarUrl ||
           p.avatarUrl.startsWith('/') ||
           p.avatarUrl.includes('images.unsplash.com')
@@ -504,6 +508,9 @@ export class StorageService {
     }
     if (shouldMigrateWorkdays) {
       localStorage.setItem(STORAGE_KEYS.PROFESSIONAL_WORKDAYS_VERSION, new Date().toISOString());
+    }
+    if (shouldForceOfficialAvatars) {
+      localStorage.setItem(STORAGE_KEYS.PROFESSIONAL_AVATARS_VERSION, new Date().toISOString());
     }
 
     return sanitized;
