@@ -28,7 +28,30 @@ const LOOKAHEAD_LINES = 6;
 // (ex.: `appointments?id=eq.1`). Um arquivo novo nessa lista precisa ser revisto.
 const KNOWN_DYNAMIC_HELPERS = ['api/_lib/whatsapp.ts', 'api/cron/send-reminders.ts'];
 
-const SCAN_ROOTS = ['api', 'src/services'];
+// Onde o guarda procura: api/**/*.ts e src/**/*.{ts,tsx}, sem arquivos de teste.
+const SCAN_ROOTS: ReadonlyArray<{ dir: string; extensions: readonly string[] }> = [
+  { dir: 'api', extensions: ['.ts'] },
+  { dir: 'src', extensions: ['.ts', '.tsx'] }
+];
+
+// Pastas fora da varredura que podem citar rest/v1/ sem risco (cópias antigas,
+// build, automações separadas, ferramentas). Qualquer outro arquivo com rest/v1/
+// fora de api/ e src/ faz o teste falhar.
+const OUTSIDE_EXCLUDED_DIRS = [
+  'node_modules',
+  'dist',
+  'historico',
+  'infraestrutura-e-pesquisas',
+  'automacoes',
+  'sistema',
+  'e2e',
+  '.superpowers',
+  'scripts',
+  '.git'
+] as const;
+const OUTSIDE_EXTENSIONS = ['.ts', '.tsx', '.js', '.mjs'] as const;
+
+const isTestFile = (name: string): boolean => /\.test\.[a-z]+$/.test(name);
 
 const FILTER_PATTERN = /\b(salonFilter|withSalon)\(/;
 const OPT_OUT_PATTERN = /\/\/\s*tenant-guard:\s*sem-filtro\s+\S/;
@@ -42,6 +65,21 @@ type Occurrence = { line: number; table: string };
 
 const isCommentLine = (line: string): boolean => /^\s*(\/\/|\/\*|\*)/.test(line);
 
+// Tira o comentário de fim de linha (preserva `https://`).
+const stripLineComment = (line: string): string => line.replace(/(^|[^:])\/\/.*$/, '$1');
+
+// Código da linha sem comentário; linha que é só comentário vira vazia.
+const codeOf = (line: string): string => (isCommentLine(line) ? '' : stripLineComment(line));
+
+const bracketDelta = (code: string): number => {
+  let delta = 0;
+  for (const char of code) {
+    if (char === '(' || char === '{' || char === '[') delta += 1;
+    else if (char === ')' || char === '}' || char === ']') delta -= 1;
+  }
+  return delta;
+};
+
 const isTenantTable = (name: string): boolean =>
   (TENANT_TABLES as readonly string[]).includes(name);
 
@@ -50,8 +88,8 @@ const isException = (line: string, table: string): boolean =>
 
 const findOccurrences = (lines: string[]): Occurrence[] => {
   const found: Occurrence[] = [];
-  lines.forEach((text, index) => {
-    if (isCommentLine(text)) return;
+  lines.forEach((raw, index) => {
+    const text = codeOf(raw);
     for (const match of text.matchAll(REST_PATTERN)) {
       const table = match[1];
       if (isTenantTable(table) && !isException(text, table)) found.push({ line: index, table });
@@ -66,12 +104,17 @@ const findOccurrences = (lines: string[]): Occurrence[] => {
 const hasOptOut = (lines: string[], index: number): boolean =>
   OPT_OUT_PATTERN.test(lines[index]) || (index > 0 && OPT_OUT_PATTERN.test(lines[index - 1]));
 
+// Procura o filtro na própria linha e nas seguintes (no máximo 6 abaixo), mas só
+// dentro da mesma instrução/chamada: para na linha em que os parênteses/chaves
+// abertos desde a linha da ocorrência se fecham, ou que termina com `;`.
 const hasFilterNearby = (lines: string[], index: number, nextOccurrenceLine: number): boolean => {
   const last = Math.min(index + LOOKAHEAD_LINES, nextOccurrenceLine - 1, lines.length - 1);
+  let depth = 0;
   for (let current = index; current <= last; current += 1) {
-    const text = lines[current];
-    if (current > index && isCommentLine(text)) continue;
-    if (FILTER_PATTERN.test(text)) return true;
+    const code = codeOf(lines[current]);
+    if (FILTER_PATTERN.test(code)) return true;
+    depth += bracketDelta(code);
+    if (code.trim() !== '' && (depth <= 0 || code.trimEnd().endsWith(';'))) return false;
   }
   return false;
 };
@@ -92,12 +135,16 @@ const checkSource = (file: string, source: string): Violation[] => {
 
 const repoRoot = process.cwd();
 
-const listSourceFiles = (dir: string): string[] => {
+const listFiles = (
+  dir: string,
+  extensions: readonly string[],
+  skipDirs: readonly string[] = ['node_modules']
+): string[] => {
   const entries = readdirSync(dir).sort();
   return entries.flatMap(entry => {
     const full = join(dir, entry);
-    if (statSync(full).isDirectory()) return entry === 'node_modules' ? [] : listSourceFiles(full);
-    return entry.endsWith('.ts') && !entry.endsWith('.test.ts') ? [full] : [];
+    if (statSync(full).isDirectory()) return skipDirs.includes(entry) ? [] : listFiles(full, extensions, skipDirs);
+    return extensions.some(ext => entry.endsWith(ext)) && !isTestFile(entry) ? [full] : [];
   });
 };
 
@@ -105,7 +152,7 @@ const toRepoPath = (full: string): string => relative(repoRoot, full).split('\\'
 
 const loadSources = (): Array<{ file: string; source: string }> =>
   SCAN_ROOTS
-    .flatMap(root => listSourceFiles(join(repoRoot, root)))
+    .flatMap(root => listFiles(join(repoRoot, root.dir), root.extensions))
     .map(full => ({ file: toRepoPath(full), source: readFileSync(full, 'utf8') }))
     .sort((a, b) => a.file.localeCompare(b.file));
 
@@ -201,6 +248,47 @@ describe('tenantGuard: função de verificação', () => {
     ].join('\n');
     expect(checkSource('x.ts', source)).toHaveLength(1);
   });
+
+  it('salonFilter em comentário no fim da linha não conta (e https:// continua valendo)', () => {
+    const trailing = 'fetch(`${url}/rest/v1/appointments?id=eq.1`); // salonFilter(salonId)';
+    expect(checkSource('x.ts', trailing)).toHaveLength(1);
+
+    const withHttps = "fetch(`https://x.supabase.co/rest/v1/appointments?${salonFilter(id)}`);";
+    expect(checkSource('x.ts', withHttps)).toEqual([]);
+  });
+
+  it('salonFilter em outra instrução depois do fetch concluído não conta', () => {
+    const withSemicolon = [
+      'const r = await fetch(`${url}/rest/v1/appointments?id=eq.1`, { headers });',
+      'const unused = salonFilter(x);'
+    ].join('\n');
+    expect(checkSource('x.ts', withSemicolon)).toHaveLength(1);
+
+    const withoutSemicolon = [
+      'const r = await fetch(`${url}/rest/v1/appointments?id=eq.1`, { headers })',
+      'const unused = salonFilter(x)'
+    ].join('\n');
+    expect(checkSource('x.ts', withoutSemicolon)).toHaveLength(1);
+  });
+
+  it('filtro dentro da mesma chamada, 3 linhas abaixo, conta', () => {
+    const query = [
+      'const r = await fetch(`${url}/rest/v1/appointments?select=payload` +',
+      '  `&order=appointment_date.asc` +',
+      '  `&limit=10` +',
+      '  `&${salonFilter(id)}`, { headers });'
+    ].join('\n');
+    expect(checkSource('x.ts', query)).toEqual([]);
+
+    const insert = [
+      'const r = await fetch(`${url}/rest/v1/appointments?on_conflict=id`, {',
+      "  method: 'POST',",
+      '  headers,',
+      '  body: JSON.stringify(withSalon(row, salonId))',
+      '});'
+    ].join('\n');
+    expect(checkSource('x.ts', insert)).toEqual([]);
+  });
 });
 
 describe('tenantGuard: código do projeto', () => {
@@ -209,6 +297,16 @@ describe('tenantGuard: código do projeto', () => {
     const total = sources.reduce((sum, { source }) => sum + (source.match(/rest\/v1\//g) ?? []).length, 0);
     expect(sources.length).toBeGreaterThan(0);
     expect(total).toBeGreaterThan(0);
+  });
+
+  it('nenhum arquivo fora de api/ e src/ acessa rest/v1/ (fora das pastas excluídas)', () => {
+    const scanned = new Set(loadSources().map(({ file }) => file));
+    const outside = listFiles(repoRoot, OUTSIDE_EXTENSIONS, OUTSIDE_EXCLUDED_DIRS)
+      .map(full => ({ file: toRepoPath(full), full }))
+      .filter(({ file }) => !scanned.has(file))
+      .filter(({ full }) => readFileSync(full, 'utf8').includes('rest/v1/'))
+      .map(({ file }) => file);
+    expect(outside).toEqual([]);
   });
 
   it('todo helper com URL dinâmica rest/v1/${...} é conhecido', () => {
