@@ -207,6 +207,7 @@ Hoje os ids `prof_elisangela`, `prof_talitha` e `prof_nayara` aparecem em 17 arq
 - **Tarefa 5.1:** papel novo `superadmin` (você), em tabela própria `platform_admins`.
 - **Tarefa 5.2:** página `/plataforma` com a lista de salões, situação (ativo, em teste, bloqueado), número de agendamentos no mês, robô conectado ou não, e botão para entrar no painel de um salão (fica registrado no histórico).
 - **Tarefa 5.3:** a admin de cada salão aprova as próprias profissionais (o que existe hoje, agora limitado ao salão dela).
+- **Tarefa 5.4:** opção por salão "profissionais veem a agenda umas das outras" (`salon_settings.payload.sharedAgenda`). **Na LEV fica ligada** (decisão da dona, 04/11/2026: lá as profissionais veem as agendas reciprocamente, como já funciona hoje). Para salões novos, começa desligada, e cada profissional vê só a própria agenda, a não ser que a admin ligue. Ver ou não ver é só leitura: mexer, finalizar ou cancelar o horário de outra profissional continua proibido para todas, ligada ou desligada (regra que já existe no servidor). O filtro precisa ser feito no servidor (`api/appointments/staff-list.ts`), não só na tela.
 - **Aceite:** a admin do salão B não consegue ver nada da LEV, nem mudando o endereço manualmente.
 
 ## Fase 6 — WhatsApp por salão
