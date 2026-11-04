@@ -101,7 +101,7 @@ const queueForSalon = async (rawSalonId: string, now: Date, today: string): Prom
     if (apt.status === 'confirmado') {
       if (!apt.sent['1hora'] && isDueFor1Hour(apt, now)) queue.push({ apt, kind: '1hora', text: messages.reminder1Hour(apt) });
       else if (!apt.sent['1dia'] && isDueFor1Day(apt, now)) queue.push({ apt, kind: '1dia', text: messages.reminder1Day(apt) });
-      else if (!apt.sent.confirmacao && isDueForConfirmation(apt, now)) queue.push({ apt, kind: 'confirmacao', text: messages.confirmation(apt) });
+      else if (!apt.sent.confirmacao && isDueForConfirmation(apt, now, apt.sent)) queue.push({ apt, kind: 'confirmacao', text: messages.confirmation(apt, now) });
     }
     if (!apt.sent.agradecimento && isDueForThanks(apt, now)) queue.push({ apt, kind: 'agradecimento', text: messages.thanks(apt) });
   });

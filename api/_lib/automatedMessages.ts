@@ -59,13 +59,16 @@ export const isDueForThanks = (apt: AutomatedAppointment, now: Date) => {
 // agendamentos feitos depois que a mensagem foi criada, para não reenviar a clientes antigas.
 export const CONFIRMATION_START = '2026-11-01T20:00:00-03:00';
 
-export const isDueForConfirmation = (apt: AutomatedAppointment, now: Date) => {
+// Sai sempre que o horário ainda não começou, mesmo em encaixe de última hora.
+// Se o lembrete de 1 hora já saiu, ele fez o papel da confirmação (sem mensagem dupla).
+// No cron, o lembrete de 1 hora tem prioridade quando os dois vencem juntos.
+export const isDueForConfirmation = (apt: AutomatedAppointment, now: Date, sent: { '1hora'?: boolean } = {}) => {
   if (apt.status !== 'confirmado' || !apt.createdAt) return false;
+  if (sent['1hora']) return false;
   const created = new Date(apt.createdAt).getTime();
   if (!Number.isFinite(created) || created < new Date(CONFIRMATION_START).getTime()) return false;
   const start = new Date(`${apt.date}T${apt.startTime}:00-03:00`).getTime();
-  // Se falta 70 minutos ou menos, o lembrete de 1 hora já avisa a cliente
-  return start - now.getTime() > 70 * 60_000;
+  return start > now.getTime();
 };
 
 const MAINTENANCE_WINDOW_DAYS = 30;
@@ -103,14 +106,14 @@ export const findMaintenanceDue = (
 
 // Tom da LEV para as clientes: alegre, carinhoso e entusiasmado.
 export const messages = {
-  confirmation: (apt: AutomatedAppointment) =>
+  confirmation: (apt: AutomatedAppointment, now: Date = new Date()) =>
     `Olá, ${firstName(apt.clientName)}, maravilhosa! 💖✨ Que alegria: seu horário no LEV Coworking Beauty está confirmadíssimo!
 
 🗓️ ${formatDate(apt.date)} às ${apt.startTime}
 💅 ${apt.serviceNames.join(', ')}
 👩 Com ${apt.professionalName || 'a sua profissional'}
 
-Prepare-se para sair daqui ainda mais linda e deslumbrante! 😍 Na véspera a gente te lembra. Se precisar remarcar, é só responder esta mensagem.`,
+Prepare-se para sair daqui ainda mais linda e deslumbrante! 😍 ${apt.date === brasiliaNow(now).date ? 'Te esperamos daqui a pouco!' : 'Na véspera a gente te lembra.'} Se precisar remarcar, é só responder esta mensagem.`,
 
   reminder1Day: (apt: AutomatedAppointment) =>
     `Oi, ${firstName(apt.clientName)}, linda! 💖 Amanhã é o seu dia de brilhar! ✨ Seu horário no LEV Coworking Beauty é ${formatDate(apt.date)} às ${apt.startTime}, com ${apt.professionalName || 'a sua profissional'}, para ${apt.serviceNames.join(', ')}.

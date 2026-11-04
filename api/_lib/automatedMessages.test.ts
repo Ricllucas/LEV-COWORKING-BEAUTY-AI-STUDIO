@@ -61,10 +61,24 @@ describe('mensagens automáticas', () => {
     expect(isDueForConfirmation(apt({ ...futuro, status: 'confirmado' }), agora)).toBe(true);
   });
 
+  it('encaixe de última hora: confirma mesmo faltando menos de 50 minutos', () => {
+    const base = { status: 'confirmado', createdAt: '2026-11-02T16:00:00.000Z', date: '2026-11-02', startTime: '14:30' };
+    // 14:14 em Brasília, horário às 14:30 (16 minutos)
+    expect(isDueForConfirmation(apt(base), at('2026-11-02T17:14:00Z'))).toBe(true);
+    expect(isDueForConfirmation(apt(base), at('2026-11-02T17:14:00Z'), {})).toBe(true);
+  });
+
+  it('não confirma depois que o lembrete de 1 hora já saiu (evita mensagem dupla)', () => {
+    const base = { status: 'confirmado', createdAt: '2026-11-02T16:00:00.000Z', date: '2026-11-02', startTime: '14:30' };
+    expect(isDueForConfirmation(apt(base), at('2026-11-02T17:14:00Z'), { '1hora': true })).toBe(false);
+  });
+
   it('não confirma horário passado, muito próximo ou criado antes do robô', () => {
     const base = { status: 'confirmado', createdAt: '2026-11-02T16:00:00.000Z' };
-    // Começa em 1 hora: o lembrete de 1 hora já cobre
-    expect(isDueForConfirmation(apt({ ...base, date: '2026-11-02', startTime: '15:00' }), at('2026-11-02T17:00:00Z'))).toBe(false);
+    // Começa em 1 hora e o lembrete de 1 hora já saiu
+    expect(isDueForConfirmation(apt({ ...base, date: '2026-11-02', startTime: '15:00' }), at('2026-11-02T17:00:00Z'), { '1hora': true })).toBe(false);
+    // Já começou
+    expect(isDueForConfirmation(apt({ ...base, date: '2026-11-02', startTime: '14:00' }), at('2026-11-02T17:00:00Z'))).toBe(false);
     expect(isDueForConfirmation(apt({ ...base, date: '2026-11-01', startTime: '15:00' }), at('2026-11-02T17:00:00Z'))).toBe(false);
     expect(isDueForConfirmation(apt({ ...base, date: '2026-11-05', createdAt: '2026-10-20T12:00:00.000Z' }), at('2026-11-02T17:00:00Z'))).toBe(false);
     expect(isDueForConfirmation(apt({ ...base, date: '2026-11-05', createdAt: undefined }), at('2026-11-02T17:00:00Z'))).toBe(false);
@@ -78,6 +92,15 @@ describe('mensagens automáticas', () => {
     expect(text).toContain('10:00');
     expect(text).toContain('Nayara');
     expect(text).toContain('Esmaltação em Gel');
+  });
+
+  it('confirmação para hoje não promete lembrete na véspera', () => {
+    const hoje = apt({ date: '2026-11-02', startTime: '14:30', status: 'confirmado' });
+    const text = messages.confirmation(hoje, at('2026-11-02T17:14:00Z'));
+    expect(text).not.toContain('véspera');
+    expect(text).toContain('daqui a pouco');
+    const outroDia = messages.confirmation(apt({ date: '2026-11-05', status: 'confirmado' }), at('2026-11-02T17:14:00Z'));
+    expect(outroDia).toContain('véspera');
   });
 
   it('todas as mensagens para a cliente são carinhosas e elogiam a cliente', () => {
