@@ -1,6 +1,7 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
 import { salonFilter } from '../_lib/tenant.js';
+import { parsePaymentFields } from '../_lib/appointmentPaymentFields.js';
 import { applyApiSecurity, rateLimit, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
@@ -48,6 +49,8 @@ export default async function handler(req: any, res: any) {
       if (startTime !== undefined && !/^\d{2}:\d{2}$/.test(startTime)) return json(res, 400, { error: 'Horário inicial inválido.' });
       if (endTime !== undefined && !/^\d{2}:\d{2}$/.test(endTime)) return json(res, 400, { error: 'Horário final inválido.' });
       if (serviceIds !== undefined && serviceIds.length === 0) return json(res, 400, { error: 'Selecione ao menos um serviço.' });
+      const payment = parsePaymentFields(changes);
+      if (payment.error) return json(res, 400, { error: payment.error });
 
       const updatedAt = new Date().toISOString();
       const numeric = (value: unknown, fallback: number) => typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : fallback;
@@ -64,6 +67,7 @@ export default async function handler(req: any, res: any) {
         totalDurationMinutes: numeric(changes.totalDurationMinutes, appointment.totalDurationMinutes),
         totalPrice: numeric(changes.totalPrice, appointment.totalPrice),
         remainingPrice: numeric(changes.remainingPrice, appointment.remainingPrice),
+        ...payment.fields,
         updatedAt
       };
       const updateResponse = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}&${salonFilter(staff.salonId)}`, {

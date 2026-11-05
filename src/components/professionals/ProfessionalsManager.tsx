@@ -99,7 +99,7 @@ export const ProfessionalsManager: React.FC = () => {
       email: formData.email || activeProf.email,
     } as Professional;
 
-    StorageService.saveProfessional(updatedProf);
+    StorageService.publishProfessional(updatedProf);
     
     // Also update current active user session if editing their own profile
     const currentUser = StorageService.getCurrentUser();

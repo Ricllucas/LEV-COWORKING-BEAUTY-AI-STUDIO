@@ -153,23 +153,27 @@ export const CoworkingProvider: React.FC<CoworkingProviderProps> = ({ children }
     StorageService.setCurrentUser(state.currentUser);
   }, [state.currentUser]);
 
+  // As regravações abaixo são só do aparelho: nada vai para a nuvem (nem os logs
+  // que elas geram). Envio para a nuvem só em ação explícita da usuária
+  // (ex.: StorageService.publishProfessional), senão um aparelho com dados antigos
+  // sobrescreveria a nuvem.
   React.useEffect(() => {
-    state.professionals.forEach(p => StorageService.saveProfessional(p));
+    StorageService.runLocalOnly(() => state.professionals.forEach(p => StorageService.saveProfessional(p)));
   }, [state.professionals]);
 
   React.useEffect(() => {
-    state.services.forEach(s => StorageService.saveService(s));
+    StorageService.runLocalOnly(() => state.services.forEach(s => StorageService.saveService(s)));
   }, [state.services]);
 
   React.useEffect(() => {
-    state.clients.forEach(c => StorageService.saveClient(c));
+    StorageService.runLocalOnly(() => state.clients.forEach(c => StorageService.saveClient(c)));
   }, [state.clients]);
 
   React.useEffect(() => {
     // O servidor é a fonte oficial dos agendamentos. O estado carregado atualiza
     // somente o cache local; reenviá-lo ao endpoint de criação gera novos IDs e
     // pode recriar um atendimento que já foi cancelado.
-    state.appointments.forEach(a => StorageService.saveAppointment(a, false));
+    StorageService.runLocalOnly(() => state.appointments.forEach(a => StorageService.saveAppointment(a, false)));
   }, [state.appointments]);
 
   const value: CoworkingContextType = { state, dispatch };

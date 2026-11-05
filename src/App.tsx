@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useRef, useCallback, lazy, Suspense } from 'react';
 import { User } from './types';
 import { useCoworking } from './context/useCoworking';
 
@@ -17,6 +17,7 @@ import { ProfessionalAuthService } from './services/professionalAuth';
 import { ProfessionalAccessManager } from './components/professionals/ProfessionalAccessManager';
 import { CloudServiceCatalog } from './services/cloudServiceCatalog';
 import { StorageService } from './services/storage';
+import { SalonDataSync, SyncUser } from './services/salonDataSync';
 import { LegalPage } from './components/legal/LegalPage';
 import { PortfolioPage } from './components/public/PortfolioPage';
 import { ConfirmAppointmentPage } from './components/public/ConfirmAppointmentPage';
@@ -139,6 +140,57 @@ function Application() {
       window.clearInterval(intervalId);
     };
   }, [currentUser.id, currentUser.role]);
+
+  // Dados do painel na nuvem (configurações, profissionais e, para a equipe,
+  // financeiro, bloqueios, lista de espera e logs). Sem login: só os públicos.
+  const syncUserRef = useRef<SyncUser | undefined>(undefined);
+  const pullState = useRef({ running: false, again: false });
+
+  const runCloudPull = useCallback(async (afterLoginChange = false) => {
+    if (pullState.current.running) {
+      // Foco ou relógio com um pull em andamento: pula. Troca de login: roda de
+      // novo ao terminar, já com a usuária nova.
+      if (afterLoginChange) pullState.current.again = true;
+      return;
+    }
+    pullState.current.running = true;
+    try {
+      do {
+        pullState.current.again = false;
+        const changed = await SalonDataSync.pull(syncUserRef.current);
+        if (changed) {
+          // O pull grava direto no aparelho: avisa as telas e recarrega o estado global.
+          StorageService.notifyExternalChange();
+          dispatch({
+            type: 'SYNC_ALL',
+            payload: {
+              settings: StorageService.getSettings(),
+              professionals: StorageService.getProfessionals(),
+              waitlist: StorageService.getWaitlist()
+            }
+          });
+        }
+      } while (pullState.current.again);
+    } finally {
+      pullState.current.running = false;
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
+    const isStaff = currentUser.role === 'admin' || currentUser.role === 'profissional';
+    syncUserRef.current = isStaff && currentUser.id
+      ? { id: currentUser.id, role: currentUser.role, professionalId: currentUser.professionalId }
+      : undefined;
+
+    void runCloudPull(true);
+    const handleFocus = () => { void runCloudPull(); };
+    window.addEventListener('focus', handleFocus);
+    const intervalId = isStaff ? window.setInterval(handleFocus, 60_000) : undefined;
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      if (intervalId !== undefined) window.clearInterval(intervalId);
+    };
+  }, [currentUser.id, currentUser.role, currentUser.professionalId, runCloudPull]);
 
   useEffect(() => {
     if (isAdminRoute || isProfessionalRoute) return;

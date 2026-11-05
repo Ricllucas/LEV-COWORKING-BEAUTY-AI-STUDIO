@@ -122,7 +122,7 @@ export const SettingsManager: React.FC = () => {
       email: profFormData.email || activeProf.email,
     } as Professional;
 
-    StorageService.saveProfessional(updatedProf);
+    StorageService.publishProfessional(updatedProf);
 
     // Update active user session if editing their own profile
     const currentStorageUser = StorageService.getCurrentUser();

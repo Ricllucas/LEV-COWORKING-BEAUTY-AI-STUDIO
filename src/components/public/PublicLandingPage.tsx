@@ -52,7 +52,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
         ...prof,
         avatarUrl: resizedBase64,
       };
-      StorageService.saveProfessional(updatedProf);
+      StorageService.publishProfessional(updatedProf);
       setProfessionals(StorageService.getProfessionals());
       alert(`Foto de ${prof.name} atualizada e salva com sucesso!`);
     } catch (err) {

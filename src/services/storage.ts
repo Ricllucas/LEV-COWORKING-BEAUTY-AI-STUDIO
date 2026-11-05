@@ -14,6 +14,7 @@ import {
 } from '../types';
 
 import { CloudAppointmentService } from './cloudAppointments';
+import { SalonDataSync, SyncKind, SyncUser } from './salonDataSync';
 
 import {
   INITIAL_SETTINGS,
@@ -73,6 +74,28 @@ export const subscribeStorage = (listener: Listener) => {
 
 const notifyListeners = () => {
   listeners.forEach(fn => fn());
+};
+
+// Quem está logada nesta aba, só em memória. O aparelho guarda apenas login de
+// cliente (getCurrentUser devolve visitante para equipe), então o envio para a
+// nuvem usa este registro, preenchido por setCurrentUser.
+let sessionUser: User | undefined;
+
+// Enquanto > 0, nada é enviado para a nuvem (regravação em massa do estado).
+let localOnlyDepth = 0;
+
+const staffSyncUser = (): SyncUser | undefined => {
+  const user = sessionUser;
+  if (!user || !user.id || (user.role !== 'admin' && user.role !== 'profissional')) return undefined;
+  return { id: user.id, role: user.role, professionalId: user.professionalId };
+};
+
+// Envia sem esperar. Cliente, visitante ou regravação em massa: não envia.
+const sendToCloud = (kind: SyncKind, item: unknown) => {
+  if (localOnlyDepth > 0) return;
+  const user = staffSyncUser();
+  if (!user) return;
+  void SalonDataSync.push(kind, item, user);
 };
 
 // Helper getter/setters
@@ -150,6 +173,27 @@ export const INITIAL_USERS: (User & { password?: string })[] = [
 
 export class StorageService {
   static subscribeStorage = subscribeStorage;
+
+  // Avisa as telas que o aparelho mudou por fora do StorageService (ex.: pull da nuvem).
+  static notifyExternalChange(): void {
+    notifyListeners();
+  }
+
+  // Quem está logada para a nuvem (admin ou profissional); senão undefined.
+  static getSyncUser(): SyncUser | undefined {
+    return staffSyncUser();
+  }
+
+  // Executa `task` gravando só no aparelho, sem nenhum envio para a nuvem.
+  // Usado pelo CoworkingContext, que regrava listas inteiras a cada mudança.
+  static runLocalOnly(task: () => void): void {
+    localOnlyDepth += 1;
+    try {
+      task();
+    } finally {
+      localOnlyDepth -= 1;
+    }
+  }
 
   private static purgeConfirmedTestDataOnce(): void {
     if (localStorage.getItem(STORAGE_KEYS.TEST_DATA_PURGE_VERSION)) return;
@@ -395,6 +439,7 @@ export class StorageService {
   }
 
   static setCurrentUser(user: User): void {
+    sessionUser = user;
     setStored<User>(STORAGE_KEYS.CURRENT_USER, user);
   }
 
@@ -429,6 +474,8 @@ export class StorageService {
 
   static saveSettings(settings: CoworkingSettings): void {
     setStored(STORAGE_KEYS.SETTINGS, settings);
+    // O banco só aceita configuração da admin; a da profissional fica no aparelho.
+    if (staffSyncUser()?.role === 'admin') sendToCloud('settings', settings);
     this.addAuditLog("CONFIG_ATUALIZADA", "Configurações Gerais", "Atualização das configurações do coworking.");
   }
 
@@ -520,7 +567,20 @@ export class StorageService {
     return this.getProfessionals().find(p => p.id === id);
   }
 
+  // Grava só no aparelho (inclusive o log). Não envia para a nuvem: o
+  // CoworkingContext chama isto para todas as profissionais a cada mudança, e um
+  // aparelho com dados antigos sobrescreveria a nuvem.
   static saveProfessional(prof: Professional): void {
+    this.runLocalOnly(() => this.storeProfessional(prof));
+  }
+
+  // Edição explícita da usuária: grava no aparelho e envia a profissional (e o log).
+  static publishProfessional(prof: Professional): void {
+    this.storeProfessional(prof);
+    sendToCloud('professionals', prof); // tenant-guard: sem-filtro tipo de dado (SyncKind), não é consulta
+  }
+
+  private static storeProfessional(prof: Professional): void {
     const list = this.getProfessionals();
     const index = list.findIndex(p => p.id === prof.id);
     if (index >= 0) {
@@ -875,12 +935,15 @@ export class StorageService {
     const list = this.getScheduleBlocks();
     list.push(block);
     setStored(STORAGE_KEYS.BLOCKS, list);
+    sendToCloud('blocks', block);
     this.addAuditLog("BLOQUEIO_AGENDA", block.professionalId, `Horário bloqueado em ${block.date} das ${block.startTime} às ${block.endTime}.`);
   }
 
   static deleteScheduleBlock(id: string): void {
     const list = this.getScheduleBlocks().filter(b => b.id !== id);
     setStored(STORAGE_KEYS.BLOCKS, list);
+    const user = staffSyncUser();
+    if (user && localOnlyDepth === 0) void SalonDataSync.removeBlock(id, user);
   }
 
   // Payments
@@ -892,6 +955,7 @@ export class StorageService {
     const list = this.getPaymentRecords();
     list.push(record);
     setStored(STORAGE_KEYS.PAYMENTS, list);
+    sendToCloud('payments', record); // tenant-guard: sem-filtro tipo de dado (SyncKind), não é consulta
 
     // Update appointment payment state
     const apt = this.getAppointmentById(record.appointmentId);
@@ -942,6 +1006,7 @@ export class StorageService {
       list.unshift(entry);
     }
     setStored(STORAGE_KEYS.WAITLIST, list);
+    sendToCloud('waitlist', entry); // tenant-guard: sem-filtro tipo de dado (SyncKind), não é consulta
     this.addAuditLog("LISTA_ESPERA_ENTRADA", entry.clientName, `Cliente entrou na lista de espera.`);
   }
 
@@ -951,7 +1016,9 @@ export class StorageService {
   }
 
   static addAuditLog(action: string, target: string, details: string, oldValue?: string, newValue?: string): void {
-    const user = this.getCurrentUser();
+    // Autora do log: a equipe logada nesta aba; senão a cliente/visitante do aparelho.
+    const staff = staffSyncUser() ? sessionUser : undefined;
+    const user = staff ?? this.getCurrentUser();
     const logs = this.getAuditLogs();
     const newLog: AuditLog = {
       id: "log_" + Date.now() + "_" + Math.floor(Math.random() * 1000),
@@ -968,6 +1035,7 @@ export class StorageService {
     logs.unshift(newLog);
     // Keep max 500 logs
     setStored(STORAGE_KEYS.LOGS, logs.slice(0, 500));
+    sendToCloud('logs', newLog);
   }
 
   // Notifications

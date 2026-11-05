@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Appointment, Professional, Service, User, ScheduleBlock, AppointmentStatus, PaymentStatus } from '../../types';
+import { Appointment, Professional, Service, User, ScheduleBlock, AppointmentStatus, PaymentStatus, PaymentMethod } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { canSeeAppointmentPrice } from '../../utils/agendaVisibility';
@@ -131,23 +131,41 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
     }
   };
 
-  const handleRecordPayment = (aptId: string, amount: number, method: any) => {
+  const handleRecordPayment = async (aptId: string, amount: number, method: PaymentMethod) => {
     const apt = StorageService.getAppointmentById(aptId);
-    if (apt) {
-      StorageService.savePaymentRecord({
-        id: "pay_" + Date.now(),
-        appointmentId: apt.id,
-        professionalId: apt.professionalId,
-        clientId: apt.clientId,
-        clientName: apt.clientName,
-        amount,
-        method,
-        type: apt.depositPaid === 0 ? 'sinal' : 'restante',
-        paidAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-        receivedBy: currentUser.name
-      });
-      const updated = StorageService.getAppointmentById(aptId);
-      if (updated) setSelectedApt(updated);
+    if (!apt) return;
+    StorageService.savePaymentRecord({
+      id: "pay_" + Date.now(),
+      appointmentId: apt.id,
+      professionalId: apt.professionalId,
+      clientId: apt.clientId,
+      clientName: apt.clientName,
+      amount,
+      method,
+      type: apt.depositPaid === 0 ? 'sinal' : 'restante',
+      paidAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
+      receivedBy: currentUser.name
+    });
+    const updated = StorageService.getAppointmentById(aptId);
+    if (!updated) return;
+    setSelectedApt(updated);
+    // O lançamento já foi gravado no aparelho e segue para a nuvem (ou para a fila).
+    // Aqui vai também o status de pagamento do atendimento.
+    try {
+      const saved = await CloudAppointmentService.updateDetails(aptId, {
+        depositPaid: updated.depositPaid,
+        remainingPrice: updated.remainingPrice,
+        paymentStatus: updated.paymentStatus,
+        paymentMethod: updated.paymentMethod,
+        paymentDate: updated.paymentDate
+      }, currentUser);
+      StorageService.saveAppointment(saved, false);
+      setAppointments(current => current.map(item => item.id === saved.id ? saved : item));
+      setSelectedApt(current => current && current.id === saved.id ? saved : current);
+    } catch (error) {
+      alert(error instanceof Error
+        ? `Pagamento salvo neste aparelho, mas o status do atendimento não foi atualizado na Agenda LEV: ${error.message}`
+        : 'Pagamento salvo neste aparelho, mas o status do atendimento não foi atualizado na Agenda LEV.');
     }
   };
 
@@ -225,7 +243,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
   const handleSaveBlock = () => {
     if (!blockProfId || !blockDate || !blockStart || !blockEnd) return;
     StorageService.saveScheduleBlock({
-      id: "blk_" + Date.now(),
+      id: "blk_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6).padEnd(4, "0"),
       professionalId: blockProfId,
       date: blockDate,
       startTime: blockStart,
@@ -736,7 +754,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                 </button>
 
                 <button
-                  onClick={() => handleRecordPayment(selectedApt.id, selectedApt.remainingPrice || 50, 'pix')}
+                  onClick={() => void handleRecordPayment(selectedApt.id, selectedApt.remainingPrice || 50, 'pix')}
                   className="py-2 px-3 rounded-xl bg-amber-950/60 border border-amber-800 hover:bg-amber-900/80 text-amber-300 text-xs font-medium transition-colors flex items-center justify-center gap-1"
                 >
                   <DollarSign className="w-3.5 h-3.5" /> Registrar Pagamento
