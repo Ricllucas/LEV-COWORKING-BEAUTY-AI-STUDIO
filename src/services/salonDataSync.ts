@@ -263,13 +263,16 @@ const seedWrites = async (items: WithId[], buildWrites: (batch: WithId[]) => Tab
 };
 
 // Profissional só sobe o que a regra do banco permite (precisa do próprio id).
+// Profissionais (perfil) nunca entram na primeira subida dela: o aparelho dela pode
+// ter um perfil antigo ou de demonstração, que venceria a cópia real da admin.
+// As edições dela sobem pelo envio explícito (StorageService.publishProfessional).
 const canSeed = (kind: SyncKind, item: WithId, user: StaffUser): boolean => {
   if (user.role === 'admin') return kind !== 'logs' || !DEMO_LOG_IDS.has(item.id);
   // tenant-guard: sem-filtro tipo de dado (SyncKind), não é consulta
   if (kind === 'waitlist') return true;
-  if (kind === 'logs' || kind === 'settings') return false;
   // tenant-guard: sem-filtro tipo de dado (SyncKind), não é consulta
-  return kind === 'professionals' ? item.id === user.professionalId : ownerOf(item) === user.professionalId;
+  if (kind === 'logs' || kind === 'settings' || kind === 'professionals') return false;
+  return ownerOf(item) === user.professionalId;
 };
 
 // Profissional sem o próprio id não sobe nada (e o tipo segue sem marca).
@@ -370,7 +373,8 @@ const syncProfessionals = async (user: SyncUser | undefined): Promise<boolean> =
   const local = readLocalList(PROFESSIONALS);
   const localById = new Map(local.map(item => [item.id, item]));
 
-  if (isStaffUser(user) && !isSeeded(PROFESSIONALS, user) && !seedingBlocked(user)) {
+  // Só a admin faz a primeira subida das profissionais (parte pública e privada).
+  if (isStaffUser(user) && user.role === 'admin' && !isSeeded(PROFESSIONALS, user)) {
     const publicIds = new Set(publicItems.map(item => item.id));
     const allowed = local.filter(item => canSeed(PROFESSIONALS, item, user));
     const publicToSend = allowed.filter(item => !publicIds.has(item.id));

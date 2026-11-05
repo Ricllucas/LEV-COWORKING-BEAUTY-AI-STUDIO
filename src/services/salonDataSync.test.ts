@@ -452,6 +452,15 @@ describe('SalonDataSync', () => {
       expect(localStorage.getItem(seeded('professionals'))).toBeNull();
     });
 
+    it('profissional nunca faz a primeira subida das profissionais (nem a parte privada)', async () => {
+      localStorage.setItem(PROFESSIONALS_KEY, JSON.stringify([professional('prof_x'), professional('prof_y')]));
+      await SalonDataSync.pull(PROF);
+      expect(upsertsTo('professionals')).toHaveLength(0);
+      expect(upsertsTo('professional_private')).toHaveLength(0);
+      expect(localStorage.getItem(seeded('professionals', PROF.id))).toBeNull();
+      expect(storedIds(PROFESSIONALS_KEY)).toEqual(['prof_x', 'prof_y']);
+    });
+
     it('nuvem vazia não apaga a lista do aparelho de quem não está logada', async () => {
       localStorage.setItem(PROFESSIONALS_KEY, JSON.stringify([professional('prof_x')]));
       await SalonDataSync.pull();
