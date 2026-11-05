@@ -244,6 +244,7 @@ export interface SystemNotification {
   id: string;
   title: string;
   message: string;
+  // tenant-guard: sem-filtro tipo de notificação, não é consulta ao banco
   type: 'booking' | 'cancellation' | 'reschedule' | 'waitlist' | 'payment' | 'general';
   read: boolean;
   createdAt: string;

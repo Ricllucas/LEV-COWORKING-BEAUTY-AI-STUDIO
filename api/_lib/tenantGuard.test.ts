@@ -14,7 +14,15 @@ const TENANT_TABLES = [
   'admin_users',
   'whatsapp_conversations',
   'whatsapp_messages',
-  'reminder_history'
+  'reminder_history',
+  // Tabelas de dados do painel (fase 2).
+  'salon_settings',
+  'professionals',
+  'professional_private',
+  'payments',
+  'schedule_blocks',
+  'waitlist',
+  'audit_logs'
 ] as const;
 
 // Exceções explícitas: tabelas que nunca levam filtro de salão.
@@ -26,7 +34,7 @@ const LOOKAHEAD_LINES = 6;
 // Arquivos que montam a URL `rest/v1/${caminho}` de forma dinâmica. As tabelas
 // usadas nesses casos são achadas pelos textos que começam com o nome da tabela
 // (ex.: `appointments?id=eq.1`). Um arquivo novo nessa lista precisa ser revisto.
-const KNOWN_DYNAMIC_HELPERS = ['api/_lib/whatsapp.ts', 'api/cron/send-reminders.ts'];
+const KNOWN_DYNAMIC_HELPERS = ['api/_lib/whatsapp.ts', 'api/cron/send-reminders.ts', 'src/services/cloudSalonData.ts'];
 
 // Onde o guarda procura: api/**/*.ts e src/**/*.{ts,tsx}, sem arquivos de teste.
 const SCAN_ROOTS: ReadonlyArray<{ dir: string; extensions: readonly string[] }> = [
@@ -204,6 +212,14 @@ describe('tenantGuard: função de verificação', () => {
     expect(checkSource('x.ts', "await supabaseRequest('whatsapp_messages?select=*');")).toHaveLength(1);
     expect(checkSource('x.ts', "await supabaseRequest('reminder_history', { method: 'POST' });")).toHaveLength(1);
     expect(checkSource('x.ts', 'await query(`appointments?id=eq.${id}&${salonFilter(salonId)}`);')).toEqual([]);
+  });
+
+  it('acusa as tabelas de dados do painel sem filtro de salão', () => {
+    const tables = ['salon_settings', 'professionals', 'professional_private', 'payments', 'schedule_blocks', 'waitlist', 'audit_logs'];
+    for (const table of tables) {
+      expect(checkSource('x.ts', 'fetch(`${url}/rest/v1/' + table + '?id=eq.1`)')).toHaveLength(1);
+      expect(checkSource('x.ts', 'fetch(`${url}/rest/v1/' + table + '?${salonFilter(id)}`)')).toEqual([]);
+    }
   });
 
   it('não acusa a tabela salons (exceção explícita) nem tabelas fora da lista', () => {

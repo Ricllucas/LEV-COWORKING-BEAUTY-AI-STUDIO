@@ -1,28 +1,10 @@
 import { Appointment, User } from '../types';
 import { AdminAuthService } from './adminAuth';
 import { ProfessionalAuthService } from './professionalAuth';
+import { getFreshAccessToken } from './staffSession';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
-
-type ExpiringStoredSession = { accessToken?: string; expiresAt?: number };
-
-const getFreshAccessToken = async (role?: User['role']): Promise<string | undefined> => {
-  if (typeof sessionStorage === 'undefined') return undefined;
-  const key = role === 'admin' ? 'lev_admin_session_v1' : 'lev_professional_session_v1';
-  try {
-    const stored = JSON.parse(sessionStorage.getItem(key) || '{}') as ExpiringStoredSession;
-    if (stored.accessToken && (!stored.expiresAt || stored.expiresAt > Math.floor(Date.now() / 1000) + 60)) {
-      return stored.accessToken;
-    }
-    const restored = role === 'admin'
-      ? await AdminAuthService.restore()
-      : await ProfessionalAuthService.restore();
-    return restored?.accessToken;
-  } catch {
-    return undefined;
-  }
-};
 
 const forceRefreshAccessToken = async (role?: User['role']): Promise<string | undefined> => {
   const refreshed = role === 'admin'
