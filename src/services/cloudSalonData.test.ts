@@ -120,6 +120,16 @@ describe('CloudSalonData', () => {
     expect(error).not.toBeInstanceOf(CloudTableMissingError);
   });
 
+  it('erro comum expõe o status HTTP (401 e 403 distinguíveis)', async () => {
+    const { CloudSalonData } = await loadModule();
+    for (const status of [401, 403, 500]) {
+      vi.stubGlobal('fetch', respond(status, ''));
+      const error = await CloudSalonData.upsert('payments', [{ id: 'p', payload: {} }], 'admin').catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(Error);
+      expect((error as Error & { status?: number }).status).toBe(status);
+    }
+  });
+
   it('upsert com sessão expirada lança erro de sessão', async () => {
     const { CloudSalonData } = await loadModule();
     vi.mocked(getFreshAccessToken).mockResolvedValue(undefined);

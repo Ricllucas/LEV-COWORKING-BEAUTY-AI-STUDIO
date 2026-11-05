@@ -12,6 +12,9 @@ export type SalonRow<T> = { id: string; professionalId?: string; payload: T };
 
 type CloudRecord<T> = { id: string; professional_id: string | null; payload: T };
 
+// Erro comum de resposta da nuvem: `status` traz o código HTTP (ex.: 401, 403, 500).
+export type CloudHttpError = Error & { status?: number };
+
 // A tabela ainda não foi criada no banco (migração não rodada).
 export class CloudTableMissingError extends Error {
   constructor(table: string) {
@@ -43,7 +46,7 @@ const failIfNotOk = async (response: Response, table: SalonTable, what: string, 
     if (code && MISSING_TABLE_CODES.has(code)) throw new CloudTableMissingError(table);
   }
   console.error(`Falha ao ${what} (${table}):`, response.status, details);
-  throw new Error(`Não foi possível ${what} (erro ${response.status}).`);
+  throw Object.assign(new Error(`Não foi possível ${what} (erro ${response.status}).`), { status: response.status });
 };
 
 const requireToken = async (role: User['role']) => {
