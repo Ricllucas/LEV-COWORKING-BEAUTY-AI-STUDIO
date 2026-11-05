@@ -153,6 +153,45 @@ const enqueue = (entry: OutboxEntry) => {
   writeJson(OUTBOX_KEY, [...others, entry]);
 };
 
+// Tira da fila exatamente esta entrada. Se um salvamento mais novo do mesmo item
+// já a substituiu, a mais nova fica (ela tem o próprio envio).
+const dequeue = (entry: OutboxEntry) => {
+  const text = JSON.stringify(entry);
+  const current = readOutbox();
+  const next = current.filter(existing => JSON.stringify(existing) !== text);
+  if (next.length !== current.length) writeJson(OUTBOX_KEY, next);
+};
+
+// Envios diretos (push/removeBlock) em andamento. O pull não reenvia estas
+// entradas ao mesmo tempo; elas continuam na fila, então o pull também não
+// tira o item do aparelho enquanto o envio não termina.
+const inFlight = new Map<string, number>();
+const flightKey = (entry: Pick<OutboxEntry, 'kind' | 'item' | 'userId'>) => `${entry.userId}|${entry.kind}|${entryId(entry) ?? ''}`;
+const markInFlight = (key: string) => inFlight.set(key, (inFlight.get(key) ?? 0) + 1);
+const unmarkInFlight = (key: string) => {
+  const count = (inFlight.get(key) ?? 1) - 1;
+  if (count > 0) inFlight.set(key, count);
+  else inFlight.delete(key);
+};
+
+// Pulls em andamento. Um envio que termina durante um pull só sai da fila quando
+// o pull acaba: a lista da nuvem que o pull leu pode ser de antes do envio, e é
+// a fila que mantém o item no aparelho até lá.
+let activePulls = 0;
+let deferredDone: OutboxEntry[] = [];
+
+const finishEntry = (entry: OutboxEntry) => {
+  if (activePulls > 0) deferredDone.push(entry);
+  else dequeue(entry);
+};
+
+const releaseDeferred = () => {
+  if (activePulls > 0 || !deferredDone.length) return;
+  const done = deferredDone;
+  deferredDone = [];
+  done.forEach(dequeue);
+};
+
 // ---------------------------------------------------------------------------
 // Envio para a nuvem
 // ---------------------------------------------------------------------------
@@ -218,7 +257,7 @@ const runEntry = async (entry: OutboxEntry, user: StaffUser) => {
 // outras usuárias ficam intactas. Sai da fila: o que foi enviado e o que teve erro
 // definitivo (403, 400...). Itens que entram na fila durante o reenvio são preservados.
 const flushOutbox = async (user: StaffUser) => {
-  const entries = pendingOf(user);
+  const entries = pendingOf(user).filter(entry => !inFlight.has(flightKey(entry)));
   if (!entries.length) return;
   const done = new Set<string>();
   for (const entry of entries) {
@@ -317,6 +356,12 @@ const rememberRefused = (kind: SyncKind, user: StaffUser, refused: WithId[], clo
   const kept = readKeptIds(kind, user);
   refused.filter(item => !cloudIds.has(item.id)).forEach(item => kept.add(item.id));
   writeJson(keptKey(kind, user.id), [...kept]);
+};
+
+// Envio direto recusado de vez: o item fica no aparelho (como na primeira subida).
+const keepRefusedPush = (kind: SyncKind, item: unknown, user: StaffUser) => {
+  if (kind === 'settings' || !hasId(item)) return;
+  rememberRefused(kind, user, [item], new Set());
 };
 
 const rowsToItems = (rows: SalonRow<unknown>[]): WithId[] =>
@@ -451,38 +496,69 @@ export const SalonDataSync = {
   // públicos). Devolve true se alguma chave do aparelho mudou. Nunca lança erro.
   async pull(user?: SyncUser): Promise<boolean> {
     if (!hasStorage()) return false;
+    activePulls += 1;
     try {
       if (!CloudSalonData.isConfigured()) return false;
       return await doPull(user);
     } catch (error) {
       console.warn('Sincronização com a nuvem adiada:', error);
       return false;
+    } finally {
+      activePulls -= 1;
+      releaseDeferred();
     }
   },
 
-  // Envia um item para a nuvem. Falha passageira → fila (marcada com a usuária).
-  // Tabela ainda não criada, sem configuração, sem login de equipe ou erro
-  // definitivo → não faz nada. Log de profissional vai com o id dela. Nunca lança erro.
+  // Envia um item para a nuvem. A entrada vai para a fila (da usuária) ANTES do
+  // envio e sai quando a nuvem confirma; assim um pull no meio do envio não tira
+  // o item do aparelho. Falha passageira → fica na fila para o próximo pull.
+  // Recusa definitiva (403, 400...) → sai da fila, aviso no console, e o item
+  // continua no aparelho. Tabela ainda não criada → sai da fila (o pull também
+  // não mexe nessa lista). Sem configuração ou sem login de equipe → nada.
+  // Log de profissional vai com o id dela. Nunca lança erro.
   async push(kind: SyncKind, item: unknown, user?: SyncUser): Promise<void> {
     if (!hasStorage() || !isStaffUser(user) || !isRecord(item)) return;
     if (kind !== 'settings' && !hasId(item)) return;
+    const entry: OutboxEntry = { kind, op: 'upsert', item, userId: user.id };
+    const key = flightKey(entry);
+    let queuedEntry = false;
     try {
       if (!CloudSalonData.isConfigured()) return;
+      enqueue(entry);
+      queuedEntry = true;
+      markInFlight(key);
       await writeItems(kind, [item as WithId], user);
+      finishEntry(entry);
     } catch (error) {
-      if (isTemporary(error)) enqueue({ kind, op: 'upsert', item, userId: user.id });
-      else if (!(error instanceof CloudTableMissingError)) console.warn('A nuvem recusou o envio:', error);
+      if (!queuedEntry || isTemporary(error)) return;
+      dequeue(entry);
+      if (error instanceof CloudTableMissingError) return;
+      console.warn('A nuvem recusou o envio; o item continua só neste aparelho.', kind, statusOf(error));
+      keepRefusedPush(kind, item, user);
+    } finally {
+      if (queuedEntry) unmarkInFlight(key);
     }
   },
 
+  // Exclusão de bloqueio, com a mesma regra da fila: entra antes, sai ao confirmar.
   async removeBlock(id: string, user?: SyncUser): Promise<void> {
     if (!hasStorage() || !isStaffUser(user) || !id) return;
+    const entry: OutboxEntry = { kind: 'blocks', op: 'delete', item: { id }, userId: user.id };
+    const key = flightKey(entry);
+    let queuedEntry = false;
     try {
       if (!CloudSalonData.isConfigured()) return;
+      enqueue(entry);
+      queuedEntry = true;
+      markInFlight(key);
       await CloudSalonData.remove(TABLES.blocks, id, user.role);
+      finishEntry(entry);
     } catch (error) {
-      if (isTemporary(error)) enqueue({ kind: 'blocks', op: 'delete', item: { id }, userId: user.id });
-      else if (!(error instanceof CloudTableMissingError)) console.warn('A nuvem recusou a exclusão:', error);
+      if (!queuedEntry || isTemporary(error)) return;
+      dequeue(entry);
+      if (!(error instanceof CloudTableMissingError)) console.warn('A nuvem recusou a exclusão:', statusOf(error));
+    } finally {
+      if (queuedEntry) unmarkInFlight(key);
     }
   }
 };

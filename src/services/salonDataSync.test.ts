@@ -131,7 +131,7 @@ describe('SalonDataSync', () => {
     it('CloudTableMissingError → resolve sem erro e não entra na fila', async () => {
       upsert.mockRejectedValue(new CloudTableMissingError('payments'));
       await expect(SalonDataSync.push('payments', payment('pay_1'), ADMIN)).resolves.toBeUndefined();
-      expect(localStorage.getItem(OUTBOX_KEY)).toBeNull();
+      expect(stored<unknown[] | null>(OUTBOX_KEY) ?? []).toEqual([]);
     });
 
     it('sem configuração ou sem login de equipe → não chama a nuvem nem enfileira', async () => {
@@ -167,6 +167,63 @@ describe('SalonDataSync', () => {
       const log = { id: 'log_x', userId: 'u', userName: 'T', userRole: 'profissional', action: 'A', target: 'T', details: '', timestamp: '2026-11-04 10:00' };
       await SalonDataSync.push('logs', log, PROF);
       expect(upsert).toHaveBeenCalledWith('audit_logs', [{ id: 'log_x', professionalId: 'prof_x', payload: log }], 'profissional', { insertOnly: true });
+    });
+
+    it('envio confirmado → fila vazia', async () => {
+      await SalonDataSync.push('payments', payment('pay_1'), ADMIN);
+      expect(stored<unknown[]>(OUTBOX_KEY)).toEqual([]);
+    });
+
+    it('envio recusado com 403 → fila vazia e o item continua no aparelho', async () => {
+      localStorage.setItem(PAYMENTS_KEY, JSON.stringify([payment('pay_1')]));
+      localStorage.setItem(seeded('payments'), '1');
+      upsert.mockRejectedValue(httpError(403));
+      await SalonDataSync.push('payments', payment('pay_1'), ADMIN);
+      expect(stored<unknown[]>(OUTBOX_KEY)).toEqual([]);
+      expect(console.warn).toHaveBeenCalled();
+
+      upsert.mockReset();
+      upsert.mockImplementation(async () => undefined);
+      await SalonDataSync.pull(ADMIN);
+      expect(storedIds(PAYMENTS_KEY)).toEqual(['pay_1']);
+      expect(upsert).not.toHaveBeenCalled();
+    });
+
+    it('pull no meio de um envio (nuvem ainda sem o item) → o item continua no aparelho e não é reenviado junto', async () => {
+      localStorage.setItem(PAYMENTS_KEY, JSON.stringify([payment('pay_1')]));
+      localStorage.setItem(seeded('payments'), '1');
+      let finishUpsert: () => void = () => undefined;
+      upsert.mockImplementationOnce(() => new Promise<undefined>(resolve => { finishUpsert = () => resolve(undefined); }));
+      const pending = SalonDataSync.push('payments', payment('pay_1'), ADMIN);
+
+      await SalonDataSync.pull(ADMIN);
+      expect(storedIds(PAYMENTS_KEY)).toEqual(['pay_1']);
+      expect(upsertsTo('payments')).toHaveLength(1);
+
+      finishUpsert();
+      await pending;
+      expect(stored<unknown[]>(OUTBOX_KEY)).toEqual([]);
+    });
+
+    it('envio que termina durante um pull só sai da fila no fim do pull (item não some)', async () => {
+      localStorage.setItem(PAYMENTS_KEY, JSON.stringify([payment('pay_1')]));
+      localStorage.setItem(seeded('payments'), '1');
+      let releaseList: () => void = () => undefined;
+      let finishUpsert: () => void = () => undefined;
+      upsert.mockImplementationOnce(() => new Promise<undefined>(resolve => { finishUpsert = () => resolve(undefined); }));
+      list.mockImplementation(async (table: SalonTable) => {
+        if (table === 'payments') await new Promise<void>(resolve => { releaseList = resolve; });
+        return [];
+      });
+      const pending = SalonDataSync.push('payments', payment('pay_1'), ADMIN);
+      const pulling = SalonDataSync.pull(ADMIN);
+      await vi.waitFor(() => expect(tablesListed()).toContain('payments'));
+      finishUpsert();
+      await pending;
+      releaseList();
+      await pulling;
+      expect(storedIds(PAYMENTS_KEY)).toEqual(['pay_1']);
+      expect(stored<unknown[]>(OUTBOX_KEY)).toEqual([]);
     });
 
     it('removeBlock com rede fora → exclusão vai para a fila', async () => {
