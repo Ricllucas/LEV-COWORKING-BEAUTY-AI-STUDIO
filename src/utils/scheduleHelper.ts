@@ -23,7 +23,7 @@ export function getAvailableSlots(
   professional: Professional,
   selectedServices: Service[],
   existingAppointments: Appointment[],
-  scheduleBlocks: ScheduleBlock[],
+  scheduleBlocks: Array<Pick<ScheduleBlock, 'professionalId' | 'date' | 'startTime' | 'endTime'> & { title?: string }>,
   staffMode = false
 ): SlotAvailability[] {
   if (!dateStr || !professional) return [];
@@ -137,7 +137,7 @@ export function getAvailableSlots(
         const blkEnd = timeToMinutes(blk.endTime);
         if (current < blkEnd && slotEndMinutes > blkStart) {
           available = false;
-          reason = `Bloqueado: ${blk.title}`;
+          reason = blk.title ? `Bloqueado: ${blk.title}` : 'Bloqueado';
           break;
         }
       }

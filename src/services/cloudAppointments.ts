@@ -1,4 +1,4 @@
-import { Appointment, User } from '../types';
+import { Appointment, PublicScheduleBlock, User } from '../types';
 import { AdminAuthService } from './adminAuth';
 import { ProfessionalAuthService } from './professionalAuth';
 import { getFreshAccessToken } from './staffSession';
@@ -50,11 +50,13 @@ export const CloudAppointmentService = {
     }
   },
 
-  async listPublicByDate(date: string): Promise<Appointment[]> {
+  // Horários ocupados do dia, vindos do servidor: agendamentos e bloqueios das
+  // profissionais (bloqueio sem título nem motivo).
+  async listPublicByDate(date: string): Promise<{ appointments: Appointment[]; blocks: PublicScheduleBlock[] }> {
     const response = await fetch(`/api/appointments/availability?date=${encodeURIComponent(date)}`);
     if (!response.ok) throw new Error('Não foi possível consultar os horários disponíveis.');
-    const result = await response.json() as { appointments?: Appointment[] };
-    return result.appointments || [];
+    const result = await response.json() as { appointments?: Appointment[]; blocks?: PublicScheduleBlock[] };
+    return { appointments: result.appointments || [], blocks: result.blocks || [] };
   },
 
   async cancel(appointmentId: string, clientPhone: string, reason?: string): Promise<Appointment> {

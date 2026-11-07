@@ -43,7 +43,8 @@ export default async function handler(req: any, res: any) {
       { ...appointment, source: staff ? 'staff' : 'site' },
       {
         allowStaffMonday: Boolean(staff),
-        allowStaffRetrospective: Boolean(staff)
+        allowStaffRetrospective: Boolean(staff),
+        allowStaffOverBlocks: Boolean(staff)
       }
     );
 

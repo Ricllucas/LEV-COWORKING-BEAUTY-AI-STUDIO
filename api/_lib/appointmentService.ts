@@ -117,10 +117,39 @@ export const listAppointmentsByDate = async (salonId: string, date: string): Pro
   return rows.map(row => row.payload).filter(item => item && active(item.status));
 };
 
+// Bloqueio de horário visto pelo público: só quem, quando e de que horas a que horas.
+// Título e motivo ficam fora (podem ser pessoais).
+export type PublicScheduleBlock = { professionalId: string; date: string; startTime: string; endTime: string };
+
+const MISSING_TABLE_CODES = new Set(['PGRST205', '42P01']);
+const isTime = (value: unknown): value is string => typeof value === 'string' && /^\d{2}:\d{2}$/.test(value);
+
+// Lê os bloqueios do salão no dia. Tabela ainda não criada (migração não rodada) → lista vazia.
+export const listBlocksByDate = async (salonId: string, date: string): Promise<PublicScheduleBlock[]> => {
+  const { url, key } = config();
+  const response = await fetch(`${url}/rest/v1/schedule_blocks?select=professional_id,payload&payload->>date=eq.${encodeURIComponent(date)}&${salonFilter(salonId)}`, { headers: authHeaders(key) });
+  if (!response.ok) {
+    if (response.status === 404) return [];
+    const body = await response.json().catch(() => null) as { code?: string } | null;
+    if (body?.code && MISSING_TABLE_CODES.has(body.code)) return [];
+    throw new Error('Não foi possível consultar os bloqueios da agenda.');
+  }
+  const rows = await response.json() as Array<{ professional_id?: string | null; payload?: Record<string, unknown> | null }>;
+  return rows.flatMap(row => {
+    const payload = row.payload ?? {};
+    const professionalId = typeof payload.professionalId === 'string' ? payload.professionalId : row.professional_id;
+    if (!professionalId || payload.date !== date || !isTime(payload.startTime) || !isTime(payload.endTime)) return [];
+    return [{ professionalId, date, startTime: payload.startTime, endTime: payload.endTime }];
+  });
+};
+
+const overlaps = (start: number, end: number, item: { startTime: string; endTime: string }) =>
+  start < toMinutes(item.endTime) && end > toMinutes(item.startTime);
+
 export const assertAvailable = async (
   salonId: string,
   appointment: UnifiedAppointment,
-  options?: { allowStaffMonday?: boolean; allowStaffRetrospective?: boolean }
+  options?: { allowStaffMonday?: boolean; allowStaffRetrospective?: boolean; allowStaffOverBlocks?: boolean }
 ) => {
   const today = brasiliaToday();
   const start = toMinutes(appointment.startTime); const end = toMinutes(appointment.endTime);
@@ -151,11 +180,20 @@ export const assertAvailable = async (
     const error = new Error('Este horário já está reservado no Studio LEV. Escolha outro horário disponível.');
     (error as Error & { status?: number }).status = 409; throw error;
   }
+  // A equipe pode encaixar em cima de um bloqueio; cliente (site e WhatsApp) não.
+  if (options?.allowStaffOverBlocks !== true) {
+    const blocks = await listBlocksByDate(salonId, appointment.date);
+    if (blocks.some(block => block.professionalId === appointment.professionalId && overlaps(start, end, block))) {
+      const error = new Error('Este horário está bloqueado pela profissional. Escolha outro horário.');
+      (error as Error & { status?: number }).status = 409; throw error;
+    }
+  }
 };
 
 export const availableStartTimes = async (salonId: string, date: string, duration: number, professionalId?: string) => {
   if (professionalId && !worksOnDate(professionalId, date)) return [];
-  const occupied = (await listAppointmentsByDate(salonId, date)).filter(item =>
+  const [appointments, blocks] = await Promise.all([listAppointmentsByDate(salonId, date), listBlocksByDate(salonId, date)]);
+  const occupied = [...appointments, ...blocks].filter(item =>
     !professionalId || item.professionalId === professionalId
   );
   const result: string[] = [];
@@ -173,7 +211,7 @@ export const availableStartTimes = async (salonId: string, date: string, duratio
 export const createUnifiedAppointment = async (
   salonId: string,
   appointment: UnifiedAppointment,
-  options?: { allowStaffMonday?: boolean; allowStaffRetrospective?: boolean }
+  options?: { allowStaffMonday?: boolean; allowStaffRetrospective?: boolean; allowStaffOverBlocks?: boolean }
 ) => {
   const payload = appointment.source === 'site' || !appointment.source
     ? await canonicalizePublicAppointment(salonId, appointment)

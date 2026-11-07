@@ -193,6 +193,9 @@ export interface ScheduleBlock {
   reason?: string;
 }
 
+// Bloqueio como o site público recebe: sem título nem motivo.
+export type PublicScheduleBlock = Pick<ScheduleBlock, 'professionalId' | 'date' | 'startTime' | 'endTime'>;
+
 export interface WaitlistEntry {
   id: string;
   clientName: string;

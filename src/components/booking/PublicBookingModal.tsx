@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Professional, Service, Client, Appointment, User } from '../../types';
+import { Professional, Service, Client, Appointment, User, PublicScheduleBlock } from '../../types';
 import { StorageService } from '../../services/storage';
 import { getAvailableSlots, SlotAvailability } from '../../utils/scheduleHelper';
 import { formatCurrency, formatDateBR, generateWhatsAppMessage, buildWhatsAppLink, getProfessionalWhatsApp } from '../../utils/formatters';
@@ -56,6 +56,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
   // Results
   const [availableSlots, setAvailableSlots] = useState<SlotAvailability[]>([]);
   const [onlineAppointments, setOnlineAppointments] = useState<Appointment[]>([]);
+  const [onlineBlocks, setOnlineBlocks] = useState<PublicScheduleBlock[]>([]);
   const [confirmedApt, setConfirmedApt] = useState<Appointment | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -142,8 +143,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     if (!isOpen || !selectedDate) return;
     let active = true;
     CloudAppointmentService.listPublicByDate(selectedDate)
-      .then(items => { if (active) setOnlineAppointments(items); })
-      .catch(() => { if (active) setOnlineAppointments([]); });
+      .then(result => { if (active) { setOnlineAppointments(result.appointments); setOnlineBlocks(result.blocks); } })
+      .catch(() => { if (active) { setOnlineAppointments([]); setOnlineBlocks([]); } });
     return () => { active = false; };
   }, [isOpen, selectedDate]);
 
@@ -157,7 +158,9 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
       // aparelho pode manter cópias antigas/canceladas bloqueando horários que
       // já estão livres no servidor.
       const existingApts = onlineAppointments;
-      const blocks = StorageService.getScheduleBlocks();
+      // Bloqueios: os do servidor valem para todos; os deste aparelho cobrem um
+      // bloqueio recém-feito que ainda não chegou na nuvem.
+      const blocks = [...onlineBlocks, ...StorageService.getScheduleBlocks()];
 
       if (prof) {
         const slots = getAvailableSlots(selectedDate, prof, selSrvs, existingApts, blocks, isStaffBooking);
@@ -166,7 +169,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
     } else {
       setAvailableSlots([]);
     }
-  }, [selectedProfId, selectedDate, selectedServiceIds, onlineAppointments, isStaffBooking]);
+  }, [selectedProfId, selectedDate, selectedServiceIds, onlineAppointments, onlineBlocks, isStaffBooking]);
 
   if (!isOpen) return null;
 
