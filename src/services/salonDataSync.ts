@@ -266,7 +266,8 @@ const flushOutbox = async (user: StaffUser) => {
       done.add(JSON.stringify(entry));
     } catch (error) {
       if (isPermanent(error)) {
-        console.warn('A nuvem recusou um envio pendente; ele foi descartado.', entry.kind, statusOf(error));
+        console.warn('A nuvem recusou um envio pendente; o item continua só neste aparelho.', entry.kind, statusOf(error));
+        if (entry.op === 'upsert') keepRefusedPush(entry.kind, entry.item, user);
         done.add(JSON.stringify(entry));
       }
     }

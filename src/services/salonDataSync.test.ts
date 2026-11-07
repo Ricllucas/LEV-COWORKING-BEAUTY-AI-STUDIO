@@ -286,6 +286,21 @@ describe('SalonDataSync', () => {
       expect(console.warn).toHaveBeenCalled();
     });
 
+    it('pendência da fila recusada de vez (403) → sai da fila e o item continua no aparelho', async () => {
+      localStorage.setItem(PAYMENTS_KEY, JSON.stringify([payment('pay_1')]));
+      localStorage.setItem(seeded('payments'), '1');
+      localStorage.setItem(OUTBOX_KEY, JSON.stringify([queued('payments', payment('pay_1'))]));
+      upsert.mockRejectedValue(httpError(403));
+      await SalonDataSync.pull(ADMIN);
+      expect(stored<unknown[]>(OUTBOX_KEY)).toEqual([]);
+      expect(storedIds(PAYMENTS_KEY)).toEqual(['pay_1']);
+
+      upsert.mockReset();
+      upsert.mockImplementation(async () => undefined);
+      await SalonDataSync.pull(ADMIN);
+      expect(storedIds(PAYMENTS_KEY)).toEqual(['pay_1']);
+    });
+
     it('exclusão pendente na fila tira o bloqueio do aparelho', async () => {
       localStorage.setItem(OUTBOX_KEY, JSON.stringify([queued('blocks', { id: 'blk_1' }, ADMIN.id, 'delete')]));
       localStorage.setItem(seeded('blocks'), '1');
