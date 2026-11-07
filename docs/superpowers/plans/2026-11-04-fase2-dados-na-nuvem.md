@@ -172,9 +172,9 @@ Comportamento:
 
 ## Tarefa 7: publicar e conferir
 
-- [ ] **Passo 1:** `npm run test`, `npm run lint`, `npm run build`, `npm run e2e`.
-- [ ] **Passo 2:** `git push origin main`. Conferir no site no ar que tudo continua igual (o banco ainda não tem as tabelas novas).
-- [ ] **Passo 3:** a dona roda `20261105_salon_data.sql` no SQL Editor e a verificação do fim do arquivo.
-- [ ] **Passo 4 (com a dona):** abrir o painel uma vez em cada aparelho que já usou o financeiro (Elisangela, Talitha, Nayara, computador da admin), logada. Anotar antes o total do mês na tela Financeiro de cada aparelho.
-- [ ] **Passo 5:** conferir: lançar um pagamento de teste no celular → aparece no computador em até 1 minuto. Bloquear um horário no painel → o site público não oferece esse horário. Depois apagar o bloqueio de teste (o pagamento de teste não pode ser apagado pelo painel; usar valor R$ 0,01 e avisar a dona).
-- [ ] **Passo 6:** conferir no Supabase, com uma profissional logada, que ela não lê pagamentos de outra (consulta pelo navegador devolve lista vazia para `professional_id` de outra).
+- [x] **Passo 1:** `npm run test`, `npm run lint`, `npm run build`, `npm run e2e`.
+- [x] **Passo 2:** `git push origin main`. Conferir no site no ar que tudo continua igual (o banco ainda não tem as tabelas novas).
+- [x] **Passo 3:** a dona roda `20261105_salon_data.sql` no SQL Editor e a verificação do fim do arquivo.
+- [x] **Passo 4 (com a dona):** abrir o painel uma vez em cada aparelho que já usou o financeiro (Elisangela, Talitha, Nayara, computador da admin), logada. Anotar antes o total do mês na tela Financeiro de cada aparelho. _(07/11: feito no computador da admin e no celular da Elisangela, totais iguais; Talitha e Nayara dispensadas pela dona.)_
+- [x] **Passo 5:** conferir: lançar um pagamento de teste no celular → aparece no computador em até 1 minuto. Bloquear um horário no painel → o site público não oferece esse horário. Depois apagar o bloqueio de teste (o pagamento de teste não pode ser apagado pelo painel; usar valor R$ 0,01 e avisar a dona).
+- [x] **Passo 6:** conferir no Supabase, com uma profissional logada, que ela não lê pagamentos de outra (consulta pelo navegador devolve lista vazia para `professional_id` de outra).

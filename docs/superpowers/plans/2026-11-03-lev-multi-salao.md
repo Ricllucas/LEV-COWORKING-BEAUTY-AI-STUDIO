@@ -172,7 +172,7 @@ Regra para escolher o salão em cada rota:
 
 ## Fase 2 — Tirar dados do navegador
 
-> **Situação (07/11/2026): em andamento.** Plano detalhado: [`2026-11-04-fase2-dados-na-nuvem.md`](2026-11-04-fase2-dados-na-nuvem.md). Código pronto na branch `fase2-dados-nuvem` (migração `supabase/migrations/20261105_salon_data.sql`, sincronização com fila de envio, bloqueios valendo no site e no WhatsApp). Falta publicar, rodar a migração no Supabase e abrir o painel uma vez em cada aparelho (Tarefa 7 do plano detalhado).
+> **Situação (07/11/2026): concluída e no ar.** Plano detalhado: [`2026-11-04-fase2-dados-na-nuvem.md`](2026-11-04-fase2-dados-na-nuvem.md). Migração rodada no Supabase; conferido com a dona: dados do computador da admin subiram sem mudar os totais (R$ 850,00 em 01–07/11), pagamento lançado no celular chegou à nuvem, bloqueio some do site e o novo botão "Desbloquear" libera o horário, profissional não vê o financeiro das colegas. Talitha e Nayara dispensadas pela dona. Na conferência apareceu e foi corrigido um erro antigo: o pagamento lançado na agenda não marcava o atendimento como pago na nuvem.
 >
 > **Fica para a Fase 3:** os ids de `catalog_services` (ex.: `srv_tal_1`) ainda podem se repetir entre salões. Resolver junto com a troca dos ids fixos das profissionais (Tarefa 3.1).
 
