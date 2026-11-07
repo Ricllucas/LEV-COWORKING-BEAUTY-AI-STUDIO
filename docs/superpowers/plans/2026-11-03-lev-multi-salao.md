@@ -170,7 +170,11 @@ Regra para escolher o salão em cada rota:
 
 ---
 
-## Fase 2 — Tirar dados do navegador (plano detalhado próprio antes de começar)
+## Fase 2 — Tirar dados do navegador
+
+> **Situação (07/11/2026): em andamento.** Plano detalhado: [`2026-11-04-fase2-dados-na-nuvem.md`](2026-11-04-fase2-dados-na-nuvem.md). Código pronto na branch `fase2-dados-nuvem` (migração `supabase/migrations/20261105_salon_data.sql`, sincronização com fila de envio, bloqueios valendo no site e no WhatsApp). Falta publicar, rodar a migração no Supabase e abrir o painel uma vez em cada aparelho (Tarefa 7 do plano detalhado).
+>
+> **Fica para a Fase 3:** os ids de `catalog_services` (ex.: `srv_tal_1`) ainda podem se repetir entre salões. Resolver junto com a troca dos ids fixos das profissionais (Tarefa 3.1).
 
 **Problema atual:** `src/services/storage.ts` guarda no `localStorage` (memória do navegador) o financeiro (`PAYMENTS`), as configurações (`SETTINGS`), as profissionais (`PROFESSIONALS`), os bloqueios (`BLOCKS`), a lista de espera (`WAITLIST`) e o histórico (`LOGS`). Esses dados não passam de um aparelho para outro e se perdem se o navegador for limpo.
 
