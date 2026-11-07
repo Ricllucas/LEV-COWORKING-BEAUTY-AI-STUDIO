@@ -78,7 +78,7 @@ export default async function handler(req: any, res: any) {
           'Content-Type': 'application/json',
           Prefer: 'return=minimal'
         },
-        body: JSON.stringify({ payload: appointment, date: appointment.date, updated_at: updatedAt })
+        body: JSON.stringify({ payload: appointment, appointment_date: appointment.date, start_time: appointment.startTime, updated_at: updatedAt })
       });
       if (!updateResponse.ok) return json(res, 502, { error: 'Não foi possível salvar as alterações do lançamento.' });
     }
