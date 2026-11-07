@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canSeeAppointmentPrice, visibleAgendaAppointments } from './agendaVisibility';
+import { canRemoveScheduleBlock, canSeeAppointmentPrice, visibleAgendaAppointments } from './agendaVisibility';
 import type { Appointment, User } from '../types';
 
 const apt = (id: string, professionalId: string) => ({ id, professionalId } as Appointment);
@@ -24,5 +24,19 @@ describe('agenda compartilhada entre profissionais', () => {
     expect(canSeeAppointmentPrice(all[1], talitha)).toBe(true);
     expect(canSeeAppointmentPrice(all[0], talitha)).toBe(false);
     expect(canSeeAppointmentPrice(all[0], admin)).toBe(true);
+  });
+});
+
+describe('desbloquear horário', () => {
+  const block = { professionalId: 'prof_elisangela' };
+  it('a admin desbloqueia o horário de qualquer profissional', () => {
+    expect(canRemoveScheduleBlock(block, admin)).toBe(true);
+  });
+  it('a profissional desbloqueia só o próprio horário', () => {
+    expect(canRemoveScheduleBlock(block, talitha)).toBe(false);
+    expect(canRemoveScheduleBlock({ professionalId: 'prof_talitha' }, talitha)).toBe(true);
+  });
+  it('cliente nunca desbloqueia', () => {
+    expect(canRemoveScheduleBlock(block, { role: 'cliente' } as User)).toBe(false);
   });
 });

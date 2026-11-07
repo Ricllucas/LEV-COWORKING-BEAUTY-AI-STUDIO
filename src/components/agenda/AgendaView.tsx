@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Appointment, Professional, Service, User, ScheduleBlock, AppointmentStatus, PaymentStatus, PaymentMethod } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
-import { canSeeAppointmentPrice } from '../../utils/agendaVisibility';
+import { canRemoveScheduleBlock, canSeeAppointmentPrice } from '../../utils/agendaVisibility';
 import { formatCurrency, formatDateBR, getDayOfWeekName, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
 import {
   Calendar as CalendarIcon,
@@ -251,6 +251,13 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
       title: blockTitle
     });
     setIsBlockModalOpen(false);
+  };
+
+  const handleRemoveBlock = (block: ScheduleBlock) => {
+    if (!canRemoveScheduleBlock(block, currentUser)) return;
+    if (!window.confirm(`Desbloquear ${formatDateBR(block.date)} das ${block.startTime} às ${block.endTime}? O horário volta a aparecer no site.`)) return;
+    StorageService.deleteScheduleBlock(block.id);
+    setBlocks(StorageService.getScheduleBlocks());
   };
 
   const changeDate = (days: number) => {
@@ -528,6 +535,17 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                           style={{ top, height }}
                         >
                           <Lock className="w-3 h-3 inline mr-1" />{block.title}
+                          {canRemoveScheduleBlock(block, currentUser) && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveBlock(block)}
+                              className="absolute top-1 right-1 inline-flex items-center gap-1 rounded-md border border-white/15 bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white/80 hover:bg-white/15"
+                              title="Desbloquear este horário"
+                              aria-label={`Desbloquear ${block.startTime} às ${block.endTime}`}
+                            >
+                              <X className="w-3 h-3" />Desbloquear
+                            </button>
+                          )}
                         </div>
                       );
                     })}
