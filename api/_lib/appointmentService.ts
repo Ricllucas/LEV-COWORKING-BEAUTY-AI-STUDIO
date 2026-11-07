@@ -137,8 +137,11 @@ export const listBlocksByDate = async (salonId: string, date: string): Promise<P
   const rows = await response.json() as Array<{ professional_id?: string | null; payload?: Record<string, unknown> | null }>;
   return rows.flatMap(row => {
     const payload = row.payload ?? {};
-    const professionalId = typeof payload.professionalId === 'string' ? payload.professionalId : row.professional_id;
-    if (!professionalId || payload.date !== date || !isTime(payload.startTime) || !isTime(payload.endTime)) return [];
+    // A coluna é a que o banco confere (a profissional só grava a própria).
+    // Texto interno apontando outra profissional → linha ignorada.
+    const professionalId = row.professional_id;
+    if (!professionalId || (payload.professionalId !== undefined && payload.professionalId !== professionalId)) return [];
+    if (payload.date !== date || !isTime(payload.startTime) || !isTime(payload.endTime)) return [];
     return [{ professionalId, date, startTime: payload.startTime, endTime: payload.endTime }];
   });
 };

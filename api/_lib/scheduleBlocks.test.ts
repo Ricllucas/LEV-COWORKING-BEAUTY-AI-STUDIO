@@ -70,6 +70,14 @@ describe('bloqueios da profissional valem para o site público', () => {
     expect(await listBlocksByDate('lev', DAY)).toEqual([{ professionalId: 'prof_talitha', date: DAY, startTime: '09:30', endTime: '11:00' }]);
   });
 
+  it('vale a profissional da coluna (conferida pelo banco); linha com texto apontando outra é ignorada', async () => {
+    const forged = blockRow('prof_nayara', '09:30', '11:00');
+    forged.payload.professionalId = 'prof_talitha';
+    blocksAnswer = { status: 200, body: [forged, { professional_id: null, payload: blockRow('prof_talitha', '13:00', '14:00').payload }] };
+    expect(await listBlocksByDate('lev', DAY)).toEqual([]);
+    await expect(assertAvailable('lev', apt('prof_talitha', '10:00', '11:00'))).resolves.toBeUndefined();
+  });
+
   it('tabela ainda não criada (404 ou PGRST205) → lista vazia e o agendamento segue', async () => {
     blocksAnswer = { status: 404, body: { code: 'PGRST205' } };
     expect(await listBlocksByDate('lev', DAY)).toEqual([]);
