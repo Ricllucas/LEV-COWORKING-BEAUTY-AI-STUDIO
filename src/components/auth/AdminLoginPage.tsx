@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { AlertCircle, Loader2, LockKeyhole, ScanFace } from 'lucide-react';
 import { Logo } from '../brand/Logo';
+import { StorageService } from '../../services/storage';
+import { salonNames } from '../../utils/salonNames';
 import { AdminAuthService, AdminSession } from '../../services/adminAuth';
 import { User } from '../../types';
 
@@ -69,7 +71,7 @@ export const AdminLoginPage: React.FC<AdminLoginPageProps> = ({ onAuthenticated 
       <section className="w-full max-w-md rounded-3xl border border-white/10 bg-[#0a0a0a] p-7 shadow-2xl">
         <Logo size="lg" variant="symbol" className="mx-auto mb-5" />
         <p className="text-center text-[10px] font-semibold uppercase tracking-[0.24em] text-[#c4b491]">
-          LEV Coworking Beauty
+          {salonNames(StorageService.getSettings()).name}
         </p>
         <h1 className="mt-2 text-center font-serif text-3xl">Área Administrativa</h1>
         <p className="mt-2 text-center text-sm text-white/55">

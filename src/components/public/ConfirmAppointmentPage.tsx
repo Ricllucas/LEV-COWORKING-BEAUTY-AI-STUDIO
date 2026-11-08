@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Logo } from '../brand/Logo';
+import { StorageService } from '../../services/storage';
+import { brandStyle, currentBrand } from '../../utils/salonBrand';
 
 // Página aberta pelo link que a profissional recebe no WhatsApp.
 // Abrir a página NÃO confirma nada (o WhatsApp abre links sozinho para gerar a prévia):
@@ -48,7 +50,7 @@ export const ConfirmAppointmentPage: React.FC = () => {
         if (!active) return;
         if (!response.ok) setView({ kind: 'error', message: body.error || 'Não foi possível abrir este horário.' });
         else if (body.status === 'confirmado') setView({ kind: 'done', data: body, already: true });
-        else if (body.status !== 'aguardando_confirmacao') setView({ kind: 'error', message: 'Este horário não está mais aguardando confirmação. Confira no painel da LEV.', data: body });
+        else if (body.status !== 'aguardando_confirmacao') setView({ kind: 'error', message: 'Este horário não está mais aguardando confirmação. Confira no painel do salão.', data: body });
         else setView({ kind: 'ready', data: body });
       })
       .catch(() => active && setView({ kind: 'error', message: 'Sem conexão. Verifique a internet e tente de novo.' }));
@@ -74,14 +76,14 @@ export const ConfirmAppointmentPage: React.FC = () => {
   const data = 'data' in view ? view.data : undefined;
 
   return (
-    <div className="min-h-screen bg-[#FCF9F2] text-[#3D312A] flex items-center justify-center px-5 py-10 font-sans">
+    <div className="min-h-screen bg-(--brand-bg) text-(--brand-text) flex items-center justify-center px-5 py-10 font-sans" style={brandStyle(currentBrand(StorageService.getSettings()))}>
       <div className="w-full max-w-md rounded-3xl bg-white shadow-xl border border-[#E6D7C3] p-7 space-y-6">
         <div className="flex justify-center"><Logo size="md" /></div>
 
         {view.kind === 'loading' && <p className="text-center text-sm text-[#7A6A5C]">Carregando o horário...</p>}
 
         {data && (
-          <div className="rounded-2xl bg-[#FCF9F2] border border-[#E6D7C3] p-5 space-y-2 text-sm">
+          <div className="rounded-2xl bg-(--brand-bg) border border-[#E6D7C3] p-5 space-y-2 text-sm">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A08A6A]">Agendamento</p>
             <p><span className="font-semibold">Cliente:</span> {data.clientFirstName}</p>
             <p><span className="font-semibold">Serviço:</span> {data.serviceNames.join(', ')}</p>
@@ -128,7 +130,7 @@ export const ConfirmAppointmentPage: React.FC = () => {
         )}
 
         <p className="text-center text-xs text-[#A08A6A]">
-          Também dá para confirmar pelo <a href="/profissional" className="underline">painel da LEV</a>.
+          Também dá para confirmar pelo <a href="/profissional" className="underline">painel do salão</a>.
         </p>
       </div>
     </div>

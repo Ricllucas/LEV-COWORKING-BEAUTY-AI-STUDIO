@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { StorageService } from '../../services/storage';
+import { salonNames } from '../../utils/salonNames';
 import { User } from '../../types';
 import { X, Mail, Lock, User as UserIcon, Phone, Sparkles, CheckCircle2, AlertCircle, ShieldCheck } from 'lucide-react';
 
@@ -211,7 +212,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Modal Header */}
         <div className="text-center mb-6">
           <span className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-[#c4b491] px-2.5 py-1 rounded-full bg-[#c4b491]/10 border border-[#c4b491]/20">
-            <Sparkles className="w-3 h-3" /> LEV Coworking Beauty
+            <Sparkles className="w-3 h-3" /> {salonNames(StorageService.getSettings()).name}
           </span>
           <h2 className="text-2xl font-serif text-white font-medium mt-2">
             {mode === 'login' && 'Acessar Conta'}

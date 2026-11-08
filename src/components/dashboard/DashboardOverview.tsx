@@ -4,6 +4,7 @@ import { StorageService } from '../../services/storage';
 import { formatCurrency, formatDateBR } from '../../utils/formatters';
 import { FollowUpsPanel } from './FollowUpsPanel';
 import { SHARED_AGENDA } from '../../config/salon';
+import { withProfessionalNames } from '../../utils/salonBrand';
 import { canSeeAppointmentPrice, visibleAgendaAppointments } from '../../utils/agendaVisibility';
 import {
   Calendar,
@@ -72,7 +73,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   // Lembretes e tarefas: cada profissional cuida só dos próprios atendimentos
   const allApts = deduplicateAppointments(appointments);
   const filteredApts = visibleAgendaAppointments(allApts, currentUser, false);
-  // Agenda do dia e contadores: na LEV, as profissionais veem as colegas também
+  // Agenda do dia e contadores: com a agenda compartilhada, as profissionais veem as colegas também
   const agendaApts = visibleAgendaAppointments(allApts, currentUser, SHARED_AGENDA);
 
   const todayApts = agendaApts.filter(a => a.date === todayStr && a.status !== 'cancelado_cliente' && a.status !== 'cancelado_coworking');
@@ -95,16 +96,16 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       <div className="p-6 rounded-2xl bg-[#0a0a0a] border border-white/10 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-semibold text-[#c4b491] uppercase tracking-widest block">
-            Painel Geral LEV COWORKING BEAUTY
+            Painel Geral {StorageService.getSettings().name}
           </span>
           <h1 className="text-2xl font-serif font-medium text-white mt-1">
             Olá, {currentUser.name}! ✨
           </h1>
           <p className="text-xs text-white/60 mt-1">
             {currentUser.role === 'admin'
-              ? 'Visão consolidada das agendas de Elisangela, Talitha e Nayara, com acompanhamento financeiro individual.'
+              ? withProfessionalNames('Visão consolidada das agendas de {profissionais}, com acompanhamento financeiro individual.', professionals.map(p => p.name))
               : SHARED_AGENDA
-                ? 'Agenda do dia com todas as profissionais da LEV. O faturamento mostrado é só o seu.'
+                ? 'Agenda do dia com todas as profissionais do salão. O faturamento mostrado é só o seu.'
                 : `Ambiente profissional exclusivo de ${currentUser.name}`}
           </p>
         </div>

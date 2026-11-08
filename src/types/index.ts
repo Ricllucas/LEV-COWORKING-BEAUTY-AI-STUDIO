@@ -254,11 +254,68 @@ export interface SystemNotification {
   linkTo?: string;
 }
 
-// Marca do salão. Por enquanto só o nome curto das mensagens; a Fase 3
-// (Tarefa 6) acrescenta cores e textos da página pública.
-export interface SalonBrandOverrides {
-  shortName?: string;
+// Marca do salão na página pública: nome curto, cores, textos e fotos.
+// Nos textos, `*trecho*` sai em destaque e `{profissionais}` vira a lista
+// com os nomes das profissionais carregadas.
+export interface SalonBrandColors {
+  text: string;
+  primary: string;
+  accent: string;
+  background: string;
+  surface: string;
 }
+
+export interface SalonBrandReview {
+  author: string;
+  text: string;
+  rating: number;
+  date?: string;
+  /** Serviço citado na avaliação (aparece no canto do cartão). */
+  service?: string;
+}
+
+export interface SalonBrand {
+  shortName: string;
+  colors: SalonBrandColors;
+  heroKicker: string;
+  heroTitle: string;
+  heroText: string;
+  highlights: { title: string; desc: string }[];
+  professionalsTitle: string;
+  professionalsText: string;
+  worksTitle: string;
+  works: { url: string; alt: string; video?: string }[];
+  featureTitle: string;
+  featureText: string;
+  featureImageUrl: string;
+  googleReviews: { rating: number; total: number; url: string; reviews: SalonBrandReview[] } | null;
+  portfolioEnabled: boolean;
+  footerNote: string;
+  // Opcionais: seções que hoje só a LEV preenche. Sem valor, a seção some
+  // (ou usa um texto genérico).
+  /** Logo usado no lugar de `settings.logoUrl`. */
+  logoUrl?: string;
+  /** Logo largo do topo da página; sem ele, aparece o logo normal. */
+  bannerLogoUrl?: string;
+  spaceKicker?: string;
+  spaceTitle?: string;
+  spacePhotos?: { url: string; title: string; desc: string }[];
+  professionalsKicker?: string;
+  featureKicker?: string;
+  featureItems?: { title: string; desc: string }[];
+  featureCtaLabel?: string;
+  featureSecondaryCtaLabel?: string;
+  featureImageAlt?: string;
+  featureImageTitle?: string;
+  featureImageText?: string;
+  staffAreaText?: string;
+}
+
+// O que cada salão grava em `settings.brand`: qualquer parte da marca, e as
+// cores uma a uma. O que faltar vem da marca de fábrica (resolveBrand).
+export type SalonBrandOverrides = Partial<Omit<SalonBrand, 'colors'>> & {
+  colors?: Partial<SalonBrandColors>;
+};
 
 export interface CoworkingSettings {
   name: string;

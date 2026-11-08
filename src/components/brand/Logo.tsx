@@ -1,5 +1,6 @@
 import React from 'react';
-import { LEV_LOGO_DATA_URL } from '../../assets/brandImages';
+import { StorageService } from '../../services/storage';
+import { brandLogoUrl } from '../../utils/salonBrand';
 
 interface LogoProps {
   variant?: 'horizontal' | 'symbol' | 'monochrome' | 'stacked';
@@ -9,7 +10,10 @@ interface LogoProps {
   showSubtitle?: boolean;
 }
 
+// Logo do salão: o da marca (quando a marca traz um) ou o do cadastro.
 export const Logo: React.FC<LogoProps> = ({ size = 'md', className = '' }) => {
+  const settings = StorageService.getSettings();
+  const src = brandLogoUrl(settings);
   const sizes = {
     sm: 'h-9 w-9',
     md: 'h-12 w-12',
@@ -19,15 +23,21 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', className = '' }) => {
 
   return (
     <span className={`inline-flex items-center justify-center overflow-hidden rounded-xl bg-[#f8f4ec] shadow-[0_12px_40px_rgba(196,180,145,0.18)] ${className}`}>
-      <img
-        src={LEV_LOGO_DATA_URL}
-        alt="LEV Coworking Beauty"
-        className={`${sizes[size]} block object-contain`}
-        width={512}
-        height={512}
-        loading="eager"
-        decoding="async"
-      />
+      {src ? (
+        <img
+          src={src}
+          alt={settings.name}
+          className={`${sizes[size]} block object-contain`}
+          width={512}
+          height={512}
+          loading="eager"
+          decoding="async"
+        />
+      ) : (
+        <span className={`${sizes[size]} flex items-center justify-center font-serif font-semibold text-[#3D312A]`}>
+          {(settings.name || '').slice(0, 1)}
+        </span>
+      )}
     </span>
   );
 };

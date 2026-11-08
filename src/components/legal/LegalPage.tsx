@@ -1,5 +1,7 @@
 import React from 'react';
 import { Logo } from '../brand/Logo';
+import { StorageService } from '../../services/storage';
+import { salonNames } from '../../utils/salonNames';
 
 type LegalPageKind = 'privacy' | 'data-deletion';
 
@@ -16,7 +18,7 @@ const Section: React.FC<React.PropsWithChildren<{ title: string }>> = ({ title, 
   </section>
 );
 
-const PrivacyPolicy = () => (
+const PrivacyPolicy: React.FC<{ names: { name: string; shortName: string } }> = ({ names }) => (
   <>
     <header className="space-y-3 border-b border-white/10 pb-8">
       <p className="text-xs font-semibold uppercase tracking-[0.28em] text-[#c4b491]">Privacidade e proteção de dados</p>
@@ -25,7 +27,7 @@ const PrivacyPolicy = () => (
     </header>
 
     <Section title="1. Quem somos">
-      <p>O LEV Coworking Beauty oferece uma plataforma de agendamento que conecta clientes às profissionais que atendem no espaço LEV.</p>
+      <p>O {names.name} oferece uma plataforma de agendamento que conecta clientes às profissionais que atendem no espaço {names.shortName}.</p>
     </Section>
 
     <Section title="2. Dados que podemos coletar">
@@ -87,7 +89,9 @@ const DataDeletion = () => (
   </>
 );
 
-export const LegalPage: React.FC<LegalPageProps> = ({ kind }) => (
+export const LegalPage: React.FC<LegalPageProps> = ({ kind }) => {
+  const names = salonNames(StorageService.getSettings());
+  return (
   <div className="min-h-screen bg-[#050505] text-white">
     <header className="border-b border-white/10 bg-[#080808]">
       <div className="mx-auto flex max-w-4xl items-center justify-between px-5 py-5 sm:px-8">
@@ -98,12 +102,11 @@ export const LegalPage: React.FC<LegalPageProps> = ({ kind }) => (
       </div>
     </header>
     <main className="mx-auto max-w-4xl space-y-10 px-5 py-12 sm:px-8 sm:py-16">
-      {kind === 'privacy' ? <PrivacyPolicy /> : <DataDeletion />}
+      {kind === 'privacy' ? <PrivacyPolicy names={names} /> : <DataDeletion />}
     </main>
     <footer className="border-t border-white/10 px-5 py-8 text-center text-xs text-white/45">
-      © {new Date().getFullYear()} LEV Coworking Beauty
+      © {new Date().getFullYear()} {names.name}
     </footer>
   </div>
 );
-
-
+};

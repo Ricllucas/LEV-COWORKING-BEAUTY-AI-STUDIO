@@ -21,7 +21,7 @@ import { SalonDataSync, SyncUser } from './services/salonDataSync';
 import { LegalPage } from './components/legal/LegalPage';
 import { PortfolioPage } from './components/public/PortfolioPage';
 import { ConfirmAppointmentPage } from './components/public/ConfirmAppointmentPage';
-import { isDefaultSalon } from './config/salon';
+import { brandStyle, currentBrand } from './utils/salonBrand';
 
 // Views - eager load only essential views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
@@ -44,6 +44,12 @@ const AuditLogsView = lazy(() => import('./components/audit/AuditLogsView').then
 export default function App() {
   const normalizedPath = window.location.pathname.replace(/\/$/, '') || '/';
 
+  // Nome do salão na aba do navegador.
+  useEffect(() => {
+    const name = StorageService.getSettings().name;
+    if (name) document.title = name;
+  }, []);
+
   if (normalizedPath === '/politica-de-privacidade') {
     return <LegalPage kind="privacy" />;
   }
@@ -56,8 +62,8 @@ export default function App() {
     return <ConfirmAppointmentPage />;
   }
 
-  // Página de portfólio é só da LEV; nos outros salões a rota mostra a página inicial.
-  if (normalizedPath === '/portfolio' && isDefaultSalon()) {
+  // Página de portfólio só para o salão que tem portfólio; nos outros a rota mostra a página inicial.
+  if (normalizedPath === '/portfolio' && currentBrand(StorageService.getSettings()).portfolioEnabled) {
     return <PortfolioPage />;
   }
 
@@ -223,7 +229,7 @@ function Application() {
   };
 
   if (isRouteAuthChecking) {
-    return <LoadingSpinner message="Validando acesso e carregando a Agenda LEV..." />;
+    return <LoadingSpinner message="Validando acesso e carregando a agenda..." />;
   }
 
   if (isProfessionalRoute && currentUser.role !== 'profissional') {
@@ -253,14 +259,15 @@ function Application() {
   }
 
   const isClientOrGuest = currentUser.role === 'cliente' || currentUser.id === 'visitor_guest';
+  const publicBrandStyle = isClientOrGuest ? brandStyle(currentBrand(coworkingState.settings)) : undefined;
 
   return (
     <ErrorBoundary>
       <div className={`min-h-screen font-sans flex flex-col ${
         isClientOrGuest
-          ? 'bg-[#FCF9F2] text-[#3D312A] selection:bg-[#E6D7C3] selection:text-[#3D312A]'
+          ? 'bg-(--brand-bg) text-(--brand-text) selection:bg-[#E6D7C3] selection:text-(--brand-text)'
           : 'bg-[#050505] text-white selection:bg-[#c4b491]/30 selection:text-white'
-      }`}>
+      }`} style={publicBrandStyle}>
       {/* Header */}
       <Header
         currentUser={currentUser}

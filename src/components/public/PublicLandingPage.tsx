@@ -2,13 +2,12 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Logo } from '../brand/Logo';
 import { Professional, Service, CoworkingSettings, Appointment } from '../../types';
 import { StorageService } from '../../services/storage';
-import { GOOGLE_REVIEWS, GOOGLE_REVIEWS_SUMMARY, GOOGLE_REVIEWS_URL } from '../../data/initialData';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { formatCurrency, buildProfessionalWhatsAppLink } from '../../utils/formatters';
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
 import { LoopVideo } from '../common/LoopVideo';
-import { isDefaultSalon } from '../../config/salon';
+import { brandStyle, currentBrand, emphasisParts, withProfessionalNames } from '../../utils/salonBrand';
 import { compressImageToDataUrl } from '../../utils/imageCompressor';
 import {
   Calendar,
@@ -42,6 +41,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
   const [cancellingId, setCancellingId] = useState<string>('');
 
   const isAdmin = currentUser?.role === 'admin';
+  const brand = useMemo(() => currentBrand(settings), [settings]);
+  const highlightIcons = [Sparkles, Star, Calendar, Heart];
+  const spacePhotos = brand.spacePhotos ?? [];
+  const featureItems = brand.featureItems ?? [];
 
   const handleDirectAvatarUpload = async (prof: Professional, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -106,49 +109,57 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
   };
 
   return (
-    <div className="min-h-screen bg-[#FCF9F2] text-[#3D312A] pb-20">
+    <div className="min-h-screen bg-(--brand-bg) text-(--brand-text) pb-20" style={brandStyle(brand)}>
       {/* Brand Banner */}
       <section className="px-4 sm:px-6 lg:px-8 pt-14 pb-6 sm:pt-20 sm:pb-10">
-        <h1 className="sr-only">LEV Coworking Beauty</h1>
+        <h1 className="sr-only">{settings.name}</h1>
         <div className="max-w-4xl mx-auto flex flex-col items-center gap-6">
-          <img
-            src="/brand/lev-logo-horizontal.webp"
-            alt="LEV Coworking Beauty"
-            width={1437}
-            height={438}
-            loading="eager"
-            className="w-full h-auto mix-blend-multiply"
-          />
-          <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.4em] text-[#8C7249]">
-            Centro · Curitiba
-          </p>
+          {brand.bannerLogoUrl ? (
+            <img
+              src={brand.bannerLogoUrl}
+              alt={settings.name}
+              width={1437}
+              height={438}
+              loading="eager"
+              className="w-full h-auto mix-blend-multiply"
+            />
+          ) : (
+            <Logo size="lg" />
+          )}
+          {brand.heroKicker && (
+            <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.4em] text-(--brand-primary)">
+              {brand.heroKicker}
+            </p>
+          )}
         </div>
       </section>
 
       {/* Hero Section */}
-      <section className="relative pt-6 pb-20 px-4 sm:px-6 lg:px-8 border-b border-[#3D312A]/10">
+      <section className="relative pt-6 pb-20 px-4 sm:px-6 lg:px-8 border-b border-(--brand-text)/10">
         <div className="max-w-5xl mx-auto text-center">
-          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-medium text-[#3D312A] mt-4 leading-tight tracking-tight">
-            <span className="bg-gradient-to-r from-[#3D312A] via-[#6B5440] to-[#A1865B] bg-clip-text text-transparent block">
-              Sua Beleza Completa: Unhas, Cílios, Sobrancelhas, Maquiagem & Penteados.
+          <h2 className="text-3xl sm:text-5xl lg:text-6xl font-serif font-medium text-(--brand-text) mt-4 leading-tight tracking-tight">
+            <span className="bg-gradient-to-r from-(--brand-text) via-(--brand-primary) to-(--brand-accent) bg-clip-text text-transparent block">
+              {brand.heroTitle}
             </span>
           </h2>
 
-          <p className="mt-5 max-w-3xl mx-auto text-sm sm:text-base text-[#3D312A]/80 leading-relaxed font-light">
-            Do cuidado impecável com <strong className="text-[#8C7249] font-semibold">unhas, cílios e sobrancelhas</strong> à produção completa para momentos especiais, com <strong className="text-[#8C7249] font-semibold">maquiagem, penteados e atendimento para noivas</strong>. Viva uma experiência personalizada com nossas especialistas, em ambientes acolhedores, reservados e cuidadosamente preparados para você.
+          <p className="mt-5 max-w-3xl mx-auto text-sm sm:text-base text-(--brand-text)/80 leading-relaxed font-light">
+            {emphasisParts(brand.heroText).map((part, i) => part.emphasis
+              ? <strong key={i} className="text-(--brand-primary) font-semibold">{part.text}</strong>
+              : <React.Fragment key={i}>{part.text}</React.Fragment>)}
           </p>
 
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               type="button" onClick={() => onOpenBookingModal()}
-              className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-[#A1865B] via-[#B39A70] to-[#8C7249] hover:from-[#8C7249] hover:to-[#8C7249] text-white font-semibold text-sm transition-all shadow-[0_0_25px_rgba(161,134,91,0.25)] flex items-center justify-center gap-2 group hover:scale-[1.02]"
+              className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-(--brand-accent) via-(--brand-accent) to-(--brand-primary) hover:from-(--brand-primary) hover:to-(--brand-primary) text-white font-semibold text-sm transition-all shadow-[0_0_25px_rgba(161,134,91,0.25)] flex items-center justify-center gap-2 group hover:scale-[1.02]"
             >
-              <MessageCircle className="w-5 h-5 text-[#3D312A] group-hover:scale-110 transition-transform" />
+              <MessageCircle className="w-5 h-5 text-(--brand-text) group-hover:scale-110 transition-transform" />
               Escolher profissional e agendar
             </button>
-            {isDefaultSalon() && <a
+            {brand.portfolioEnabled && <a
               href="/portfolio"
-              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#3D312A]/[0.05] border border-[#A1865B]/40 hover:bg-[#3D312A]/10 text-[#8C7249] font-semibold text-sm transition-all flex items-center justify-center gap-2"
+              className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-(--brand-text)/[0.05] border border-(--brand-accent)/40 hover:bg-(--brand-text)/10 text-(--brand-primary) font-semibold text-sm transition-all flex items-center justify-center gap-2"
             >
               <Sparkles className="w-5 h-5" />
               Ver portfólio
@@ -157,39 +168,37 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
 
           {/* Highlights Badges */}
           <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {[
-              { title: "Atendimento Exclusivo", desc: "Cuidado personalizado em cada detalhe", icon: <Sparkles className="w-4 h-4 text-[#8C7249]" /> },
-              { title: "Especialistas LEV", desc: "Elisangela, Talitha e Nayara", icon: <Star className="w-4 h-4 text-[#8C7249]" /> },
-              { title: "Agendamento Online 24h", desc: "Agende quando quiser. Atendimentos até as 18h", icon: <Calendar className="w-4 h-4 text-[#8C7249]" /> },
-              { title: "Espaço Glamour", desc: "Ambiente reservado e aconchegante", icon: <Heart className="w-4 h-4 text-[#8C7249]" /> }
-            ].map((item, idx) => (
-              <div key={idx} className="p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-[#3D312A]/10 hover:border-[#A1865B]/40 text-left transition-all hover:shadow-[0_0_15px_rgba(161,134,91,0.1)]">
+            {brand.highlights.map((item, idx) => {
+              const Icon = highlightIcons[idx % highlightIcons.length];
+              return (
+              <div key={idx} className="p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-(--brand-text)/10 hover:border-(--brand-accent)/40 text-left transition-all hover:shadow-[0_0_15px_rgba(161,134,91,0.1)]">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <div className="p-1.5 rounded-lg bg-[#A1865B]/10 border border-[#A1865B]/20">
-                    {item.icon}
+                  <div className="p-1.5 rounded-lg bg-(--brand-accent)/10 border border-(--brand-accent)/20">
+                    <Icon className="w-4 h-4 text-(--brand-primary)" />
                   </div>
-                  <span className="text-xs font-semibold text-[#3D312A]">{item.title}</span>
+                  <span className="text-xs font-semibold text-(--brand-text)">{item.title}</span>
                 </div>
-                <span className="text-[11px] text-[#8C7249] font-medium block">{item.desc}</span>
+                <span className="text-[11px] text-(--brand-primary) font-medium block">{withProfessionalNames(item.desc, professionals.map(p => p.name))}</span>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
 
       {localAppointments.length > 0 && (
         <section className="px-4 -mt-8 relative z-20">
-          <div className="max-w-4xl mx-auto rounded-2xl border border-[#A1865B]/30 bg-white p-4 shadow-xl">
+          <div className="max-w-4xl mx-auto rounded-2xl border border-(--brand-accent)/30 bg-white p-4 shadow-xl">
             <div className="mb-3">
-              <span className="text-[10px] font-semibold uppercase tracking-widest text-[#8C7249]">Neste dispositivo</span>
-              <h2 className="text-base font-semibold text-[#3D312A]">Meus agendamentos</h2>
+              <span className="text-[10px] font-semibold uppercase tracking-widest text-(--brand-primary)">Neste dispositivo</span>
+              <h2 className="text-base font-semibold text-(--brand-text)">Meus agendamentos</h2>
             </div>
             <div className="space-y-2">
               {localAppointments.map(appointment => (
-                <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-[#3D312A]/10 bg-[#FCF9F2] p-3">
+                <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-xl border border-(--brand-text)/10 bg-(--brand-bg) p-3">
                   <div className="text-xs">
-                    <p className="font-semibold text-[#3D312A]">{appointment.serviceNames.join(', ')} — {appointment.professionalName}</p>
-                    <p className="text-[#3D312A]/55">{appointment.date.split('-').reverse().join('/')} às {appointment.startTime}</p>
+                    <p className="font-semibold text-(--brand-text)">{appointment.serviceNames.join(', ')} — {appointment.professionalName}</p>
+                    <p className="text-(--brand-text)/55">{appointment.date.split('-').reverse().join('/')} às {appointment.startTime}</p>
                   </div>
                   <button
                     onClick={() => handleClientCancellation(appointment)}
@@ -207,39 +216,19 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
       )}
 
       {/* Ambiance Gallery */}
+      {spacePhotos.length > 0 && (
       <section className="py-12 px-4 max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <span className="text-xs font-semibold tracking-widest text-[#8C7249] uppercase">
-            Nosso Espaço
+          <span className="text-xs font-semibold tracking-widest text-(--brand-primary) uppercase">
+            {brand.spaceKicker}
           </span>
-          <h2 className="text-2xl font-serif text-[#3D312A] font-medium mt-1">
-            Ambientes Individuais, Atendimento com Privacidade
+          <h2 className="text-2xl font-serif text-(--brand-text) font-medium mt-1">
+            {brand.spaceTitle}
           </h2>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            {
-              url: "/spaces/sala-unhas-elisangela.webp",
-              title: "Sala de Unhas da Elisangela",
-              desc: "Ambiente próprio de nail design, com privacidade e cuidado"
-            },
-            {
-              url: "/spaces/sala-unhas-nayara.webp",
-              title: "Sala de Unhas da Nayara",
-              desc: "Ambiente próprio de nail design, com privacidade e cuidado"
-            },
-            {
-              url: "/spaces/private-makeup-room.webp?v=real-room-2",
-              title: "Sala Exclusiva de Maquiagem",
-              desc: "Atendimento personalizado com Talitha em um ambiente próprio e reservado"
-            },
-            {
-              url: "/portfolio/lev/equipe.webp",
-              title: "Nossa Equipe",
-              desc: "Elisangela, Talitha e Nayara, especialistas que atendem no LEV"
-            }
-          ].map((img, i) => (
+          {spacePhotos.map((img, i) => (
             <div key={i} className="group relative rounded-2xl overflow-hidden h-60">
               <img
                 src={img.url}
@@ -247,7 +236,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 loading="lazy"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#3D312A]/80 via-[#3D312A]/20 to-transparent flex flex-col justify-end p-4 text-white">
+              <div className="absolute inset-0 bg-gradient-to-t from-(--brand-text)/80 via-(--brand-text)/20 to-transparent flex flex-col justify-end p-4 text-white">
                 <span className="font-medium text-sm font-serif">{img.title}</span>
                 <span className="text-xs text-white/80 font-light mt-0.5">{img.desc}</span>
               </div>
@@ -255,27 +244,23 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           ))}
         </div>
       </section>
+      )}
 
-      {/* Portfolio Teaser (só quando o salão tem página de portfólio) */}
-      {isDefaultSalon() && (
+      {/* Portfolio Teaser (fotos de trabalhos; o link só quando o salão tem página de portfólio) */}
+      {brand.works.length > 0 && (
         <section className="py-12 px-4 max-w-6xl mx-auto">
           <div className="text-center mb-8">
-            <span className="text-xs font-semibold tracking-widest text-[#8C7249] uppercase">
+            <span className="text-xs font-semibold tracking-widest text-(--brand-primary) uppercase">
               Portfólio
             </span>
-            <h2 className="text-2xl font-serif text-[#3D312A] font-medium mt-1">
-              Trabalhos Feitos Aqui na LEV
+            <h2 className="text-2xl font-serif text-(--brand-text) font-medium mt-1">
+              {brand.worksTitle}
             </h2>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {[
-              { url: "/portfolio/talitha/noiva-leticia-janela.webp", alt: "Noiva Letícia produzida no LEV" },
-              { url: "/portfolio/videos/unhas-macaron-limpo.webp", video: "/portfolio/videos/unhas-macaron-limpo.mp4", alt: "Unhas Macaron de Amora" },
-              { url: "/portfolio/videos/make-penteado.webp", video: "/portfolio/videos/make-penteado.mp4", alt: "Maquiagem e penteado" },
-              { url: "/portfolio/lev/make-fox-2.webp", alt: "Maquiagem fox" }
-            ].map(item => (
-              <a key={item.url} href="/portfolio" className="group block rounded-2xl overflow-hidden aspect-[3/4] bg-[#F3EBDD]">
+            {brand.works.map(item => (
+              <a key={item.url} href={brand.portfolioEnabled ? '/portfolio' : undefined} className="group block rounded-2xl overflow-hidden aspect-[3/4] bg-(--brand-surface)">
                 {item.video ? (
                   <LoopVideo src={item.video} poster={item.url} label={item.alt} className="w-full h-full object-cover" />
                 ) : (
@@ -290,105 +275,104 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             ))}
           </div>
 
-          <div className="mt-6 text-center">
+          {brand.portfolioEnabled && <div className="mt-6 text-center">
             <a
               href="/portfolio"
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-[#A1865B] text-[#8C7249] hover:bg-[#A1865B] hover:text-white text-xs font-semibold uppercase tracking-[0.2em] transition-colors"
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-(--brand-accent) text-(--brand-primary) hover:bg-(--brand-accent) hover:text-white text-xs font-semibold uppercase tracking-[0.2em] transition-colors"
             >
               Ver portfólio completo
               <ChevronRight className="w-4 h-4" />
             </a>
-          </div>
+          </div>}
         </section>
       )}
 
       {/* Spa de Noivas & Produção VIP Experience Banner */}
+      {brand.featureTitle && (
       <section className="py-12 px-4 max-w-6xl mx-auto">
-        <div className="relative rounded-3xl bg-gradient-to-br from-[#F3EBDD] via-[#F3EBDD] to-[#FCF9F2] border border-[#A1865B]/40 p-6 sm:p-10 overflow-hidden shadow-[0_0_50px_rgba(161,134,91,0.15)]">
+        <div className="relative rounded-3xl bg-gradient-to-br from-(--brand-surface) via-(--brand-surface) to-(--brand-bg) border border-(--brand-accent)/40 p-6 sm:p-10 overflow-hidden shadow-[0_0_50px_rgba(161,134,91,0.15)]">
           {/* Decorative Gold Sparkles Background */}
-          <div className="absolute -top-12 -right-12 w-64 h-64 bg-[#A1865B]/15 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-[#A1865B]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -top-12 -right-12 w-64 h-64 bg-(--brand-accent)/15 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-(--brand-accent)/10 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             <div className="lg:col-span-7 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#A1865B]/20 border border-[#A1865B]/40 text-[#8C7249] text-xs font-semibold tracking-wider uppercase">
-                <Sparkles className="w-3.5 h-3.5 text-[#8C7249]" />
-                <span>Experiência Exclusiva LEV</span>
-              </div>
+              {brand.featureKicker && <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-(--brand-accent)/20 border border-(--brand-accent)/40 text-(--brand-primary) text-xs font-semibold tracking-wider uppercase">
+                <Sparkles className="w-3.5 h-3.5 text-(--brand-primary)" />
+                <span>{brand.featureKicker}</span>
+              </div>}
 
-              <h2 className="text-2xl sm:text-4xl font-serif font-semibold text-[#3D312A] leading-tight">
-                Beleza para <span className="text-[#8C7249] italic">Noivas & Momentos Especiais</span>
+              <h2 className="text-2xl sm:text-4xl font-serif font-semibold text-(--brand-text) leading-tight">
+                {emphasisParts(brand.featureTitle).map((part, i) => part.emphasis
+                  ? <span key={i} className="text-(--brand-primary) italic">{part.text}</span>
+                  : <React.Fragment key={i}>{part.text}</React.Fragment>)}
               </h2>
 
-              <p className="text-sm text-[#3D312A]/80 leading-relaxed font-light">
-                Conte com especialistas dedicadas a valorizar sua beleza em cada etapa. Reúna cuidados personalizados e uma produção completa para viver seu momento com tranquilidade, confiança e elegância:
+              <p className="text-sm text-(--brand-text)/80 leading-relaxed font-light">
+                {brand.featureText}
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                {[
-                  { title: "Elisangela — Nail Designer", desc: "Manicure, pedicure e cuidados personalizados para mãos e pés impecáveis." },
-                  { title: "Talitha — Maquiagem", desc: "Maquiagem personalizada para diferentes ocasiões, com atendimento em sala exclusiva." },
-                  { title: "Nayara — Nail Designer", desc: "Cuidados com as unhas em atendimento individual, realizado em sua própria sala." },
-                  { title: "Produções Integradas", desc: "Experiências personalizadas para noivas, formandas e ocasiões especiais." }
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-[#3D312A]/[0.03] border border-[#3D312A]/10">
-                    <CheckCircle2 className="w-4 h-4 text-[#8C7249] shrink-0 mt-0.5" />
+              {featureItems.length > 0 && <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                {featureItems.map((item, i) => (
+                  <div key={i} className="flex items-start gap-2.5 p-3 rounded-xl bg-(--brand-text)/[0.03] border border-(--brand-text)/10">
+                    <CheckCircle2 className="w-4 h-4 text-(--brand-primary) shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-xs font-semibold text-[#3D312A]">{item.title}</h4>
-                      <p className="text-[11px] text-[#3D312A]/60">{item.desc}</p>
+                      <h4 className="text-xs font-semibold text-(--brand-text)">{item.title}</h4>
+                      <p className="text-[11px] text-(--brand-text)/60">{item.desc}</p>
                     </div>
                   </div>
                 ))}
-              </div>
+              </div>}
 
               <div className="pt-4 flex flex-wrap items-center gap-3">
                 <button
                   onClick={() => onOpenBookingModal()}
-                  className="px-7 py-3.5 rounded-xl bg-[#A1865B] hover:bg-[#8C7249] text-white font-semibold text-xs transition-all shadow-md flex items-center gap-2"
+                  className="px-7 py-3.5 rounded-xl bg-(--brand-accent) hover:bg-(--brand-primary) text-white font-semibold text-xs transition-all shadow-md flex items-center gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  Montar Minha Experiência / Agendar
+                  {brand.featureCtaLabel || 'Agendar'}
                 </button>
 
-                <button type="button" onClick={() => onOpenBookingModal()}
-                  className="px-6 py-3.5 rounded-xl bg-[#3D312A]/[0.05] border border-[#3D312A]/15 hover:bg-[#3D312A]/10 text-[#3D312A] font-medium text-xs transition-all flex items-center gap-2"
+                {brand.featureSecondaryCtaLabel && <button type="button" onClick={() => onOpenBookingModal()}
+                  className="px-6 py-3.5 rounded-xl bg-(--brand-text)/[0.05] border border-(--brand-text)/15 hover:bg-(--brand-text)/10 text-(--brand-text) font-medium text-xs transition-all flex items-center gap-2"
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-600" />
-                  Consultar Produção para Noivas
-                </button>
+                  {brand.featureSecondaryCtaLabel}
+                </button>}
               </div>
             </div>
 
-            <div className="lg:col-span-5 relative">
+            {brand.featureImageUrl && <div className="lg:col-span-5 relative">
               <div className="relative rounded-2xl overflow-hidden group">
                 <img
-                  src="/spaces/producao-integrada-lev.jpg"
-                  alt="Dia de Noiva e Spa no LEV Beauty"
+                  src={brand.featureImageUrl}
+                  alt={brand.featureImageAlt || brand.featureTitle.split('*').join('')}
                   className="w-full h-80 object-cover group-hover:scale-105 transition-transform duration-700"
                   loading="lazy"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#3D312A]/85 via-[#3D312A]/20 to-transparent flex flex-col justify-end p-5">
-                  <span className="text-xs font-serif text-[#F3EBDD] font-semibold">Produção Integrada LEV Beauty</span>
-                  <span className="text-sm font-medium text-white">Sua transformação completa com quem mais entende de beleza.</span>
-                </div>
+                {(brand.featureImageTitle || brand.featureImageText) && <div className="absolute inset-0 bg-gradient-to-t from-(--brand-text)/85 via-(--brand-text)/20 to-transparent flex flex-col justify-end p-5">
+                  <span className="text-xs font-serif text-(--brand-surface) font-semibold">{brand.featureImageTitle}</span>
+                  <span className="text-sm font-medium text-white">{brand.featureImageText}</span>
+                </div>}
               </div>
-            </div>
+            </div>}
           </div>
         </div>
       </section>
+      )}
 
       {/* Professionals Section */}
-      <section className="py-12 bg-white border-y border-[#3D312A]/10 px-4 sm:px-6 lg:px-8">
+      <section className="py-12 bg-white border-y border-(--brand-text)/10 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-10">
-            <span className="text-xs font-semibold tracking-widest text-[#8C7249] uppercase">
-              Profissionais do Coworking
+            <span className="text-xs font-semibold tracking-widest text-(--brand-primary) uppercase">
+              {brand.professionalsKicker || 'Profissionais'}
             </span>
-            <h2 className="text-2xl sm:text-3xl font-serif text-[#3D312A] font-medium mt-1">
-              Conheça nossas especialistas
+            <h2 className="text-2xl sm:text-3xl font-serif text-(--brand-text) font-medium mt-1">
+              {brand.professionalsTitle}
             </h2>
-            <p className="text-xs sm:text-sm text-[#3D312A]/60 mt-1 max-w-xl mx-auto">
-              Cada especialista oferece atendimento personalizado, com excelência, cuidado e dedicação em sua área.
+            <p className="text-xs sm:text-sm text-(--brand-text)/60 mt-1 max-w-xl mx-auto">
+              {brand.professionalsText}
             </p>
           </div>
 
@@ -396,7 +380,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             {professionals.map(prof => (
               <div
                 key={prof.id}
-                className="bg-[#FCF9F2] rounded-2xl border border-[#3D312A]/10 p-6 shadow-xs hover:border-[#A1865B]/50 transition-all flex flex-col justify-between"
+                className="bg-(--brand-bg) rounded-2xl border border-(--brand-text)/10 p-6 shadow-xs hover:border-(--brand-accent)/50 transition-all flex flex-col justify-between"
               >
                 <div>
                   <div className="relative w-28 h-28 mx-auto mb-4 group flex items-center justify-center">
@@ -411,7 +395,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                       <>
                         <label
                           htmlFor={`avatar-upload-${prof.id}`}
-                          className="absolute bottom-0 right-0 p-2 bg-[#A1865B] hover:bg-[#B39A70] text-black rounded-full shadow-lg cursor-pointer transition-transform hover:scale-110 active:scale-95 border-2 border-[#FCF9F2] flex items-center justify-center"
+                          className="absolute bottom-0 right-0 p-2 bg-(--brand-accent) hover:bg-(--brand-accent) text-black rounded-full shadow-lg cursor-pointer transition-transform hover:scale-110 active:scale-95 border-2 border-(--brand-bg) flex items-center justify-center"
                           title="Toque para enviar a foto real da sua galeria"
                         >
                           <Camera className="w-4 h-4 text-black" />
@@ -428,24 +412,24 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                   </div>
 
                   <div className="text-center">
-                    <h3 className="text-lg font-serif font-semibold text-[#3D312A]">
+                    <h3 className="text-lg font-serif font-semibold text-(--brand-text)">
                       {prof.name}
                     </h3>
-                    <div className="inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-full bg-[#A1865B]/15 text-[#8C7249] font-medium text-xs border border-[#A1865B]/30">
-                      {getSpecialtyIcon(prof.name + ' ' + prof.title, "w-3.5 h-3.5 text-[#8C7249]")}
+                    <div className="inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-full bg-(--brand-accent)/15 text-(--brand-primary) font-medium text-xs border border-(--brand-accent)/30">
+                      {getSpecialtyIcon(prof.name + ' ' + prof.title, "w-3.5 h-3.5 text-(--brand-primary)")}
                       <span>{prof.title}</span>
                     </div>
 
-                    <p className="text-xs text-[#3D312A]/60 mt-3 leading-relaxed">
+                    <p className="text-xs text-(--brand-text)/60 mt-3 leading-relaxed">
                       {prof.bio}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-[#3D312A]/10 flex flex-col gap-2">
+                <div className="mt-6 pt-4 border-t border-(--brand-text)/10 flex flex-col gap-2">
                   <button
                     onClick={() => onOpenBookingModal(prof.id)}
-                    className="w-full py-2.5 rounded-xl bg-[#A1865B] hover:bg-[#8C7249] text-white font-semibold text-xs transition-colors shadow-2xs flex items-center justify-center gap-1.5"
+                    className="w-full py-2.5 rounded-xl bg-(--brand-accent) hover:bg-(--brand-primary) text-white font-semibold text-xs transition-colors shadow-2xs flex items-center justify-center gap-1.5"
                   >
                     <Calendar className="w-3.5 h-3.5" />
                     Agendar com {prof.name}
@@ -455,7 +439,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
                     href={buildProfessionalWhatsAppLink(prof.id, `Olá, ${prof.name}! Gostaria de falar sobre seus serviços.`, prof)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-2 rounded-xl bg-[#3D312A]/[0.03] border border-[#3D312A]/10 hover:bg-[#3D312A]/[0.08] text-[#3D312A]/80 font-medium text-xs transition-colors text-center flex items-center justify-center gap-1.5"
+                    className="w-full py-2 rounded-xl bg-(--brand-text)/[0.03] border border-(--brand-text)/10 hover:bg-(--brand-text)/[0.08] text-(--brand-text)/80 font-medium text-xs transition-colors text-center flex items-center justify-center gap-1.5"
                   >
                     <MessageCircle className="w-3.5 h-3.5 text-emerald-600" />
                     WhatsApp Direto
@@ -470,10 +454,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
       {/* Services Menu Section */}
       <section className="py-12 px-4 max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <span className="text-xs font-semibold tracking-widest text-[#8C7249] uppercase">
+          <span className="text-xs font-semibold tracking-widest text-(--brand-primary) uppercase">
             Serviços & Procedimentos
           </span>
-          <h2 className="text-2xl sm:text-3xl font-serif text-[#3D312A] font-medium mt-1">
+          <h2 className="text-2xl sm:text-3xl font-serif text-(--brand-text) font-medium mt-1">
             Menu de Atendimentos
           </h2>
         </div>
@@ -484,8 +468,8 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             onClick={() => setSelectedProfCategory('todas')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
               selectedProfCategory === 'todas'
-                ? 'bg-[#A1865B] text-white font-semibold shadow-2xs'
-                : 'bg-[#3D312A]/[0.03] text-[#3D312A]/60 border border-[#3D312A]/10 hover:bg-[#3D312A]/[0.08] hover:text-[#3D312A]'
+                ? 'bg-(--brand-accent) text-white font-semibold shadow-2xs'
+                : 'bg-(--brand-text)/[0.03] text-(--brand-text)/60 border border-(--brand-text)/10 hover:bg-(--brand-text)/[0.08] hover:text-(--brand-text)'
             }`}
           >
             Todos os Serviços
@@ -496,8 +480,8 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
               onClick={() => setSelectedProfCategory(p.id)}
               className={`px-4 py-2 rounded-xl text-xs font-medium transition-all ${
                 selectedProfCategory === p.id
-                  ? 'bg-[#A1865B] text-white font-semibold shadow-2xs'
-                  : 'bg-[#3D312A]/[0.03] text-[#3D312A]/60 border border-[#3D312A]/10 hover:bg-[#3D312A]/[0.08] hover:text-[#3D312A]'
+                  ? 'bg-(--brand-accent) text-white font-semibold shadow-2xs'
+                  : 'bg-(--brand-text)/[0.03] text-(--brand-text)/60 border border-(--brand-text)/10 hover:bg-(--brand-text)/[0.08] hover:text-(--brand-text)'
               }`}
             >
               {p.name} ({p.title})
@@ -510,45 +494,45 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           {filteredServices.map(service => (
             <div
               key={service.id}
-              className="bg-white rounded-2xl border border-[#3D312A]/10 p-5 shadow-2xs hover:border-[#A1865B] transition-all flex flex-col justify-between"
+              className="bg-white rounded-2xl border border-(--brand-text)/10 p-5 shadow-2xs hover:border-(--brand-accent) transition-all flex flex-col justify-between"
             >
               <div>
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <span className="text-[10px] font-semibold text-[#8C7249] uppercase tracking-wider block mb-1">
+                    <span className="text-[10px] font-semibold text-(--brand-primary) uppercase tracking-wider block mb-1">
                       {service.professionalName} • {service.category}
                     </span>
-                    <h3 className="font-serif text-base font-semibold text-[#3D312A]">
+                    <h3 className="font-serif text-base font-semibold text-(--brand-text)">
                       {service.name}
                     </h3>
                   </div>
 
                   <div className="text-right shrink-0">
-                    <span className="text-base font-serif font-bold text-[#8C7249]">
+                    <span className="text-base font-serif font-bold text-(--brand-primary)">
                       {service.price <= 0 ? 'Sob consulta' : formatCurrency(service.promotionalPrice || service.price)}
                     </span>
                     {service.promotionalPrice && (
-                      <span className="text-xs text-[#3D312A]/40 line-through block">
+                      <span className="text-xs text-(--brand-text)/40 line-through block">
                         {formatCurrency(service.price)}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <p className="text-xs text-[#3D312A]/60 mt-2 leading-relaxed">
+                <p className="text-xs text-(--brand-text)/60 mt-2 leading-relaxed">
                   {service.description}
                 </p>
               </div>
 
-              <div className="mt-4 pt-3 border-t border-[#3D312A]/10 flex items-center justify-between">
-                <span className="text-[11px] text-[#8C7249] flex items-center gap-1 font-medium">
-                  <Clock className="w-3.5 h-3.5 text-[#8C7249]" />
+              <div className="mt-4 pt-3 border-t border-(--brand-text)/10 flex items-center justify-between">
+                <span className="text-[11px] text-(--brand-primary) flex items-center gap-1 font-medium">
+                  <Clock className="w-3.5 h-3.5 text-(--brand-primary)" />
                   Duração: {service.durationMinutes} min
                 </span>
 
                 <button
                   onClick={() => onOpenBookingModal(service.professionalId, service.id)}
-                  className="px-4 py-1.5 rounded-xl bg-[#3D312A]/[0.03] border border-[#3D312A]/10 hover:bg-[#A1865B] text-white/80 hover:text-[#3D312A] font-medium text-xs transition-colors flex items-center gap-1"
+                  className="px-4 py-1.5 rounded-xl bg-(--brand-text)/[0.03] border border-(--brand-text)/10 hover:bg-(--brand-accent) text-white/80 hover:text-(--brand-text) font-medium text-xs transition-colors flex items-center gap-1"
                 >
                   Agendar <ChevronRight className="w-3.5 h-3.5" />
                 </button>
@@ -559,41 +543,41 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
       </section>
 
       {/* Reviews Section */}
-      {GOOGLE_REVIEWS.length > 0 && (
-        <section className="py-12 bg-white border-t border-[#3D312A]/10 px-4">
+      {brand.googleReviews && brand.googleReviews.reviews.length > 0 && (
+        <section className="py-12 bg-white border-t border-(--brand-text)/10 px-4">
           <div className="max-w-5xl mx-auto text-center">
-            <span className="text-xs font-semibold tracking-widest text-[#8C7249] uppercase">
+            <span className="text-xs font-semibold tracking-widest text-(--brand-primary) uppercase">
               Avaliações reais no Google
             </span>
-            <h2 className="text-2xl font-serif text-[#3D312A] font-medium mt-1 mb-2">
+            <h2 className="text-2xl font-serif text-(--brand-text) font-medium mt-1 mb-2">
               O que dizem sobre nosso espaço
             </h2>
             <a
-              href={GOOGLE_REVIEWS_URL}
+              href={brand.googleReviews.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs text-[#3D312A]/70 hover:text-[#8C7249] mb-8"
+              className="inline-flex items-center gap-1.5 text-xs text-(--brand-text)/70 hover:text-(--brand-primary) mb-8"
             >
               <Star className="w-4 h-4 fill-amber-400 stroke-amber-400" />
-              <span className="font-semibold text-[#3D312A]">{GOOGLE_REVIEWS_SUMMARY.rating.toFixed(1).replace('.', ',')}</span>
-              <span>· {GOOGLE_REVIEWS_SUMMARY.total} avaliações no Google</span>
+              <span className="font-semibold text-(--brand-text)">{brand.googleReviews.rating.toFixed(1).replace('.', ',')}</span>
+              <span>· {brand.googleReviews.total} avaliações no Google</span>
             </a>
 
             <div className="flex flex-wrap justify-center gap-4">
-              {GOOGLE_REVIEWS.map(rev => (
-                <div key={rev.id} className="w-full md:w-[calc(33.333%-0.75rem)] bg-[#FCF9F2] p-5 rounded-2xl border border-[#3D312A]/10 text-left shadow-2xs flex flex-col">
+              {brand.googleReviews.reviews.map((rev, idx) => (
+                <div key={`${rev.author}-${idx}`} className="w-full md:w-[calc(33.333%-0.75rem)] bg-(--brand-bg) p-5 rounded-2xl border border-(--brand-text)/10 text-left shadow-2xs flex flex-col">
                   <div className="flex items-center gap-1 text-amber-600 mb-2">
                     {[...Array(rev.rating)].map((_, i) => (
                       <Star key={i} className="w-4 h-4 fill-amber-400 stroke-amber-400" />
                     ))}
                   </div>
-                  <p className="text-xs text-[#3D312A]/70 italic leading-relaxed flex-1">
-                    "{rev.comment}"
+                  <p className="text-xs text-(--brand-text)/70 italic leading-relaxed flex-1">
+                    "{rev.text}"
                   </p>
-                  <div className="mt-4 pt-3 border-t border-[#3D312A]/10 flex items-center justify-between gap-2">
-                    <span className="text-xs font-semibold text-[#3D312A]">{rev.clientName}</span>
-                    <span className="text-[10px] text-[#8C7249] text-right">
-                      {rev.serviceName || 'Avaliação no Google'}
+                  <div className="mt-4 pt-3 border-t border-(--brand-text)/10 flex items-center justify-between gap-2">
+                    <span className="text-xs font-semibold text-(--brand-text)">{rev.author}</span>
+                    <span className="text-[10px] text-(--brand-primary) text-right">
+                      {rev.service || 'Avaliação no Google'}
                     </span>
                   </div>
                 </div>
@@ -601,10 +585,10 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
             </div>
 
             <a
-              href={GOOGLE_REVIEWS_URL}
+              href={brand.googleReviews.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 mt-6 text-xs font-medium text-[#8C7249] hover:underline"
+              className="inline-flex items-center gap-1 mt-6 text-xs font-medium text-(--brand-primary) hover:underline"
             >
               Ver todas as avaliações no Google <ChevronRight className="w-3.5 h-3.5" />
             </a>
@@ -613,69 +597,69 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
       )}
 
       {/* Footer & Info Section */}
-      <footer className="bg-[#FCF9F2] border-t border-[#3D312A]/10 text-[#3D312A]/70 py-12 px-4 sm:px-6 lg:px-8 mt-12">
+      <footer className="bg-(--brand-bg) border-t border-(--brand-text)/10 text-(--brand-text)/70 py-12 px-4 sm:px-6 lg:px-8 mt-12">
         <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <Logo size="md" theme="dark" variant="horizontal" />
-            <p className="text-xs text-[#3D312A]/60 mt-4 leading-relaxed">
+            <p className="text-xs text-(--brand-text)/60 mt-4 leading-relaxed">
               {settings.slogan}
             </p>
-            <p className="text-[11px] text-[#3D312A]/40 mt-2">
-              © {new Date().getFullYear()} LEV COWORKING BEAUTY. Todos os direitos reservados.
+            <p className="text-[11px] text-(--brand-text)/40 mt-2">
+              © {new Date().getFullYear()} {brand.footerNote || `${settings.name ? `${settings.name}. ` : ''}Todos os direitos reservados.`}
             </p>
           </div>
 
           <div>
-            <h4 className="font-serif text-sm font-semibold text-[#8C7249] mb-3 uppercase tracking-wider">
+            <h4 className="font-serif text-sm font-semibold text-(--brand-primary) mb-3 uppercase tracking-wider">
               Localização & Horários
             </h4>
-            <ul className="space-y-2 text-xs text-[#3D312A]/70">
+            <ul className="space-y-2 text-xs text-(--brand-text)/70">
               <li className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#8C7249] shrink-0 mt-0.5" />
+                <MapPin className="w-4 h-4 text-(--brand-primary) shrink-0 mt-0.5" />
                 <span>{settings.address}</span>
               </li>
               <li className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-[#8C7249] shrink-0" />
+                <Clock className="w-4 h-4 text-(--brand-primary) shrink-0" />
                 <span>{settings.businessHoursText}</span>
               </li>
               <li className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#8C7249] shrink-0" />
+                <Phone className="w-4 h-4 text-(--brand-primary) shrink-0" />
                 <span>{settings.phone}</span>
               </li>
               <li className="flex items-center gap-2">
-                <Instagram className="w-4 h-4 text-[#8C7249] shrink-0" />
+                <Instagram className="w-4 h-4 text-(--brand-primary) shrink-0" />
                 <span>{settings.instagram}</span>
               </li>
             </ul>
           </div>
 
           <div>
-            <h4 className="font-serif text-sm font-semibold text-[#8C7249] mb-3 uppercase tracking-wider">
+            <h4 className="font-serif text-sm font-semibold text-(--brand-primary) mb-3 uppercase tracking-wider">
               Políticas & Acesso
             </h4>
-            <p className="text-xs text-[#3D312A]/60 leading-relaxed mb-3">
+            <p className="text-xs text-(--brand-text)/60 leading-relaxed mb-3">
               {settings.cancellationPolicy}
             </p>
-            <div className="flex items-center gap-2 text-xs text-[#3D312A]/70 mb-3">
-              <CreditCard className="w-4 h-4 text-[#8C7249]" />
+            <div className="flex items-center gap-2 text-xs text-(--brand-text)/70 mb-3">
+              <CreditCard className="w-4 h-4 text-(--brand-primary)" />
               <span>Aceitamos Pix, cartão de crédito, cartão de débito e dinheiro.</span>
             </div>
-            <div className="mt-6 pt-5 border-t border-[#3D312A]/10">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#8C7249] mb-1">Área da equipe</p>
-              <p className="text-xs text-[#3D312A]/60 leading-relaxed mb-3">
-                Acesso para profissionais e administração do Studio LEV gerenciarem agendamentos e serviços.
+            <div className="mt-6 pt-5 border-t border-(--brand-text)/10">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-(--brand-primary) mb-1">Área da equipe</p>
+              <p className="text-xs text-(--brand-text)/60 leading-relaxed mb-3">
+                {brand.staffAreaText || 'Acesso para profissionais e administração do salão gerenciarem agendamentos e serviços.'}
               </p>
               <div className="flex flex-wrap gap-2">
                 <a
                   href="/profissional"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#A1865B]/40 text-[#8C7249] hover:bg-[#A1865B] hover:text-white text-xs font-semibold transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-(--brand-accent)/40 text-(--brand-primary) hover:bg-(--brand-accent) hover:text-white text-xs font-semibold transition-colors"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   Sou profissional
                 </a>
                 <a
                   href="/admin"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-[#3D312A]/20 text-[#3D312A]/70 hover:bg-[#3D312A] hover:text-white text-xs font-semibold transition-colors"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-(--brand-text)/20 text-(--brand-text)/70 hover:bg-(--brand-text) hover:text-white text-xs font-semibold transition-colors"
                 >
                   <Lock className="w-3.5 h-3.5" />
                   Administração
@@ -690,7 +674,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
       <div className="fixed bottom-20 right-4 z-20">
         <button
           type="button" onClick={() => onOpenBookingModal()}
-          className="px-4 py-3 rounded-full bg-[#A1865B] hover:bg-[#8C7249] text-white font-semibold text-xs shadow-xl flex items-center gap-2 transition-transform hover:scale-105"
+          className="px-4 py-3 rounded-full bg-(--brand-accent) hover:bg-(--brand-primary) text-white font-semibold text-xs shadow-xl flex items-center gap-2 transition-transform hover:scale-105"
           title="Escolher profissional e agendar"
         >
           <MessageCircle className="w-4 h-4" />

@@ -1,4 +1,4 @@
-import { AuditLog, CoworkingSettings, Professional, Review, Service } from '../types';
+import { AuditLog, CoworkingSettings, Professional, Review, SalonBrand, Service } from '../types';
 import { DEFAULT_SALON_ID } from '../../api/_lib/tenant';
 import {
   INITIAL_AUDIT_LOGS,
@@ -34,6 +34,37 @@ const neutralSettings = (): CoworkingSettings => ({
   privacyPolicy: '',
   termsOfService: ''
 });
+
+// Marca de fábrica de um salão novo: textos genéricos, sem nome de salão e
+// sem fotos. Cada salão grava a própria marca em `settings.brand`.
+export const NEUTRAL_BRAND: SalonBrand = {
+  shortName: '',
+  colors: {
+    text: '#2D2A32',
+    primary: '#5E548E',
+    accent: '#9F86C0',
+    background: '#FAFAF9',
+    surface: '#EFEDF3'
+  },
+  heroKicker: '',
+  heroTitle: 'Agende seu horário',
+  heroText: 'Escolha a profissional, o serviço e o melhor horário para você.',
+  highlights: [
+    { title: 'Atendimento personalizado', desc: 'Cuidado em cada detalhe' },
+    { title: 'Nossas profissionais', desc: '{profissionais}' },
+    { title: 'Agendamento online 24h', desc: 'Agende quando quiser' }
+  ],
+  professionalsTitle: 'Conheça nossas profissionais',
+  professionalsText: 'Escolha com quem você quer agendar.',
+  worksTitle: '',
+  works: [],
+  featureTitle: '',
+  featureText: '',
+  featureImageUrl: '',
+  googleReviews: null,
+  portfolioEnabled: false,
+  footerNote: ''
+};
 
 const LEV_SERVICES = INITIAL_SERVICES.filter(service => !RETIRED_SERVICE_IDS.has(service.id));
 

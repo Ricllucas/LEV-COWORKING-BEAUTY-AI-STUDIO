@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Smartphone, Monitor, Share, PlusSquare, MoreVertical, Download, X, Check } from 'lucide-react';
 import { Logo } from '../brand/Logo';
+import { StorageService } from '../../services/storage';
 
 interface PWAInstallerModalProps {
   isOpen: boolean;
@@ -25,7 +26,7 @@ export const PWAInstallerModal: React.FC<PWAInstallerModalProps> = ({ isOpen, on
         <div className="text-center mb-6">
           <Logo size="md" variant="symbol" theme="dark" className="mx-auto mb-2" />
           <h2 className="text-xl font-serif font-medium text-white">
-            Instalar LEV COWORKING BEAUTY
+            Instalar {StorageService.getSettings().name}
           </h2>
           <p className="text-xs text-white/60 mt-1">
             Instale o aplicativo na tela inicial do seu dispositivo para acesso rápido, notificações e visual nativo sem abrir o navegador.
@@ -138,7 +139,7 @@ export const PWAInstallerModal: React.FC<PWAInstallerModalProps> = ({ isOpen, on
                   2
                 </div>
                 <p className="leading-relaxed pt-0.5">
-                  Confirme a instalação e o LEV COWORKING BEAUTY abrirá como uma janela de aplicativo independente na sua área de trabalho.
+                  Confirme a instalação e o {StorageService.getSettings().name} abrirá como uma janela de aplicativo independente na sua área de trabalho.
                 </p>
               </div>
             </>
