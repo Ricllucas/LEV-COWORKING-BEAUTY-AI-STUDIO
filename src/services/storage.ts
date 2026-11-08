@@ -17,15 +17,27 @@ import { CloudAppointmentService } from './cloudAppointments';
 import { SalonDataSync, SyncKind, SyncUser } from './salonDataSync';
 
 import {
-  INITIAL_SETTINGS,
-  INITIAL_PROFESSIONALS,
-  INITIAL_SERVICES,
   INITIAL_CLIENTS,
   INITIAL_APPOINTMENTS,
-  INITIAL_REVIEWS,
-  INITIAL_AUDIT_LOGS,
   INITIAL_NOTIFICATIONS
 } from '../data/initialData';
+import { bundledDataFor } from '../data/salonDefaults';
+import {
+  LEV_BRAND_LOGO_URL,
+  LEV_ELISANGELA_ID,
+  LEV_EXAMPLE_USERS,
+  LEV_OFFICIAL_AVATARS,
+  LEV_OFFICIAL_PIX_KEYS,
+  LEV_PLACEHOLDER_ADDRESS_HINTS,
+  LEV_TALITHA_ADDITION_IDS,
+  LEV_TALITHA_ADDITIONS_KEY,
+  LEV_TALITHA_ID,
+  LEV_TEST_PHONES
+} from '../data/levLegacy';
+import { CURRENT_SALON_ID, isDefaultSalon, scopedStorageKey } from '../config/salon';
+
+// Dados de fábrica do salão deste site (LEV: os de sempre; outro salão: vazio).
+const BUNDLED = bundledDataFor(CURRENT_SALON_ID);
 
 // "Unha Raiz" was renamed to "Unha Tradicional"; older browser data and the cloud
 // catalog may still carry the legacy label, so it is translated whenever it is read.
@@ -34,7 +46,9 @@ const renameLegacyLabel = <T extends string>(label: T): T => (LEGACY_LABELS[labe
 const normalizeServiceLabels = (services: Service[]): Service[] =>
   services.map(s => (LEGACY_LABELS[s.category] ? { ...s, category: renameLegacyLabel(s.category) } : s));
 
-const STORAGE_KEYS = {
+// Chaves do aparelho. Na LEV ficam como sempre foram; em outro salão ganham o
+// id do salão na frente (scopedStorageKey), para os dados não se misturarem.
+const RAW_STORAGE_KEYS = {
   SETTINGS: 'lev_coworking_settings_v1',
   BRAND_ASSETS_VERSION: 'lev_brand_logo_2026_08_05_v2',
   PROFESSIONALS: 'lev_coworking_professionals_v10',
@@ -58,8 +72,13 @@ const STORAGE_KEYS = {
   LOGS: 'lev_coworking_logs_v1',
   NOTIFICATIONS: 'lev_coworking_notifications_v1',
   CURRENT_USER: 'lev_coworking_user_v3',
-  USERS: 'lev_coworking_users_v1'
+  USERS: 'lev_coworking_users_v1',
+  TALITHA_ADDITIONS_VERSION: LEV_TALITHA_ADDITIONS_KEY
 };
+
+const STORAGE_KEYS = Object.fromEntries(
+  Object.entries(RAW_STORAGE_KEYS).map(([name, key]) => [name, scopedStorageKey(key)])
+) as Record<keyof typeof RAW_STORAGE_KEYS, string>;
 
 // Event emitter listener setup
 type Listener = () => void;
@@ -117,8 +136,8 @@ function setStored<T>(key: string, value: T): void {
     console.warn(`Error writing ${key} to storage, attempting cleanup:`, err);
     try {
       // Clear non-critical history/logs to free up quota on mobile
-      localStorage.removeItem('lev_coworking_logs_v1');
-      localStorage.removeItem('lev_coworking_notifications_v1');
+      localStorage.removeItem(STORAGE_KEYS.LOGS);
+      localStorage.removeItem(STORAGE_KEYS.NOTIFICATIONS);
       localStorage.setItem(key, JSON.stringify(value));
       notifyListeners();
     } catch (quotaErr) {
@@ -135,41 +154,8 @@ export const DEFAULT_CURRENT_USER: User = {
   role: "cliente"
 };
 
-export const INITIAL_USERS: (User & { password?: string })[] = [
-  {
-    id: "admin_1",
-    name: "Administração LEV",
-    email: "admin@levcoworkingbeauty.com.br",
-    role: "admin"
-  },
-  {
-    id: "prof_elisangela_user",
-    name: "Elisangela",
-    email: "elisangela@levcoworkingbeauty.com.br",
-    role: "profissional",
-    professionalId: "prof_elisangela"
-  },
-  {
-    id: "prof_talitha_user",
-    name: "Talitha",
-    email: "talithakumbeauty@gmail.com",
-    role: "profissional",
-    professionalId: "prof_talitha"
-  },
-  {
-    id: "prof_nayara_user",
-    name: "Nayara",
-    email: "nayara@levcoworkingbeauty.com.br",
-    role: "profissional",
-    professionalId: "prof_nayara"
-  },
-  {
-    id: "recepcao_1",
-    name: "Recepção LEV",
-    email: "recepcao@levcoworkingbeauty.com.br",
-    role: "recepcao"
-  }
-];
+// Usuários de exemplo: só a LEV tem; outro salão começa sem nenhum.
+export const INITIAL_USERS: (User & { password?: string })[] = isDefaultSalon() ? LEV_EXAMPLE_USERS : [];
 
 export class StorageService {
   static subscribeStorage = subscribeStorage;
@@ -196,14 +182,11 @@ export class StorageService {
   }
 
   private static purgeConfirmedTestDataOnce(): void {
+    // Limpeza antiga de aparelhos da LEV; outro salão não tem o que limpar.
+    if (!isDefaultSalon()) return;
     if (localStorage.getItem(STORAGE_KEYS.TEST_DATA_PURGE_VERSION)) return;
 
-    const testPhones = new Set([
-      '11998881122',
-      '11997773344',
-      '11996665566',
-      '41991011975'
-    ]);
+    const testPhones = new Set(LEV_TEST_PHONES);
     const isTestPhone = (phone?: string) => {
       const normalized = (phone || '').replace(/\D/g, '').slice(-11);
       return testPhones.has(normalized);
@@ -445,25 +428,28 @@ export class StorageService {
 
   // Settings
   static getSettings(): CoworkingSettings {
-    const settings = getStored<CoworkingSettings>(STORAGE_KEYS.SETTINGS, INITIAL_SETTINGS);
+    const settings = getStored<CoworkingSettings>(STORAGE_KEYS.SETTINGS, BUNDLED.settings);
+    // Correções antigas dos aparelhos da LEV; em outro salão vale o que foi gravado.
+    if (!isDefaultSalon()) return settings;
+    const bundledSettings = BUNDLED.settings;
     let updated = false;
     if (!localStorage.getItem(STORAGE_KEYS.BRAND_ASSETS_VERSION)) {
-      settings.logoUrl = '/branding/lev-logo.jpeg';
-      settings.heroBannerUrl = '/branding/lev-logo.jpeg';
+      settings.logoUrl = LEV_BRAND_LOGO_URL;
+      settings.heroBannerUrl = LEV_BRAND_LOGO_URL;
       localStorage.setItem(STORAGE_KEYS.BRAND_ASSETS_VERSION, new Date().toISOString());
       updated = true;
     }
-    if (!settings.address || settings.address.includes('Rua das Flores') || settings.address.includes('São Paulo')) {
-      settings.address = INITIAL_SETTINGS.address;
+    if (!settings.address || LEV_PLACEHOLDER_ADDRESS_HINTS.some(hint => settings.address.includes(hint))) {
+      settings.address = bundledSettings.address;
       updated = true;
     }
-    if (settings.phone !== INITIAL_SETTINGS.phone || settings.whatsapp !== INITIAL_SETTINGS.whatsapp) {
-      settings.phone = INITIAL_SETTINGS.phone;
-      settings.whatsapp = INITIAL_SETTINGS.whatsapp;
+    if (settings.phone !== bundledSettings.phone || settings.whatsapp !== bundledSettings.whatsapp) {
+      settings.phone = bundledSettings.phone;
+      settings.whatsapp = bundledSettings.whatsapp;
       updated = true;
     }
-    if (settings.businessHoursText !== INITIAL_SETTINGS.businessHoursText) {
-      settings.businessHoursText = INITIAL_SETTINGS.businessHoursText;
+    if (settings.businessHoursText !== bundledSettings.businessHoursText) {
+      settings.businessHoursText = bundledSettings.businessHoursText;
       updated = true;
     }
     if (updated) {
@@ -481,22 +467,15 @@ export class StorageService {
 
   // Professionals
   static getProfessionals(): Professional[] {
-    const list = getStored<Professional[]>(STORAGE_KEYS.PROFESSIONALS, INITIAL_PROFESSIONALS);
-    const officialAvatars: Record<string, string> = {
-      prof_elisangela: '/profiles/elisangela-2026.webp',
-      prof_talitha: '/profiles/talitha.webp',
-      prof_nayara: '/profiles/nayara-2026.webp'
-    };
-
-    const officialPixKeys: Record<string, string> = {
-      prof_elisangela: '(41)992461203',
-      prof_talitha: '(41)999983228',
-      prof_nayara: '61573046000194'
-    };
-    const shouldMigratePixKeys = !localStorage.getItem(STORAGE_KEYS.PIX_KEYS_VERSION);
-    const shouldMigrateContact = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_CONTACT_VERSION);
-    const shouldMigrateWorkdays = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_WORKDAYS_VERSION);
-    const shouldForceOfficialAvatars = !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_AVATARS_VERSION);
+    const list = getStored<Professional[]>(STORAGE_KEYS.PROFESSIONALS, BUNDLED.professionals);
+    // Correções antigas (fotos, Pix, contato, dias de trabalho) só para aparelhos da LEV.
+    const legacy = isDefaultSalon();
+    const officialAvatars: Readonly<Record<string, string>> = legacy ? LEV_OFFICIAL_AVATARS : {};
+    const officialPixKeys: Readonly<Record<string, string>> = legacy ? LEV_OFFICIAL_PIX_KEYS : {};
+    const shouldMigratePixKeys = legacy && !localStorage.getItem(STORAGE_KEYS.PIX_KEYS_VERSION);
+    const shouldMigrateContact = legacy && !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_CONTACT_VERSION);
+    const shouldMigrateWorkdays = legacy && !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_WORKDAYS_VERSION);
+    const shouldForceOfficialAvatars = legacy && !localStorage.getItem(STORAGE_KEYS.PROFESSIONAL_AVATARS_VERSION);
 
     let updated = false;
     const sanitized = list.map(p => {
@@ -513,8 +492,8 @@ export class StorageService {
 
       const avatarUrl = shouldUseOfficialAvatar ? officialAvatar : p.avatarUrl;
       const pixKey = shouldMigratePixKeys && officialPixKey ? officialPixKey : p.pixKey;
-      const phone = shouldMigrateContact ? INITIAL_SETTINGS.phone : p.phone;
-      const whatsapp = shouldMigrateContact ? INITIAL_SETTINGS.whatsapp : p.whatsapp;
+      const phone = shouldMigrateContact ? BUNDLED.settings.phone : p.phone;
+      const whatsapp = shouldMigrateContact ? BUNDLED.settings.whatsapp : p.whatsapp;
       const workingHours = shouldMigrateWorkdays
         ? {
             ...p.workingHours,
@@ -608,26 +587,29 @@ export class StorageService {
 
   // Services
   static getServices(): Service[] {
-    let current = getStored<Service[]>(STORAGE_KEYS.SERVICES, INITIAL_SERVICES);
+    let current = getStored<Service[]>(STORAGE_KEYS.SERVICES, BUNDLED.services);
+    // Correções antigas dos catálogos da LEV; outro salão usa o que está gravado.
+    if (!isDefaultSalon()) return normalizeServiceLabels(current);
+    const bundledServices = BUNDLED.services;
 
     // Inclusão aditiva: preserva serviços e alterações anteriores da profissional.
-    if (!localStorage.getItem('lev_talitha_additions_20260904')) {
-      const additions = INITIAL_SERVICES.filter(service =>
-        ['srv_tal_10', 'srv_tal_11', 'srv_tal_12', 'srv_tal_13', 'srv_tal_14'].includes(service.id)
+    if (!localStorage.getItem(STORAGE_KEYS.TALITHA_ADDITIONS_VERSION)) {
+      const additions = bundledServices.filter(service =>
+        LEV_TALITHA_ADDITION_IDS.includes(service.id)
       );
       const ids = new Set(current.map(service => service.id));
       current = [...current, ...additions.filter(service => !ids.has(service.id))];
       setStored(STORAGE_KEYS.SERVICES, current);
-      localStorage.setItem('lev_talitha_additions_20260904', '1');
+      localStorage.setItem(STORAGE_KEYS.TALITHA_ADDITIONS_VERSION, '1');
     }
 
 
 
     try {
       if (!localStorage.getItem(STORAGE_KEYS.ELISANGELA_CATALOG_VERSION)) {
-        const otherProfessionals = current.filter(service => service.professionalId !== 'prof_elisangela');
-        const officialElisangelaCatalog = INITIAL_SERVICES.filter(
-          service => service.professionalId === 'prof_elisangela'
+        const otherProfessionals = current.filter(service => service.professionalId !== LEV_ELISANGELA_ID);
+        const officialElisangelaCatalog = bundledServices.filter(
+          service => service.professionalId === LEV_ELISANGELA_ID
         );
         current = [...otherProfessionals, ...officialElisangelaCatalog];
         setStored(STORAGE_KEYS.SERVICES, current);
@@ -639,9 +621,9 @@ export class StorageService {
 
     try {
       if (!localStorage.getItem(STORAGE_KEYS.TALITHA_CATALOG_VERSION)) {
-        const otherProfessionals = current.filter(service => service.professionalId !== 'prof_talitha');
-        const officialTalithaCatalog = INITIAL_SERVICES.filter(
-          service => service.professionalId === 'prof_talitha'
+        const otherProfessionals = current.filter(service => service.professionalId !== LEV_TALITHA_ID);
+        const officialTalithaCatalog = bundledServices.filter(
+          service => service.professionalId === LEV_TALITHA_ID
         );
         const updatedCatalog = [...otherProfessionals, ...officialTalithaCatalog];
 
@@ -707,6 +689,9 @@ export class StorageService {
 
   // Appointments
   private static clearFutureScheduleOnce(): void {
+    // Limpeza única de aparelhos antigos da LEV. Em outro salão apagaria da
+    // memória os horários futuros que acabaram de vir da nuvem.
+    if (!isDefaultSalon()) return;
     try {
       if (localStorage.getItem(STORAGE_KEYS.FUTURE_SCHEDULE_RESET)) return;
 
@@ -978,7 +963,7 @@ export class StorageService {
 
   // Reviews
   static getReviews(): Review[] {
-    return getStored<Review[]>(STORAGE_KEYS.REVIEWS, INITIAL_REVIEWS);
+    return getStored<Review[]>(STORAGE_KEYS.REVIEWS, BUNDLED.reviews);
   }
 
   static saveReview(review: Review): void {
@@ -1012,7 +997,7 @@ export class StorageService {
 
   // Audit Logs
   static getAuditLogs(): AuditLog[] {
-    return getStored<AuditLog[]>(STORAGE_KEYS.LOGS, INITIAL_AUDIT_LOGS);
+    return getStored<AuditLog[]>(STORAGE_KEYS.LOGS, BUNDLED.auditLogs);
   }
 
   static addAuditLog(action: string, target: string, details: string, oldValue?: string, newValue?: string): void {

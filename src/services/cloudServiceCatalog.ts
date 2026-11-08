@@ -1,10 +1,13 @@
-import { INITIAL_SERVICES } from '../data/initialData';
 import { Service, User } from '../types';
 import { RETIRED_SERVICE_IDS } from '../data/retiredServices';
+import { bundledDataFor } from '../data/salonDefaults';
 import { CURRENT_SALON_ID, salonFilter, withSalon } from '../config/salon';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+
+// Catálogo de fábrica do salão deste site (LEV: o de sempre, sem os aposentados; outro salão: vazio).
+const bundledServices = (): Service[] => bundledDataFor(CURRENT_SALON_ID).services;
 
 type CatalogRecord = { id: string; professional_id: string; payload: Service | null; deleted: boolean };
 
@@ -34,7 +37,7 @@ const upsert = async (items: CatalogRecord[], role: User['role']) => {
   const { url } = config();
   const token = accessToken(role);
   if (!token) throw new Error('Sua sessão expirou. Entre novamente para publicar as alterações.');
-  const response = await fetch(`${url}/rest/v1/catalog_services?on_conflict=id`, {
+  const response = await fetch(`${url}/rest/v1/catalog_services?on_conflict=salon_id,id`, {
     method: 'POST',
     headers: { ...headers(token), Prefer: 'resolution=merge-duplicates,return=minimal' },
     body: JSON.stringify(items.map(item => withSalon({ ...item, updated_at: new Date().toISOString() }, CURRENT_SALON_ID)))
@@ -50,7 +53,7 @@ export const CloudServiceCatalog = {
   isConfigured: () => Boolean(SUPABASE_URL && SUPABASE_KEY),
 
   async load(): Promise<Service[]> {
-    if (!this.isConfigured()) return INITIAL_SERVICES;
+    if (!this.isConfigured()) return bundledServices();
     const { url } = config();
     const response = await fetch(`${url}/rest/v1/catalog_services?select=id,professional_id,payload,deleted&${salonFilter(CURRENT_SALON_ID)}`, {
       headers: headers(),
@@ -58,7 +61,7 @@ export const CloudServiceCatalog = {
     });
     if (!response.ok) throw new Error('Não foi possível atualizar o catálogo de serviços.');
     const cloud = await response.json() as CatalogRecord[];
-    const merged = new Map(INITIAL_SERVICES.filter(service => !RETIRED_SERVICE_IDS.has(service.id)).map(service => [service.id, service]));
+    const merged = new Map(bundledServices().map(service => [service.id, service]));
     cloud.forEach(item => {
       if (RETIRED_SERVICE_IDS.has(item.id)) return;
       if (item.deleted) merged.delete(item.id);
@@ -75,7 +78,7 @@ export const CloudServiceCatalog = {
   async syncProfessional(localServices: Service[], professionalId: string, role: User['role']) {
     const own = localServices.filter(service => service.professionalId === professionalId);
     const currentIds = new Set(own.map(service => service.id));
-    const deletedDefaults: CatalogRecord[] = INITIAL_SERVICES
+    const deletedDefaults: CatalogRecord[] = bundledServices()
       .filter(service => service.professionalId === professionalId && !currentIds.has(service.id))
       .map(service => ({ id: service.id, professional_id: professionalId, payload: null, deleted: true }));
     await upsert([...records(own), ...deletedDefaults], role);
@@ -83,7 +86,7 @@ export const CloudServiceCatalog = {
 
   async syncAll(localServices: Service[], role: User['role']) {
     const currentIds = new Set(localServices.map(service => service.id));
-    const deletedDefaults: CatalogRecord[] = INITIAL_SERVICES
+    const deletedDefaults: CatalogRecord[] = bundledServices()
       .filter(service => !currentIds.has(service.id))
       .map(service => ({
         id: service.id,

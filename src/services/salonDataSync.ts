@@ -1,5 +1,6 @@
 import { Professional, User } from '../types';
-import { INITIAL_AUDIT_LOGS } from '../data/initialData';
+import { bundledDataFor } from '../data/salonDefaults';
+import { CURRENT_SALON_ID, scopedStorageKey } from '../config/salon';
 import { CloudHttpError, CloudSalonData, CloudTableMissingError, SalonRow, SalonTable } from './cloudSalonData';
 import { joinProfessional, PRIVATE_PROFESSIONAL_FIELDS, ProfessionalPrivate, ProfessionalPublic, splitProfessional } from './professionalSplit';
 
@@ -25,24 +26,25 @@ type WithId = { id: string } & Record<string, unknown>;
 type OutboxEntry = { kind: SyncKind; op: 'upsert' | 'delete'; item: unknown; userId: string };
 type TableWrite = { table: SalonTable; rows: SalonRow<unknown>[]; insertOnly?: boolean };
 
-const OUTBOX_KEY = 'lev_cloud_outbox_v1';
-const seededKey = (kind: SyncKind, userId: string) => `lev_cloud_seeded_${kind}_${userId}_v1`;
+// Chaves do aparelho separadas por salão (na LEV, as de sempre).
+const OUTBOX_KEY = scopedStorageKey('lev_cloud_outbox_v1');
+const seededKey = (kind: SyncKind, userId: string) => scopedStorageKey(`lev_cloud_seeded_${kind}_${userId}_v1`);
 // Itens que a nuvem recusou (403) na primeira subida e que só existem no aparelho.
-const keptKey = (kind: SyncKind, userId: string) => `lev_cloud_kept_${kind}_${userId}_v1`;
+const keptKey = (kind: SyncKind, userId: string) => scopedStorageKey(`lev_cloud_kept_${kind}_${userId}_v1`);
 const SETTINGS_ROW_ID = 'geral';
 // tenant-guard: sem-filtro tipo de dado (SyncKind), não é consulta
 const PROFESSIONALS = 'professionals' satisfies SyncKind;
 const MAX_LOGS = 500;
-const DEMO_LOG_IDS = new Set(INITIAL_AUDIT_LOGS.map(log => log.id));
+const DEMO_LOG_IDS = new Set(bundledDataFor(CURRENT_SALON_ID).auditLogs.map(log => log.id));
 
 // Mesmas chaves do StorageService (src/services/storage.ts, STORAGE_KEYS).
 const LOCAL_KEYS: Record<SyncKind, string> = {
-  settings: 'lev_coworking_settings_v1',
-  professionals: 'lev_coworking_professionals_v10',
-  payments: 'lev_coworking_payments_v1',
-  blocks: 'lev_coworking_blocks_v1',
-  waitlist: 'lev_coworking_waitlist_v1',
-  logs: 'lev_coworking_logs_v1'
+  settings: scopedStorageKey('lev_coworking_settings_v1'),
+  professionals: scopedStorageKey('lev_coworking_professionals_v10'),
+  payments: scopedStorageKey('lev_coworking_payments_v1'),
+  blocks: scopedStorageKey('lev_coworking_blocks_v1'),
+  waitlist: scopedStorageKey('lev_coworking_waitlist_v1'),
+  logs: scopedStorageKey('lev_coworking_logs_v1')
 };
 
 // tenant-guard: sem-filtro nomes de tabela; o filtro do salão é aplicado pelo CloudSalonData
