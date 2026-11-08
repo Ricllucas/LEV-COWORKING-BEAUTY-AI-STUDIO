@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { AlertCircle, CheckCircle2, Loader2, ScanFace } from 'lucide-react';
 import { Logo } from '../brand/Logo';
 import { ProfessionalAuthService, ProfessionalProfileId, ProfessionalSession } from '../../services/professionalAuth';
+import { StorageService } from '../../services/storage';
 import { User } from '../../types';
 
-const PROFILES: Array<{ id: ProfessionalProfileId; name: string }> = [
-  { id: 'prof_elisangela', name: 'Elisangela' },
-  { id: 'prof_talitha', name: 'Talitha' },
-  { id: 'prof_nayara', name: 'Nayara' }
-];
+// Perfis que podem pedir acesso: as profissionais cadastradas no salão.
+const readProfiles = () =>
+  StorageService.getProfessionals().map(professional => ({ id: professional.id, name: professional.name }));
 
 export const ProfessionalLoginPage: React.FC<{ onAuthenticated: (user: User) => void }> = ({ onAuthenticated }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [profileId, setProfileId] = useState<ProfessionalProfileId>('prof_elisangela');
+  const [profiles, setProfiles] = useState<Array<{ id: ProfessionalProfileId; name: string }>>(readProfiles);
+  const [profileId, setProfileId] = useState<ProfessionalProfileId>(() => profiles[0]?.id ?? '');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
@@ -34,6 +34,12 @@ export const ProfessionalLoginPage: React.FC<{ onAuthenticated: (user: User) => 
     });
   };
 
+  useEffect(() => StorageService.subscribeStorage(() => {
+    const next = readProfiles();
+    setProfiles(next);
+    setProfileId(current => (next.some(profile => profile.id === current) ? current : next[0]?.id ?? ''));
+  }), []);
+
   useEffect(() => {
     ProfessionalAuthService.restore().then(session => session && enter(session));
   }, []);
@@ -43,7 +49,8 @@ export const ProfessionalLoginPage: React.FC<{ onAuthenticated: (user: User) => 
     setBusy(true); setError(''); setMessage('');
     try {
       if (mode === 'register') {
-        const selected = PROFILES.find(profile => profile.id === profileId)!;
+        const selected = profiles.find(profile => profile.id === profileId);
+        if (!selected) throw new Error('Escolha o seu perfil profissional.');
         const result = await ProfessionalAuthService.signUp({ email, password, professionalId: profileId, displayName: selected.name });
         setMessage(result.needsConfirmation
           ? 'Conta criada. Confirme o e-mail recebido e depois volte para entrar.'
@@ -90,8 +97,8 @@ export const ProfessionalLoginPage: React.FC<{ onAuthenticated: (user: User) => 
           {mode === 'register' && (
             <div>
               <label className="mb-1 block text-xs text-white/70">Selecione seu perfil</label>
-              <select value={profileId} onChange={event => setProfileId(event.target.value as ProfessionalProfileId)} className="w-full rounded-xl border border-white/10 bg-black px-3 py-3 text-sm">
-                {PROFILES.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+              <select value={profileId} onChange={event => setProfileId(event.target.value)} className="w-full rounded-xl border border-white/10 bg-black px-3 py-3 text-sm">
+                {profiles.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
               </select>
             </div>
           )}

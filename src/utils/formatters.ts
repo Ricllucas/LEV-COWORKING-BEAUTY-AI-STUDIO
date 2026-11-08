@@ -1,18 +1,26 @@
 /**
- * Formatters for LEV COWORKING BEAUTY
+ * Formatters (textos, datas, valores e links de WhatsApp)
  */
+import { CURRENT_SALON_ID, isDefaultSalon } from '../config/salon';
+import { bundledDataFor } from '../data/salonDefaults';
+import { LEV_PROFESSIONAL_WHATSAPP } from '../data/levBrand';
 
-export const OFFICIAL_WHATSAPP_NUMBER = '5541984979940';
+const digitsOnly = (value: string | undefined) => (value || '').replace(/\D/g, '');
 
-export const PROFESSIONAL_WHATSAPP_NUMBERS: Record<string, string> = {
-  prof_nayara: '5541996556742',
-  prof_elisangela: '5541992461203',
-  prof_talitha: '5541999983228'
-};
-
-export function getProfessionalWhatsApp(id: string, contact?: { whatsapp?: string; phone?: string }): string {
- const phone = [contact?.whatsapp, contact?.phone].map(v => (v || '').replace(/\D/g, '')).find(v => v.length >= 10 && v !== OFFICIAL_WHATSAPP_NUMBER && v !== OFFICIAL_WHATSAPP_NUMBER.slice(2));
- return phone || PROFESSIONAL_WHATSAPP_NUMBERS[id] || '';
+// WhatsApp direto da profissional. O número geral do salão (recepção) nunca vale
+// como contato dela. Sem número no cadastro, a LEV usa a lista de fábrica; outro
+// salão fica sem link.
+export function getProfessionalWhatsApp(
+  id: string,
+  contact?: { whatsapp?: string; phone?: string },
+  salonWhatsapp: string = bundledDataFor(CURRENT_SALON_ID).settings.whatsapp
+): string {
+  const salonNumber = digitsOnly(salonWhatsapp);
+  const salonLocal = salonNumber.startsWith('55') ? salonNumber.slice(2) : salonNumber;
+  const isSalonNumber = (v: string) => Boolean(salonNumber) && (v === salonNumber || v === salonLocal || v === `55${salonLocal}`);
+  const phone = [contact?.whatsapp, contact?.phone].map(digitsOnly).find(v => v.length >= 10 && !isSalonNumber(v));
+  if (phone) return phone;
+  return isDefaultSalon() ? LEV_PROFESSIONAL_WHATSAPP[id] || '' : '';
 }
 export function buildProfessionalWhatsAppLink(id: string, text: string, contact?: { whatsapp?: string; phone?: string }): string | undefined {
  const phone = getProfessionalWhatsApp(id, contact);

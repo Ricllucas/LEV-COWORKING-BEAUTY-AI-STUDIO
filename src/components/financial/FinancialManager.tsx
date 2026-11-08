@@ -63,7 +63,7 @@ export const FinancialManager: React.FC<FinancialManagerProps> = ({ currentUser 
   // Privacy Protection
   if (currentUser.role === 'profissional' && activeMeiTab !== currentUser.professionalId) {
     // Lock to own MEI
-    setActiveMeiTab(currentUser.professionalId || 'prof_elisangela');
+    setActiveMeiTab(currentUser.professionalId || professionals[0]?.id || '');
   }
 
   // Todos os indicadores e lançamentos respeitam o mês ou dia selecionado.

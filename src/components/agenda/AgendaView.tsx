@@ -4,6 +4,7 @@ import { StorageService } from '../../services/storage';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { canRemoveScheduleBlock, canSeeAppointmentPrice } from '../../utils/agendaVisibility';
 import { formatCurrency, formatDateBR, getDayOfWeekName, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
+import { agendaColorFor, agendaToneFor } from '../../utils/professionalColors';
 import {
   Calendar as CalendarIcon,
   Clock,
@@ -65,7 +66,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
   const [isSavingServices, setIsSavingServices] = useState(false);
 
   const [isBlockModalOpen, setIsBlockModalOpen] = useState<boolean>(false);
-  const [blockProfId, setBlockProfId] = useState<string>(professionals[0]?.id || 'prof_elisangela');
+  const [blockProfId, setBlockProfId] = useState<string>(professionals[0]?.id ?? '');
   const [blockDate, setBlockDate] = useState<string>(selectedDate);
   const [blockStart, setBlockStart] = useState<string>('12:00');
   const [blockEnd, setBlockEnd] = useState<string>('13:00');
@@ -74,7 +75,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
   useEffect(() => {
     const load = () => {
       setAppointments(StorageService.getAppointments());
-      setProfessionals(StorageService.getProfessionals());
+      const loadedProfessionals = StorageService.getProfessionals();
+      setProfessionals(loadedProfessionals);
+      setBlockProfId(current => current || loadedProfessionals[0]?.id || '');
       setServices(StorageService.getServices());
       setBlocks(StorageService.getScheduleBlocks());
     };
@@ -300,28 +303,28 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
     nao_compareceu: 'Não compareceu'
   };
 
+  // Cor de cada profissional vem do cadastro (posição na lista para a paleta reserva).
+  const professionalIndex = (professionalId: string) => professionals.findIndex(item => item.id === professionalId);
   const professionalAccent = (professionalId: string) => {
-    const colors: Record<string, string> = {
-      prof_elisangela: '#d8c7a4',
-      prof_talitha: '#b59662',
-      prof_nayara: '#a98d7a'
-    };
-    return colors[professionalId] || '#c4b491';
+    const index = professionalIndex(professionalId);
+    return index >= 0 ? agendaColorFor(professionals[index], index) : agendaColorFor({ id: professionalId, color: '' }, 0);
   };
 
   const appointmentTone = (appointment: Appointment) => {
     if (appointment.status === 'concluido') {
       return 'border-[#DDE8D2] bg-[#C7D7B6] text-[#24301F] shadow-[0_8px_24px_rgba(199,215,182,0.18)]';
     }
-    const tones: Record<string, string> = {
-      prof_elisangela: 'border-[#d8c7a4]/80 bg-[#3a3226]/95 text-[#f8f1e4]',
-      prof_talitha: 'border-[#b59662]/80 bg-[#352817]/95 text-[#f6ead4]',
-      prof_nayara: 'border-[#a98d7a]/80 bg-[#342923]/95 text-[#f5e9e1]'
-    };
-    const statusEffect = appointment.status === 'aguardando_confirmacao'
-        ? ' border-dashed !border-amber-400 border-2'
-        : '';
-    return `${tones[appointment.professionalId] || 'border-[#c4b491]/80 bg-[#332d24]/95 text-[#f7f0e5]'}${statusEffect}`;
+    return appointment.status === 'aguardando_confirmacao'
+      ? 'border-dashed !border-amber-400 border-2'
+      : '';
+  };
+
+  const appointmentToneStyle = (appointment: Appointment): React.CSSProperties => {
+    if (appointment.status === 'concluido') return {};
+    const index = professionalIndex(appointment.professionalId);
+    return index >= 0
+      ? agendaToneFor(professionals[index], index)
+      : agendaToneFor({ id: appointment.professionalId, color: '' }, 0);
   };
 
   return (
@@ -558,7 +561,7 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                           key={appointment.id}
                           onClick={() => setSelectedApt(appointment)}
                           className={`absolute left-1.5 right-1.5 z-20 rounded-xl border px-2.5 py-2 text-left overflow-hidden shadow-lg transition-transform hover:scale-[1.01] ${appointmentTone(appointment)}`}
-                          style={{ top: top + 2, height }}
+                          style={{ top: top + 2, height, ...appointmentToneStyle(appointment) }}
                           title={`${appointment.clientName} · ${appointment.serviceNames.join(', ')}`}
                         >
                           {appointment.status === 'aguardando_confirmacao' && (

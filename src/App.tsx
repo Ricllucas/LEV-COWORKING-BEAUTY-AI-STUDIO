@@ -21,6 +21,7 @@ import { SalonDataSync, SyncUser } from './services/salonDataSync';
 import { LegalPage } from './components/legal/LegalPage';
 import { PortfolioPage } from './components/public/PortfolioPage';
 import { ConfirmAppointmentPage } from './components/public/ConfirmAppointmentPage';
+import { isDefaultSalon } from './config/salon';
 
 // Views - eager load only essential views
 import { PublicLandingPage } from './components/public/PublicLandingPage';
@@ -55,7 +56,8 @@ export default function App() {
     return <ConfirmAppointmentPage />;
   }
 
-  if (normalizedPath === '/portfolio') {
+  // Página de portfólio é só da LEV; nos outros salões a rota mostra a página inicial.
+  if (normalizedPath === '/portfolio' && isDefaultSalon()) {
     return <PortfolioPage />;
   }
 

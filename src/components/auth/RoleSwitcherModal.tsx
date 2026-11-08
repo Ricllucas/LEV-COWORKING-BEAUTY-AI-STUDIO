@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, UserRole } from '../../types';
+import { Professional, User, UserRole } from '../../types';
 import { StorageService } from '../../services/storage';
 import { HeartHandshake, X, Lock, ArrowLeft, KeyRound, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { NailCareIcon, LashBrowsIcon, GelNailsIcon, AdminShieldIcon } from '../common/SpecialtyIcons';
@@ -39,55 +39,53 @@ export const RoleSwitcherModal: React.FC<RoleSwitcherModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Contas de acesso vêm dos dados do salão: usuárias gravadas no aparelho e
+  // profissionais cadastradas (cada uma com o próprio login).
+  const users = StorageService.getUsers();
+  const adminUser = users.find(user => user.role === 'admin');
+  const receptionUser = users.find(user => user.role === 'recepcao');
+  const professionalBadge = 'bg-[#c4b491]/20 text-[#c4b491] border-[#c4b491]/40';
+
+  const professionalIcon = (professional: Professional) => {
+    if (professional.categories.includes('Unhas em Gel')) return <GelNailsIcon className="w-5 h-5 text-[#c4b491]" />;
+    if (professional.categories.some(category => category !== 'Unha Tradicional')) return <LashBrowsIcon className="w-5 h-5 text-[#c4b491]" />;
+    return <NailCareIcon className="w-5 h-5 text-[#c4b491]" />;
+  };
+
+  const professionalItems: RoleItem[] = StorageService.getProfessionals().map(professional => {
+    const account = users.find(user => user.role === 'profissional' && user.professionalId === professional.id);
+    return {
+      id: account?.id ?? `${professional.id}_user`,
+      name: professional.name,
+      email: account?.email ?? professional.email,
+      role: 'profissional',
+      professionalId: professional.id,
+      description: `${professional.title ? `MEI ${professional.title}. ` : ''}Acesso exclusivo à própria agenda, clientes e relatórios financeiros individuais.`,
+      icon: professionalIcon(professional),
+      badgeColor: professionalBadge
+    };
+  });
+
   const rolesList: RoleItem[] = [
-    {
-      id: 'admin_1',
+    ...(adminUser ? [{
+      id: adminUser.id,
       name: 'Administração Geral',
-      email: 'admin@levcoworkingbeauty.com.br',
-      role: 'admin',
+      email: adminUser.email,
+      role: 'admin' as UserRole,
       description: 'Acesso administrativo completo: gestão das agendas, visão financeira consolidada e configurações.',
       icon: <AdminShieldIcon className="w-5 h-5 text-[#c4b491]" />,
       badgeColor: 'bg-[#c4b491]/15 text-[#c4b491] border-[#c4b491]/30'
-    },
-    {
-      id: 'prof_elisangela_user',
-      name: 'Elisangela',
-      email: 'elisangela@levcoworkingbeauty.com.br',
-      role: 'profissional',
-      professionalId: 'prof_elisangela',
-      description: 'MEI Unha Tradicional. Acesso exclusivo à própria agenda, clientes e relatórios financeiros individuais de manicure e pedicure.',
-      icon: <NailCareIcon className="w-5 h-5 text-[#c4b491]" />,
-      badgeColor: 'bg-[#c4b491]/20 text-[#c4b491] border-[#c4b491]/40'
-    },
-    {
-      id: 'prof_talitha_user',
-      name: 'Talitha',
-      email: 'talitha.aguiarocha@gmail.com',
-      role: 'profissional',
-      professionalId: 'prof_talitha',
-      description: 'MEI Maquiagem, Cílios e Sobrancelhas. Visagista com acesso exclusivo à própria agenda e faturamento privado.',
-      icon: <LashBrowsIcon className="w-5 h-5 text-[#c4b491]" />,
-      badgeColor: 'bg-[#c4b491]/20 text-[#c4b491] border-[#c4b491]/40'
-    },
-    {
-      id: 'prof_nayara_user',
-      name: 'Nayara',
-      email: 'nayara@levcoworkingbeauty.com.br',
-      role: 'profissional',
-      professionalId: 'prof_nayara',
-      description: 'MEI Unhas em Gel & Nail Art. Acesso exclusivo à própria agenda e controle individual de faturamento em gel.',
-      icon: <GelNailsIcon className="w-5 h-5 text-[#c4b491]" />,
-      badgeColor: 'bg-[#c4b491]/20 text-[#c4b491] border-[#c4b491]/40'
-    },
-    {
-      id: 'recepcao_1',
-      name: 'Recepção LEV',
-      email: 'recepcao@levcoworkingbeauty.com.br',
-      role: 'recepcao',
+    }] : []),
+    ...professionalItems,
+    ...(receptionUser ? [{
+      id: receptionUser.id,
+      name: receptionUser.name,
+      email: receptionUser.email,
+      role: 'recepcao' as UserRole,
       description: 'Gerencia horários de todas as profissionais, lista de espera e atendimento WhatsApp. Sem acesso aos relatórios financeiros.',
       icon: <HeartHandshake className="w-5 h-5 text-[#8C6D46]" />,
       badgeColor: 'bg-[#8C6D46]/15 text-[#8C6D46] border-[#8C6D46]/30'
-    }
+    }] : [])
   ];
 
   const handleStartAuth = (item: RoleItem) => {

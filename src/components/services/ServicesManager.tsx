@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Service, Professional, CategoryType } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudServiceCatalog } from '../../services/cloudServiceCatalog';
-import { INITIAL_SERVICES } from '../../data/initialData';
+import { bundledDataFor } from '../../data/salonDefaults';
+import { CURRENT_SALON_ID, scopedStorageKey } from '../../config/salon';
 import { formatCurrency } from '../../utils/formatters';
 import { Plus, Edit2, Trash2, Clock, DollarSign, Check, X } from 'lucide-react';
 
@@ -37,10 +38,10 @@ export const ServicesManager: React.FC = () => {
     const user = StorageService.getCurrentUser();
     if (CloudServiceCatalog.isConfigured()) {
       const localServices = StorageService.getServices();
-      const hasLocalAdminChanges = JSON.stringify(localServices) !== JSON.stringify(INITIAL_SERVICES);
+      const hasLocalAdminChanges = JSON.stringify(localServices) !== JSON.stringify(bundledDataFor(CURRENT_SALON_ID).services);
       const needsAdminMigration = user.role === 'admin'
         && hasLocalAdminChanges
-        && localStorage.getItem('lev_catalog_admin_migrated_v1') !== 'done';
+        && localStorage.getItem(scopedStorageKey('lev_catalog_admin_migrated_v1')) !== 'done';
       const publish = needsAdminMigration
         ? CloudServiceCatalog.syncAll(localServices, user.role)
         : user.role === 'profissional' && user.professionalId
@@ -48,7 +49,7 @@ export const ServicesManager: React.FC = () => {
           : Promise.resolve();
       publish
         .then(() => {
-          if (needsAdminMigration) localStorage.setItem('lev_catalog_admin_migrated_v1', 'done');
+          if (needsAdminMigration) localStorage.setItem(scopedStorageKey('lev_catalog_admin_migrated_v1'), 'done');
         })
         .then(() => CloudServiceCatalog.load())
         .then(items => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Appointment } from '../../types';
 import { buildWhatsAppLink } from '../../utils/formatters';
+import { scopedStorageKey } from '../../config/salon';
 import { buildFollowUps, FollowUp, FollowUpKind } from '../../utils/followUps';
 import { WhatsAppRobotService } from '../../services/whatsappRobot';
 import { Bell, Heart, RefreshCw, MessageCircle, Check, Bot } from 'lucide-react';
@@ -11,7 +12,7 @@ interface FollowUpsPanelProps {
   isAdmin?: boolean;
 }
 
-const SENT_KEY = 'lev_followups_sent_v1';
+const SENT_KEY = scopedStorageKey('lev_followups_sent_v1');
 
 const readSent = (): Set<string> => {
   try {

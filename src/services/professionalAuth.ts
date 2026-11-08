@@ -1,12 +1,13 @@
 import { PasskeyAuthService } from './passkeyAuth';
-import { CURRENT_SALON_ID, salonFilter, withSalon } from '../config/salon';
+import { CURRENT_SALON_ID, salonFilter, scopedStorageKey, withSalon } from '../config/salon';
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
 const SESSION_KEY = 'lev_professional_session_v1';
-const REQUEST_KEY = 'lev_professional_pending_request_v1';
+const REQUEST_KEY = scopedStorageKey('lev_professional_pending_request_v1');
 
-export type ProfessionalProfileId = 'prof_elisangela' | 'prof_talitha' | 'prof_nayara';
+// Id da profissional no cadastro do salão (ex.: vem de StorageService.getProfessionals()).
+export type ProfessionalProfileId = string;
 export type ProfessionalAccess = {
   user_id: string;
   professional_id: ProfessionalProfileId;

@@ -1,5 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
+
+const salon = vi.hoisted(() => ({ id: 'lev' }));
+vi.mock('../config/salon', async importOriginal => {
+  const original = await importOriginal<typeof import('../config/salon')>();
+  return {
+    ...original,
+    get CURRENT_SALON_ID() { return salon.id; },
+    isDefaultSalon: () => salon.id === 'lev'
+  };
+});
+
 import {
+  getProfessionalWhatsApp,
   formatCurrency,
   formatDateBR,
   getDayOfWeekName,
@@ -158,5 +170,29 @@ describe('generateWhatsAppMessage', () => {
   it('should handle default case', () => {
     const msg = generateWhatsAppMessage('unknown_type', mockData);
     expect(msg).toContain('Maria Silva');
+  });
+});
+
+describe('getProfessionalWhatsApp por salão', () => {
+  afterEach(() => { salon.id = 'lev'; });
+
+  it('outro salão sem contato cadastrado não recebe número da LEV', () => {
+    salon.id = 'demo';
+    expect(getProfessionalWhatsApp('prof_aurora_ana', {})).toBe('');
+    expect(getProfessionalWhatsApp('prof_nayara', {})).toBe('');
+  });
+
+  it('LEV continua com o número de cada profissional', () => {
+    expect(getProfessionalWhatsApp('prof_nayara', {})).toBe('5541996556742');
+  });
+
+  it('ignora o número geral do salão informado', () => {
+    salon.id = 'demo';
+    expect(getProfessionalWhatsApp('prof_aurora_ana', { whatsapp: '5511999990000' }, '5511999990000')).toBe('');
+    expect(getProfessionalWhatsApp('prof_aurora_ana', { whatsapp: '11999990000', phone: '11988887777' }, '5511999990000')).toBe('11988887777');
+  });
+
+  it('LEV ignora o número geral da LEV por padrão', () => {
+    expect(getProfessionalWhatsApp('prof_elisangela', { whatsapp: '41984979940' })).toBe('5541992461203');
   });
 });

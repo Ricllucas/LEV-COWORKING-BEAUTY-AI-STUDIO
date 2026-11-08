@@ -8,6 +8,7 @@ import { formatCurrency, buildProfessionalWhatsAppLink } from '../../utils/forma
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
 import { LoopVideo } from '../common/LoopVideo';
+import { isDefaultSalon } from '../../config/salon';
 import { compressImageToDataUrl } from '../../utils/imageCompressor';
 import {
   Calendar,
@@ -145,13 +146,13 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
               <MessageCircle className="w-5 h-5 text-[#3D312A] group-hover:scale-110 transition-transform" />
               Escolher profissional e agendar
             </button>
-            <a
+            {isDefaultSalon() && <a
               href="/portfolio"
               className="w-full sm:w-auto px-8 py-4 rounded-2xl bg-[#3D312A]/[0.05] border border-[#A1865B]/40 hover:bg-[#3D312A]/10 text-[#8C7249] font-semibold text-sm transition-all flex items-center justify-center gap-2"
             >
               <Sparkles className="w-5 h-5" />
               Ver portfólio
-            </a>
+            </a>}
           </div>
 
           {/* Highlights Badges */}
@@ -255,49 +256,51 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
         </div>
       </section>
 
-      {/* Portfolio Teaser */}
-      <section className="py-12 px-4 max-w-6xl mx-auto">
-        <div className="text-center mb-8">
-          <span className="text-xs font-semibold tracking-widest text-[#8C7249] uppercase">
-            Portfólio
-          </span>
-          <h2 className="text-2xl font-serif text-[#3D312A] font-medium mt-1">
-            Trabalhos Feitos Aqui na LEV
-          </h2>
-        </div>
+      {/* Portfolio Teaser (só quando o salão tem página de portfólio) */}
+      {isDefaultSalon() && (
+        <section className="py-12 px-4 max-w-6xl mx-auto">
+          <div className="text-center mb-8">
+            <span className="text-xs font-semibold tracking-widest text-[#8C7249] uppercase">
+              Portfólio
+            </span>
+            <h2 className="text-2xl font-serif text-[#3D312A] font-medium mt-1">
+              Trabalhos Feitos Aqui na LEV
+            </h2>
+          </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { url: "/portfolio/talitha/noiva-leticia-janela.webp", alt: "Noiva Letícia produzida no LEV" },
-            { url: "/portfolio/videos/unhas-macaron-limpo.webp", video: "/portfolio/videos/unhas-macaron-limpo.mp4", alt: "Unhas Macaron de Amora" },
-            { url: "/portfolio/videos/make-penteado.webp", video: "/portfolio/videos/make-penteado.mp4", alt: "Maquiagem e penteado" },
-            { url: "/portfolio/lev/make-fox-2.webp", alt: "Maquiagem fox" }
-          ].map(item => (
-            <a key={item.url} href="/portfolio" className="group block rounded-2xl overflow-hidden aspect-[3/4] bg-[#F3EBDD]">
-              {item.video ? (
-                <LoopVideo src={item.video} poster={item.url} label={item.alt} className="w-full h-full object-cover" />
-              ) : (
-                <img
-                  src={item.url}
-                  alt={item.alt}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  loading="lazy"
-                />
-              )}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              { url: "/portfolio/talitha/noiva-leticia-janela.webp", alt: "Noiva Letícia produzida no LEV" },
+              { url: "/portfolio/videos/unhas-macaron-limpo.webp", video: "/portfolio/videos/unhas-macaron-limpo.mp4", alt: "Unhas Macaron de Amora" },
+              { url: "/portfolio/videos/make-penteado.webp", video: "/portfolio/videos/make-penteado.mp4", alt: "Maquiagem e penteado" },
+              { url: "/portfolio/lev/make-fox-2.webp", alt: "Maquiagem fox" }
+            ].map(item => (
+              <a key={item.url} href="/portfolio" className="group block rounded-2xl overflow-hidden aspect-[3/4] bg-[#F3EBDD]">
+                {item.video ? (
+                  <LoopVideo src={item.video} poster={item.url} label={item.alt} className="w-full h-full object-cover" />
+                ) : (
+                  <img
+                    src={item.url}
+                    alt={item.alt}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                  />
+                )}
+              </a>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center">
+            <a
+              href="/portfolio"
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-[#A1865B] text-[#8C7249] hover:bg-[#A1865B] hover:text-white text-xs font-semibold uppercase tracking-[0.2em] transition-colors"
+            >
+              Ver portfólio completo
+              <ChevronRight className="w-4 h-4" />
             </a>
-          ))}
-        </div>
-
-        <div className="mt-6 text-center">
-          <a
-            href="/portfolio"
-            className="inline-flex items-center gap-2 px-7 py-3 rounded-full border border-[#A1865B] text-[#8C7249] hover:bg-[#A1865B] hover:text-white text-xs font-semibold uppercase tracking-[0.2em] transition-colors"
-          >
-            Ver portfólio completo
-            <ChevronRight className="w-4 h-4" />
-          </a>
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
 
       {/* Spa de Noivas & Produção VIP Experience Banner */}
       <section className="py-12 px-4 max-w-6xl mx-auto">

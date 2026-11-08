@@ -5,42 +5,15 @@ import { CloudServiceCatalog } from '../../services/cloudServiceCatalog';
 import { formatCurrency, buildProfessionalWhatsAppLink } from '../../utils/formatters';
 import { LoopVideo } from '../common/LoopVideo';
 import { Calendar, MapPin, Clock, MessageCircle, Instagram, X } from 'lucide-react';
+import { LEV_PORTFOLIO, PortfolioWorkCategory, PortfolioWorkItem } from '../../data/levBrand';
 
 const displayFont = "font-['Cormorant_Garamond',Georgia,serif]";
 
-type WorkCategory = 'Noivas' | 'Maquiagem' | 'Penteados' | 'Unhas' | 'Sobrancelhas' | 'SPA dos pés';
+type WorkCategory = PortfolioWorkCategory;
+type WorkItem = PortfolioWorkItem;
 
-interface WorkItem {
-  src: string;
-  alt: string;
-  category: WorkCategory;
-  /** When set, `src` is the poster and the tile plays this muted clip. */
-  video?: string;
-}
-
-const clip = (name: string, alt: string, category: WorkCategory): WorkItem => ({
-  src: `/portfolio/videos/${name}.webp`,
-  video: `/portfolio/videos/${name}.mp4`,
-  alt,
-  category
-});
-
-// Trabalhos publicados no Instagram da LEV (@levcoworkingbeauty), da Talitha (@talithakum_beauty)
-// e da Nayara (@studiobynayara). Cada foto ou vídeo aparece uma única vez no site:
-// as que estão nos destaques, nas seções de noivas ou na página inicial não se repetem aqui.
-const LEV_WORKS: WorkItem[] = [
-  { src: '/portfolio/talitha/noiva-leticia-make.webp', alt: 'Noiva Letícia sendo maquiada', category: 'Noivas' },
-  { src: '/portfolio/talitha/make-raffa.webp', alt: 'Maquiagem social com olhos esfumados', category: 'Maquiagem' },
-  { src: '/portfolio/talitha/penteado-rabo-ondulado.webp', alt: 'Rabo de cavalo com ondas', category: 'Penteados' },
-  { src: '/portfolio/talitha/make-samela.webp', alt: 'Maquiagem elegante com pele luminosa', category: 'Maquiagem' },
-  { src: '/portfolio/lev/pes-vermelho-2.webp', alt: 'Pés com esmaltação vermelha', category: 'SPA dos pés' },
-  { src: '/portfolio/talitha/noiva-leticia-batom.webp', alt: 'Noiva Letícia finalizando a maquiagem', category: 'Noivas' },
-  { src: '/portfolio/talitha/penteado-coque-lateral.webp', alt: 'Coque baixo com torções', category: 'Penteados' },
-  { src: '/portfolio/lev/make-beleza-completa.webp', alt: 'Maquiagem e penteado para evento', category: 'Maquiagem' },
-  { src: '/portfolio/lev/unhas-antes-depois.webp', alt: 'Antes e depois de um cuidado com as mãos', category: 'Unhas' },
-  { src: '/portfolio/talitha/noiva-adri-sorriso.webp', alt: 'Noiva Adri sorrindo', category: 'Noivas' },
-  { src: '/portfolio/lev/make-iluminada.webp', alt: 'Maquiagem iluminada com cabelo preso', category: 'Maquiagem' }
-];
+// Fotos, vídeos e destaques: dados só da LEV (a página de portfólio é só dela).
+const LEV_WORKS = LEV_PORTFOLIO.works;
 
 const WORK_FILTERS: Array<'Todos' | WorkCategory> = [
   'Todos',
@@ -48,46 +21,10 @@ const WORK_FILTERS: Array<'Todos' | WorkCategory> = [
     .filter(category => LEV_WORKS.some(work => work.category === category))
 ];
 
-// Destaques de cada especialista, conforme o serviço que só ela realiza no catálogo
-// ou a autoria indicada na publicação.
-const PROFESSIONAL_HIGHLIGHTS: Record<string, WorkItem[]> = {
-  prof_elisangela: [
-    { src: '/portfolio/lev/unhas-lilas.webp', alt: 'Manicure tradicional com esmaltação lilás', category: 'Unhas' },
-    { src: '/portfolio/lev/espaco-spa-pes.webp', alt: 'Cesta preparada para o SPA dos pés', category: 'SPA dos pés' },
-    { src: '/portfolio/lev/pes-vermelho.webp', alt: 'Pedicure com esmaltação vermelha', category: 'SPA dos pés' }
-  ],
-  prof_talitha: [
-    { src: '/portfolio/lev/make-fox.webp', alt: 'Maquiagem fox para alongar o olhar', category: 'Maquiagem' },
-    { src: '/portfolio/talitha/penteado-coque-baixo.webp', alt: 'Coque baixo com ondas', category: 'Penteados' },
-    { src: '/portfolio/talitha/make-jessica.webp', alt: 'Maquiagem com olhos iluminados', category: 'Maquiagem' }
-  ],
-  prof_nayara: [
-    { src: '/portfolio/lev/unhas-nude.webp', alt: 'Alongamento em tom nude', category: 'Unhas' },
-    clip('unhas-preto', 'Esmaltação preta clássica', 'Unhas'),
-    { src: '/portfolio/lev/unhas-blindagem-azul.webp', alt: 'Blindagem com esmaltação azul', category: 'Unhas' }
-  ]
-};
-
-const BRIDES: WorkItem[] = [
-  { src: '/portfolio/talitha/noiva-leticia-veu.webp', alt: 'Noiva Letícia com véu', category: 'Noivas' },
-  { src: '/portfolio/talitha/noiva-adri-close.webp', alt: 'Noiva Adri', category: 'Noivas' },
-  { src: '/portfolio/talitha/noiva-leticia-sorriso.webp', alt: 'Noiva Letícia sorrindo', category: 'Noivas' },
-  { src: '/portfolio/talitha/noiva-rayssa.webp', alt: 'Noiva Rayssa com buquê', category: 'Noivas' }
-];
-
-const BRIDAL_BACKSTAGE: WorkItem[] = [
-  { src: '/portfolio/talitha/bastidores-rayssa-penteado.webp', alt: 'Talitha finalizando o penteado da noiva Rayssa', category: 'Noivas' },
-  { src: '/portfolio/talitha/bastidores-rayssa-espelho.webp', alt: 'Noiva Rayssa durante a produção', category: 'Noivas' },
-  { src: '/portfolio/talitha/noiva-rayssa-retrato.webp', alt: 'Noiva Rayssa pronta', category: 'Noivas' },
-  { src: '/portfolio/talitha/noiva-rayssa-alianca.webp', alt: 'Detalhe das mãos e aliança da noiva', category: 'Noivas' }
-];
-
-const BEHIND_THE_SCENES: Array<{ name: string; title: string }> = [
-  { name: 'inauguracao', title: 'Inauguração da LEV' },
-  { name: 'spa-dos-pes', title: 'Ritual do SPA dos pés' },
-  { name: 'brow-lamination', title: 'Brow lamination' },
-  { name: 'make-rose', title: 'Make rosé iluminada' }
-];
+const PROFESSIONAL_HIGHLIGHTS = LEV_PORTFOLIO.highlights;
+const BRIDES = LEV_PORTFOLIO.brides;
+const BRIDAL_BACKSTAGE = LEV_PORTFOLIO.bridalBackstage;
+const BEHIND_THE_SCENES = LEV_PORTFOLIO.behindTheScenes;
 
 const MediaTile: React.FC<{ item: WorkItem; className?: string }> = ({ item, className = 'w-full h-full object-cover' }) =>
   item.video
@@ -154,12 +91,12 @@ export const PortfolioPage: React.FC = () => {
   const findService = (id: string) => activeServices.find(s => s.id === id);
   const visibleWorks = workFilter === 'Todos' ? LEV_WORKS : LEV_WORKS.filter(w => w.category === workFilter);
 
-  const makeup = findService('srv_tal_1');
-  const hairstyle = findService('srv_tal_2');
-  const bridalProduction = findService('srv_tal_6');
-  const talitha = professionals.find(p => p.id === 'prof_talitha');
-  const bridalWhatsApp = talitha
-    ? buildProfessionalWhatsAppLink(talitha.id, 'Olá, Talitha! Vi o portfólio da LEV e gostaria de um orçamento para Produção Noivas.', talitha)
+  const makeup = findService(LEV_PORTFOLIO.bridalServiceIds.makeup);
+  const hairstyle = findService(LEV_PORTFOLIO.bridalServiceIds.hairstyle);
+  const bridalProduction = findService(LEV_PORTFOLIO.bridalServiceIds.bridalProduction);
+  const bridalProfessional = professionals.find(p => p.id === LEV_PORTFOLIO.bridalProfessionalId);
+  const bridalWhatsApp = bridalProfessional
+    ? buildProfessionalWhatsAppLink(bridalProfessional.id, LEV_PORTFOLIO.bridalWhatsAppText, bridalProfessional)
     : undefined;
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(settings.address)}`;
   const instagramHandle = settings.instagram.replace('@', '');
@@ -219,8 +156,8 @@ export const PortfolioPage: React.FC = () => {
         </div>
         <div className="lg:col-span-6 relative">
           <img
-            src="/portfolio/talitha/noiva-adri.webp"
-            alt="Noiva produzida pela Talitha no LEV"
+            src={LEV_PORTFOLIO.heroImage.src}
+            alt={LEV_PORTFOLIO.heroImage.alt}
             className="relative w-full aspect-[4/5] object-cover rounded-[2rem]"
           />
         </div>
@@ -230,8 +167,8 @@ export const PortfolioPage: React.FC = () => {
       <section className="px-6 py-20 bg-white border-y border-[#3D312A]/[0.06]">
         <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <img
-            src="/portfolio/lev/equipe-tres-especialistas.webp"
-            alt="Elisangela, Talitha e Nayara no LEV Coworking Beauty"
+            src={LEV_PORTFOLIO.aboutImage.src}
+            alt={LEV_PORTFOLIO.aboutImage.alt}
             loading="lazy"
             className="w-full aspect-[3/2] object-cover rounded-[2rem]"
           />
@@ -255,11 +192,11 @@ export const PortfolioPage: React.FC = () => {
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {BEHIND_THE_SCENES.map(reel => (
-            <figure key={reel.name} className="space-y-3">
+            <figure key={reel.video} className="space-y-3">
               <div className="rounded-2xl overflow-hidden aspect-[9/16] bg-[#F3EBDD]">
                 <LoopVideo
-                  src={`/portfolio/videos/${reel.name}.mp4`}
-                  poster={`/portfolio/videos/${reel.name}.webp`}
+                  src={reel.video}
+                  poster={reel.poster}
                   label={reel.title}
                   className="w-full h-full object-cover"
                 />
@@ -382,10 +319,7 @@ export const PortfolioPage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap justify-center gap-x-8 gap-y-2">
-            {[
-              { handle: 'levcoworkingbeauty', label: '@levcoworkingbeauty' },
-              { handle: 'talithakum_beauty', label: '@talithakum_beauty' }
-            ].map(profile => (
+            {LEV_PORTFOLIO.instagramProfiles.map(profile => (
               <a
                 key={profile.handle}
                 href={`https://www.instagram.com/${profile.handle}/`}
@@ -409,8 +343,8 @@ export const PortfolioPage: React.FC = () => {
               <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 items-stretch">
                 <div className="relative min-h-[420px] lg:min-h-[640px]">
                   <img
-                    src="/portfolio/talitha/noiva-rayssa-janela.webp"
-                    alt="Noiva Rayssa pronta para o grande dia"
+                    src={LEV_PORTFOLIO.bridalImage.src}
+                    alt={LEV_PORTFOLIO.bridalImage.alt}
                     loading="lazy"
                     className="absolute inset-0 w-full h-full object-cover"
                   />
@@ -520,10 +454,7 @@ export const PortfolioPage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-4xl mx-auto">
-            {[
-              { url: '/portfolio/lev/fachada.webp', title: 'Nossa fachada' },
-              { url: '/portfolio/lev/equipe-inauguracao.webp', title: 'Nossa recepção' }
-            ].map(img => (
+            {LEV_PORTFOLIO.spacePhotos.map(img => (
               <figure key={img.url} className="space-y-3">
                 <div className="rounded-2xl overflow-hidden h-96">
                   <img src={img.url} alt={img.title} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform duration-700" />
