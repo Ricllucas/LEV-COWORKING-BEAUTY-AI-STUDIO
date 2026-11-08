@@ -1,5 +1,6 @@
 import { buildConfirmUrl } from './confirmLink.js';
 import { isOpenWaConfigured, sendOpenWaText } from './openwa.js';
+import { findProfessional, loadSalonDirectory } from './salonDirectory.js';
 
 interface AppointmentData {
   id?: string;
@@ -15,13 +16,6 @@ interface AppointmentData {
   totalPrice: number;
 }
 
-// Números de WhatsApp das profissionais
-const PROFESSIONAL_PHONES: Record<string, string> = {
-  prof_elisangela: '5541992461203',
-  prof_talitha: '5541999983228',
-  prof_nayara: '5541996556742',
-};
-
 const formatDateBR = (date: string) => date.split('-').reverse().join('/');
 
 // Texto vindo do site público: sem links nem formatação, para não virar propaganda no WhatsApp
@@ -33,23 +27,25 @@ const plain = (value: unknown, max: number) => String(value || '')
   .slice(0, max);
 
 // Link assinado para a profissional confirmar direto do WhatsApp
-export const confirmFooter = (appointment: AppointmentData): string => {
+export const confirmFooter = (appointment: AppointmentData, shortName: string): string => {
   const url = appointment.id && appointment.status === 'aguardando_confirmacao'
     ? buildConfirmUrl(appointment.id, appointment.date, appointment.startTime)
     : null;
   return url
     ? `✅ *Para confirmar e avisar a cliente, toque no link:*
 ${url}`
-    : 'Confira e confirme pelo painel da LEV.';
+    : `Confira e confirme pelo painel da ${shortName}.`;
 };
 
-// Avisa a profissional pelo robô de WhatsApp da LEV quando entra um agendamento.
-export const sendProfessionalNotification = async (appointment: AppointmentData): Promise<boolean> => {
-  const professionalPhone = PROFESSIONAL_PHONES[appointment.professionalId];
-  if (!professionalPhone || !isOpenWaConfigured()) return false;
+// Avisa a profissional pelo robô de WhatsApp do salão quando entra um agendamento.
+export const sendProfessionalNotification = async (appointment: AppointmentData, salonId: string): Promise<boolean> => {
+  if (!isOpenWaConfigured()) return false;
+  const dir = await loadSalonDirectory(salonId);
+  const professionalPhone = findProfessional(dir, appointment.professionalId)?.whatsapp;
+  if (!professionalPhone) return false;
 
   const price = Number(appointment.totalPrice || 0).toFixed(2).replace('.', ',');
-  const message = `📅 *Novo agendamento — LEV*
+  const message = `📅 *Novo agendamento — ${dir.shortName}*
 
 👤 *Cliente:* ${plain(appointment.clientName, 80)}
 📞 *Telefone:* ${plain(appointment.clientPhone, 24)}
@@ -58,7 +54,7 @@ export const sendProfessionalNotification = async (appointment: AppointmentData)
 ⏰ *Horário:* ${appointment.startTime} às ${appointment.endTime}
 💰 *Valor:* R$ ${price}
 
-${confirmFooter(appointment)}`;
+${confirmFooter(appointment, dir.shortName)}`;
 
   try {
     await sendOpenWaText(professionalPhone, message);

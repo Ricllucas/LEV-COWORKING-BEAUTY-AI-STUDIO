@@ -16,7 +16,7 @@ export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return json(res, 405, { error: 'Método não permitido.' });
   if (!rateLimit(req, res, 'calendar-sync-one', 60, 60_000) || !validJsonRequest(req, res)) return;
   const staff = await authenticateStaff(req.headers?.authorization);
-  if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
+  if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe do salão.' });
   try {
     const input = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const appointmentId = input?.appointmentId || input?.id;
@@ -106,8 +106,8 @@ export default async function handler(req: any, res: any) {
       if (!updateResponse.ok) return json(res, 502, { error: 'Não foi possível salvar o status do atendimento.' });
     }
 
-    const calendar = await syncGoogleCalendarEvent(appointment);
-    return json(res, 200, { appointment, synced: true, ...calendar });
+    const calendar = await syncGoogleCalendarEvent(appointment, staff.salonId);
+    return json(res, 200, { appointment, synced: !('skipped' in calendar), ...calendar });
   } catch (error) {
     console.error('Google Calendar sync error:', error);
     return json(res, 500, { error: publicErrorMessage(error, 'Falha ao sincronizar o Google Agenda.') });

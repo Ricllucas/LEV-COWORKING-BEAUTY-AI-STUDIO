@@ -4,6 +4,7 @@ import { sendProfessionalNotification } from '../_lib/whatsappProfessionalNotifi
 import { applyApiSecurity, publicErrorMessage, rateLimit, requestIp, safeText, secureId, validJsonRequest } from '../_lib/security.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
 import { DEFAULT_SALON_ID } from '../_lib/tenant.js';
+import { findProfessional, loadSalonDirectory } from '../_lib/salonDirectory.js';
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const valid = (a: any) => Boolean(a?.id && a?.professionalId && a?.clientName && a?.clientPhone && /^\d{4}-\d{2}-\d{2}$/.test(a?.date || '') && /^\d{2}:\d{2}$/.test(a?.startTime || '') && /^\d{2}:\d{2}$/.test(a?.endTime || ''));
 export default async function handler(req: any, res: any) {
@@ -15,7 +16,6 @@ export default async function handler(req: any, res: any) {
     // Equipe: salão do login. Site público: LEV por enquanto (a fase 4 usa o endereço).
     const salonId = staff ? staff.salonId : DEFAULT_SALON_ID;
     const raw = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
-    const allowedProfessionals = new Set(['prof_elisangela', 'prof_talitha', 'prof_nayara']);
     const appointment = {
       ...raw,
       turnstileToken: undefined,
@@ -29,7 +29,9 @@ export default async function handler(req: any, res: any) {
       serviceIds: Array.isArray(raw?.serviceIds) ? raw.serviceIds.slice(0, 12).map((v: unknown) => safeText(v, 80)) : [],
       serviceNames: Array.isArray(raw?.serviceNames) ? raw.serviceNames.slice(0, 12).map((v: unknown) => safeText(v, 120)) : []
     };
-    if (!allowedProfessionals.has(appointment.professionalId)) return json(res, 400, { error: 'Profissional inválida.' });
+    // Só profissional do próprio salão (outro salão ou inventada → recusado)
+    const directory = await loadSalonDirectory(salonId);
+    if (!findProfessional(directory, appointment.professionalId)) return json(res, 400, { error: 'Profissional inválida.' });
     if (!valid(appointment)) return json(res, 400, { error: 'Dados do agendamento incompletos.' });
     if (!staff) {
       // Site público: prova de que não é robô e limite de pedidos por telefone
@@ -48,7 +50,7 @@ export default async function handler(req: any, res: any) {
       }
     );
 
-    // Avisa a profissional pelo WhatsApp da LEV, exceto quando ela mesma lançou o horário
+    // Avisa a profissional pelo WhatsApp do salão, exceto quando ela mesma lançou o horário
     const bookedByOwnProfessional = staff?.role === 'profissional' && staff.professionalId === appointment.professionalId;
     if (result?.appointment && !bookedByOwnProfessional) {
       // Usa os dados conferidos e salvos pelo servidor (serviços e preço do catálogo)
@@ -65,7 +67,7 @@ export default async function handler(req: any, res: any) {
         endTime: saved.endTime,
         serviceNames: saved.serviceNames,
         totalPrice: saved.totalPrice,
-      });
+      }, salonId);
     }
 
     return json(res, 201, result);

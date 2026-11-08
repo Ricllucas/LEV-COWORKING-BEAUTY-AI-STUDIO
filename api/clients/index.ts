@@ -11,7 +11,7 @@ const listClients = async (req: any, res: any) => {
   if (!rateLimit(req, res, 'staff-clients', 120, 60_000)) return;
   try {
     const staff = await authenticateStaff(req.headers?.authorization);
-    if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
+    if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe do salão.' });
     const { url, serviceKey } = supabaseConfig();
     const response = await fetch(
       `${url}/rest/v1/client_profiles?select=id,phone_digits,payload,created_at,updated_at&order=created_at.desc&${salonFilter(staff.salonId)}`,
@@ -30,7 +30,7 @@ const saveClient = async (req: any, res: any) => {
   if (!rateLimit(req, res, 'staff-client-save', 60, 60_000) || !validJsonRequest(req, res)) return;
   try {
     const staff = await authenticateStaff(req.headers?.authorization);
-    if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
+    if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe do salão.' });
     const input = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
     const phoneDigits = digits(input.phone);
     if (!String(input.fullName || '').trim() || phoneDigits.length < 10) {

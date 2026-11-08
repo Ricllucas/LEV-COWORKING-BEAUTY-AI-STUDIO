@@ -1,5 +1,6 @@
 import { addMinutes, availableStartTimes, createUnifiedAppointment } from './appointmentService.js';
-import { PROFESSIONALS, servicesFor, type BookingService } from './bookingCatalog.js';
+import { loadBookingServices, type BookingService } from './bookingCatalog.js';
+import { loadSalonDirectory, type SalonDirectory } from './salonDirectory.js';
 import { normalizePhone, supabaseRequest } from './whatsapp.js';
 import { salonFilter } from './tenant.js';
 
@@ -19,8 +20,10 @@ const parseDate = (text: string) => {
   if (!iso || Number.isNaN(new Date(`${iso}T12:00:00`).getTime())) return '';
   return iso;
 };
-const professionalMenu = () => `Vamos agendar pelo fluxo oficial da LEV.\n\nEscolha a profissional:\n${PROFESSIONALS.map((p, i) => `${i + 1}. ${p.name}`).join('\n')}\n\nResponda apenas com o número.`;
-const serviceMenu = (professionalId: string) => `Escolha o serviço:\n${servicesFor(professionalId).map((s, i) => `${i + 1}. ${s.name} — ${s.price > 0 ? `R$ ${s.price.toFixed(2).replace('.', ',')}` : 'valor sob consulta'}`).join('\n')}\n\nResponda apenas com o número.`;
+const professionalMenu = (dir: SalonDirectory) => `Vamos agendar pelo fluxo oficial da ${dir.shortName}.\n\nEscolha a profissional:\n${dir.professionals.map((p, i) => `${i + 1}. ${p.name}`).join('\n')}\n\nResponda apenas com o número.`;
+const servicesFor = async (salonId: string, professionalId: string) =>
+  (await loadBookingServices(salonId)).filter(service => service.professionalId === professionalId);
+const serviceMenu = (services: BookingService[]) => `Escolha o serviço:\n${services.map((s, i) => `${i + 1}. ${s.name} — ${s.price > 0 ? `R$ ${s.price.toFixed(2).replace('.', ',')}` : 'valor sob consulta'}`).join('\n')}\n\nResponda apenas com o número.`;
 
 export const processWhatsAppBooking = async (params: {
   conversation: Conversation; text: string; clientName: string; clientPhone: string; salonId: string;
@@ -35,21 +38,23 @@ export const processWhatsAppBooking = async (params: {
   }
   if (!step && /\bagendar\b|\bmarcar\b/.test(lower)) {
     await update(salonId, conversation.id, { booking_step: 'professional', booking_draft: { source: 'whatsapp' } });
-    return professionalMenu();
+    return professionalMenu(await loadSalonDirectory(salonId));
   }
   if (!step) return null;
 
   if (step === 'professional') {
-    const professional = PROFESSIONALS[choice(text) - 1];
-    if (!professional) return `Opção inválida.\n\n${professionalMenu()}`;
+    const dir = await loadSalonDirectory(salonId);
+    const professional = dir.professionals[choice(text) - 1];
+    if (!professional) return `Opção inválida.\n\n${professionalMenu(dir)}`;
     draft = { ...draft, professionalId: professional.id, professionalName: professional.name };
     await update(salonId, conversation.id, { booking_step: 'service', booking_draft: draft });
-    return serviceMenu(professional.id);
+    return serviceMenu(await servicesFor(salonId, professional.id));
   }
 
   if (step === 'service') {
-    const service = servicesFor(draft.professionalId)[choice(text) - 1] as BookingService | undefined;
-    if (!service) return `Opção inválida.\n\n${serviceMenu(draft.professionalId)}`;
+    const services = await servicesFor(salonId, draft.professionalId);
+    const service = services[choice(text) - 1] as BookingService | undefined;
+    if (!service) return `Opção inválida.\n\n${serviceMenu(services)}`;
     draft = { ...draft, serviceId: service.id, serviceName: service.name, duration: service.duration, price: service.price };
     await update(salonId, conversation.id, { booking_step: 'date', booking_draft: draft });
     return `Ótima escolha: *${service.name}*.\n\nInforme a data desejada no formato *DD/MM/AAAA*.`;
@@ -92,7 +97,7 @@ export const processWhatsAppBooking = async (params: {
       updatedAt: now.toISOString(), createdBy: clientName, source: 'whatsapp'
     });
     await update(salonId, conversation.id, { booking_step: null, booking_draft: {}, appointment_id: result.appointment.id, assigned_professional_id: draft.professionalId, assigned_professional_name: draft.professionalName, status: 'aguardando' });
-    return `Agendamento registrado com sucesso! ✅\n\n${draft.serviceName} com ${draft.professionalName}\n${draft.date.split('-').reverse().join('/')} — ${draft.startTime}\n\nO mesmo horário já foi bloqueado no site e incluído no Google Agenda compartilhado da LEV.`;
+    return `Agendamento registrado com sucesso! ✅\n\n${draft.serviceName} com ${draft.professionalName}\n${draft.date.split('-').reverse().join('/')} — ${draft.startTime}\n\nO mesmo horário já foi bloqueado no site e incluído no Google Agenda compartilhado da ${(await loadSalonDirectory(salonId)).shortName}.`;
   }
   return null;
 };

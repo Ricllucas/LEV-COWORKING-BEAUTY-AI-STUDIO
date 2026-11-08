@@ -1,19 +1,64 @@
-export type BookingService = { id: string; name: string; professionalId: string; professionalName: string; duration: number; price: number; catalogVersion?: number };
-export const PROFESSIONALS = [{ id: 'prof_elisangela', name: 'Elisangela' }, { id: 'prof_talitha', name: 'Talitha' }, { id: 'prof_nayara', name: 'Nayara' }];
-export const BOOKING_SERVICES: BookingService[] = [
-  ['srv_tal_10','Extensão de Cílios','prof_talitha','Talitha',90,170],
-  ['srv_tal_11','Manutenção de Cílios','prof_talitha','Talitha',60,120],
-  ['srv_tal_12','Lash Lifting','prof_talitha','Talitha',90,150],
-  ['srv_tal_13','Design de Sobrancelhas com Henna','prof_talitha','Talitha',30,65],
-  ['srv_tal_14','Depilação de Buço','prof_talitha','Talitha',15,35],
-  ['srv_eli_1','Mão Tradicional','prof_elisangela','Elisangela',40,35],
-  ['srv_eli_2','Pedicure Tradicional','prof_elisangela','Elisangela',45,45],
-  ['srv_eli_5','Mão — Esmaltação em Gel','prof_elisangela','Elisangela',50,55],
-  ['srv_eli_6','Pé — Esmaltação em Gel','prof_elisangela','Elisangela',60,80],
-  ['srv_eli_7','SPA dos Pés','prof_elisangela','Elisangela',60,80],
-  ['srv_1793236813426','SPA dos Pés','prof_elisangela','Elisangela',60,80],
-  ['srv_tal_1','Maquiagem Social','prof_talitha','Talitha',90,170],['srv_tal_2','Penteado','prof_talitha','Talitha',90,170],['srv_tal_3','Produção Beauty','prof_talitha','Talitha',150,300],['srv_tal_4','Baby Liss','prof_talitha','Talitha',60,140],['srv_tal_5','Penteado para Cabelos Cacheados','prof_talitha','Talitha',120,200],['srv_tal_6','Produção Noivas','prof_talitha','Talitha',180,0],['srv_tal_7','Design de Sobrancelhas','prof_talitha','Talitha',40,45],['srv_tal_8','Brow Lamination','prof_talitha','Talitha',60,130,2026110301],['srv_tal_9','Microblading','prof_talitha','Talitha',120,450],
-['srv_nay_1','Aplicação de Alongamento','prof_nayara','Nayara',120,160,2026110301],['srv_nay_2','Manutenção em Gel','prof_nayara','Nayara',120,145,2026110301],['srv_nay_3','Banho de Gel','prof_nayara','Nayara',90,90],['srv_nay_4','Esmaltação em Gel','prof_nayara','Nayara',60,55],['srv_nay_5','Blindagem','prof_nayara','Nayara',60,70],['srv_nay_6','Cuticulagem','prof_nayara','Nayara',60,35]
-].map(([id,name,professionalId,professionalName,duration,price,catalogVersion]) => ({ id, name, professionalId, professionalName, duration, price, ...(catalogVersion ? { catalogVersion } : {}) } as BookingService));
-export const servicesFor = (professionalId: string) => BOOKING_SERVICES.filter(service => service.professionalId === professionalId);
+import { RETIRED_SERVICE_IDS } from '../../src/data/retiredServices.js';
+import { LEV_BOOKING_SERVICES, LEV_SALON_ID } from './levDefaults.js';
+import { serviceHeaders, supabaseConfig } from './staffAuth.js';
+import { salonFilter } from './tenant.js';
 
+export type BookingService = { id: string; name: string; professionalId: string; professionalName: string; duration: number; price: number; catalogVersion?: number };
+
+type CatalogPayload = {
+  name?: unknown; professionalId?: unknown; professionalName?: unknown; durationMinutes?: unknown; price?: unknown;
+  promotionalPrice?: unknown; catalogVersion?: unknown; active?: unknown; onlineBookingEnabled?: unknown;
+};
+type CatalogRow = { id?: unknown; payload?: CatalogPayload | null; deleted?: unknown };
+
+const readCatalog = async (salonId: string): Promise<CatalogRow[] | null> => {
+  try {
+    const { url, serviceKey } = supabaseConfig();
+    const response = await fetch(`${url}/rest/v1/catalog_services?select=id,payload,deleted&${salonFilter(salonId)}`, { headers: serviceHeaders(serviceKey) });
+    if (!response.ok) return null;
+    const rows = await response.json() as unknown;
+    return Array.isArray(rows) ? rows as CatalogRow[] : null;
+  } catch {
+    return null;
+  }
+};
+
+const toService = (row: CatalogRow): BookingService | null => {
+  const id = typeof row.id === 'string' ? row.id : '';
+  const p = row.payload;
+  if (!id || !p || row.deleted === true || p.active === false || p.onlineBookingEnabled === false) return null;
+  const name = typeof p.name === 'string' ? p.name : '';
+  const professionalId = typeof p.professionalId === 'string' ? p.professionalId : '';
+  const duration = Number(p.durationMinutes);
+  const price = Number(p.promotionalPrice ?? p.price ?? 0);
+  if (!name || !professionalId || !Number.isFinite(duration) || duration <= 0 || !Number.isFinite(price)) return null;
+  const catalogVersion = Number(p.catalogVersion) || 0;
+  return {
+    id, name, professionalId,
+    professionalName: typeof p.professionalName === 'string' ? p.professionalName : '',
+    duration, price,
+    ...(catalogVersion ? { catalogVersion } : {})
+  };
+};
+
+// Serviços que a cliente pode agendar (menu do WhatsApp), sem os apagados.
+// A LEV completa com a lista de fábrica os ids que o banco não tiver; outro salão usa só o banco.
+export const loadBookingServices = async (salonId: string): Promise<BookingService[]> => {
+  const rows = await readCatalog(salonId);
+  const live = (rows || []).filter(row => row.deleted !== true);
+  const present = new Set(live.map(row => String(row.id)));
+  const online = live.map(toService).filter((service): service is BookingService => Boolean(service));
+  if (salonId !== LEV_SALON_ID) return online.filter(service => !RETIRED_SERVICE_IDS.has(service.id));
+
+  const onlineById = new Map(online.map(service => [service.id, service]));
+  // Mesma regra do agendamento pelo site: a versão de fábrica vence um registro online mais antigo.
+  // A ordem de fábrica vem primeiro, para o menu da LEV não mudar.
+  const known = LEV_BOOKING_SERVICES.flatMap(bundled => {
+    const current = onlineById.get(bundled.id);
+    if (current && (bundled.catalogVersion || 0) <= (current.catalogVersion || 0)) return [current];
+    if (current || !present.has(bundled.id)) return [bundled];
+    return []; // está no banco, mas desativado para agendamento online
+  });
+  const extras = online.filter(service => !LEV_BOOKING_SERVICES.some(bundled => bundled.id === service.id));
+  return [...known, ...extras].filter(service => !RETIRED_SERVICE_IDS.has(service.id));
+};

@@ -2,6 +2,7 @@ const json = (res: any, status: number, body: unknown) => res.status(status).jso
 import { applyApiSecurity, rateLimit, publicErrorMessage } from '../_lib/security.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
 import { salonFilter } from '../_lib/tenant.js';
+import { findProfessional, loadSalonDirectory } from '../_lib/salonDirectory.js';
 
 const config = () => {
   const url = process.env.SUPABASE_URL?.replace(/\/$/, '');
@@ -16,12 +17,6 @@ const headers = (key: string) => ({
   Accept: 'application/json'
 });
 
-const professionalNames: Record<string, string> = {
-  prof_elisangela: 'Elisangela',
-  prof_talitha: 'Talitha',
-  prof_nayara: 'Nayara'
-};
-
 const addMinutes = (time: string, minutes: number) => {
   const [hours, mins] = time.split(':').map(Number);
   const total = hours * 60 + mins + minutes;
@@ -34,9 +29,11 @@ export default async function handler(req: any, res: any) {
   if (!rateLimit(req, res, 'staff-appointments', 120, 60_000)) return;
   try {
     const staff = await authenticateStaff(req.headers?.authorization);
-    if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
+    if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe do salão.' });
 
     const { url, key } = config();
+    const directory = await loadSalonDirectory(staff.salonId);
+    const nameOf = (professionalId: string) => findProfessional(directory, professionalId)?.name || 'Profissional';
     const response = await fetch(
       `${url}/rest/v1/appointments?select=id,professional_id,appointment_date,start_time,status,payload,updated_at&order=appointment_date.asc,start_time.asc&${salonFilter(staff.salonId)}`,
       { headers: headers(key) }
@@ -61,7 +58,7 @@ export default async function handler(req: any, res: any) {
           ...row.payload,
           id: row.id,
           professionalId: row.professional_id,
-          professionalName: row.payload.professionalName || professionalNames[row.professional_id] || 'Profissional LEV',
+          professionalName: row.payload.professionalName || nameOf(row.professional_id),
           date: row.appointment_date,
           startTime: row.start_time,
           status: row.status,
@@ -75,9 +72,9 @@ export default async function handler(req: any, res: any) {
         clientName: 'Cliente não identificado',
         clientPhone: '',
         professionalId: row.professional_id,
-        professionalName: professionalNames[row.professional_id] || 'Profissional LEV',
+        professionalName: nameOf(row.professional_id),
         serviceIds: [],
-        serviceNames: ['Atendimento LEV'],
+        serviceNames: ['Atendimento'],
         date: row.appointment_date,
         startTime: row.start_time,
         endTime: addMinutes(row.start_time, duration),
@@ -89,7 +86,7 @@ export default async function handler(req: any, res: any) {
         paymentStatus: 'pendente',
         createdAt: row.updated_at || new Date().toISOString(),
         updatedAt: row.updated_at || new Date().toISOString(),
-        createdBy: 'Agenda LEV'
+        createdBy: 'Agenda'
       };
     });
     return json(res, 200, { appointments });

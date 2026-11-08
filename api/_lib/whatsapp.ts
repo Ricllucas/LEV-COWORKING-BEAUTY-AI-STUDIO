@@ -59,7 +59,7 @@ export const authenticateStaff = async (authorization?: string): Promise<StaffAc
   if (admins[0]) {
     const salonId = salonIdFromRow(admins[0]);
     if (!salonId) return null;
-    return { userId: user.id, role: 'admin', name: admins[0].display_name || 'Administração LEV', salonId };
+    return { userId: user.id, role: 'admin', name: admins[0].display_name || 'Administração', salonId };
   }
 
     const professionalResponse = await supabaseRequest(
@@ -127,11 +127,5 @@ export const sendWhatsAppTemplate = async (
   if (!response.ok) throw new Error(result?.error?.message || 'A Meta recusou o modelo de mensagem.');
   return result as { messages?: Array<{ id: string }> };
 };
-
-export const professionalName = (id?: string | null) => ({
-  prof_elisangela: 'Elisangela',
-  prof_talitha: 'Talitha',
-  prof_nayara: 'Nayara'
-} as Record<string, string>)[id || ''];
 
 export const normalizePhone = (value: string) => value.replace(/\D/g, '');

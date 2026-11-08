@@ -1,4 +1,5 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
+import { findProfessional, loadSalonDirectory, type SalonDirectory } from '../_lib/salonDirectory.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
 import { withSalon } from '../_lib/tenant.js';
 import { applyApiSecurity, rateLimit, safeText, secureId, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
@@ -29,7 +30,7 @@ export default async function handler(req: any, res: any) {
   }
   if (!rateLimit(req, res, 'calendar-block', 60, 60_000) || !validJsonRequest(req, res)) return;
   const staff = await authenticateStaff(req.headers?.authorization);
-  if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
+  if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe do salão.' });
 
   try {
     const block = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
@@ -37,7 +38,8 @@ export default async function handler(req: any, res: any) {
     if (!block?.id || !block?.professionalId || !block?.date || !block?.startTime || !block?.endTime) {
       return json(res, 400, { error: 'Dados do bloqueio incompletos.' });
     }
-    const invalid = validateBlock(block);
+    const directory = await loadSalonDirectory(staff.salonId);
+    const invalid = validateBlock(block, directory);
     if (invalid) return json(res, 400, { error: invalid });
     // Cada profissional só bloqueia a própria agenda; o admin bloqueia qualquer uma
     if (staff.role === 'profissional' && staff.professionalId !== block.professionalId) {
@@ -54,7 +56,7 @@ export default async function handler(req: any, res: any) {
     const blockData: TimeBlock = {
       id: secureId('block'),
       professionalId: block.professionalId,
-      professionalName: safeText(block.professionalName, 80),
+      professionalName: safeText(block.professionalName, 80) || findProfessional(directory, block.professionalId)?.name || '',
       date: block.date,
       startTime: block.startTime,
       endTime: block.endTime,
@@ -94,7 +96,7 @@ export default async function handler(req: any, res: any) {
     }
 
     try {
-      const calendarResult = await syncGoogleCalendarEvent(blockData);
+      const calendarResult = await syncGoogleCalendarEvent(blockData, staff.salonId);
 
       return json(res, 201, {
         saved: true,
@@ -117,11 +119,11 @@ export default async function handler(req: any, res: any) {
   }
 }
 
-const PROFESSIONALS = new Set(['prof_elisangela', 'prof_talitha', 'prof_nayara']);
 const BLOCK_TYPES = new Set(['pausa', 'indisponivel', 'bloqueio']);
 
-export function validateBlock(block: any): string | null {
-  if (!PROFESSIONALS.has(block.professionalId)) return 'Profissional inválida.';
+// A profissional precisa ser do salão de quem está logada
+export function validateBlock(block: any, directory: SalonDirectory): string | null {
+  if (typeof block.professionalId !== 'string' || !findProfessional(directory, block.professionalId)) return 'Profissional inválida.';
   if (typeof block.date !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(block.date)) return 'Data inválida.';
   const time = /^([01]\d|2[0-3]):[0-5]\d$/;
   if (typeof block.startTime !== 'string' || !time.test(block.startTime)) return 'Horário inicial inválido.';

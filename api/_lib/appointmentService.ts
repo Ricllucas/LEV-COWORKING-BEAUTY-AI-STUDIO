@@ -1,6 +1,6 @@
 import { syncGoogleCalendarEvent } from './googleCalendar.js';
 import { notificationService } from './notificationService.js';
-import { BOOKING_SERVICES } from './bookingCatalog.js';
+import { LEV_BOOKING_SERVICES, LEV_SALON_ID } from './levDefaults.js';
 import { RETIRED_SERVICE_IDS } from '../../src/data/retiredServices.js';
 import { salonFilter, withSalon } from './tenant.js';
 
@@ -56,7 +56,9 @@ const canonicalServices = async (salonId: string, ids: string[]): Promise<Catalo
     ? await response.json() as Array<{ id: string; payload?: CatalogService; deleted?: boolean }>
     : [];
   const cloud = new Map(cloudRows.filter(row => !row.deleted && row.payload).map(row => [row.id, row.payload!]));
-  const fallback = new Map(BOOKING_SERVICES.map(service => [service.id, {
+  // Lista de fábrica só vale para a LEV; outro salão depende só do banco
+  const bundledList = salonId === LEV_SALON_ID ? LEV_BOOKING_SERVICES : [];
+  const fallback = new Map(bundledList.map(service => [service.id, {
     ...service, durationMinutes: service.duration, active: true, onlineBookingEnabled: true
   }]));
   // Mesma regra do site: a versão oficial do código vence um registro online mais antigo
@@ -230,7 +232,10 @@ export const createUnifiedAppointment = async (
     (error as Error & { status?: number }).status = response.status === 409 ? 409 : 500; throw error;
   }
   let calendar: Record<string, unknown> = { synced: false };
-  try { calendar = { synced: true, ...await syncGoogleCalendarEvent(payload) }; }
+  try {
+    const result = await syncGoogleCalendarEvent(payload, salonId);
+    calendar = { synced: !('skipped' in result), ...result };
+  }
   catch (error) { console.error('Google Calendar sync error:', error); }
   notificationService.notifyNewAppointment({ appointmentId: payload.id, clientName: payload.clientName, clientPhone: payload.clientPhone, professionalName: payload.professionalName, serviceNames: payload.serviceNames, date: payload.date, startTime: payload.startTime, endTime: payload.endTime, status: payload.status }, payload.professionalId)
     .catch(error => console.error('Notification error:', error));

@@ -75,7 +75,7 @@ export default async function handler(req: any, res: any) {
     if (!updated[0]) return json(res, 409, { error: 'Este horário mudou enquanto você confirmava. Confira no painel da LEV.' });
 
     try {
-      await syncGoogleCalendarEvent(appointment);
+      await syncGoogleCalendarEvent(appointment, salonId);
     } catch (calendarError) {
       console.error('[CONFIRMAR LINK] Confirmado, mas falhou a sincronização com o Google Agenda:', calendarError);
     }

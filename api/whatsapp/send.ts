@@ -11,7 +11,7 @@ export default async function handler(req: any, res: any) {
   res.setHeader('Cache-Control', 'no-store');
   try {
     const staff = await authenticateStaff(req.headers?.authorization);
-    if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe LEV.' });
+    if (!staff) return json(res, 401, { error: 'Acesso restrito à equipe do salão.' });
 
     if (req.method === 'GET') return json(res, 200, { automatic: isOpenWaConfigured() });
     if (req.method !== 'POST') return json(res, 405, { error: 'Método não permitido.' });

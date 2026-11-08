@@ -1,19 +1,11 @@
 import { createHash, createSign } from 'node:crypto';
+import { LEV_SALON, LEV_SALON_ID } from './levDefaults.js';
+import { calendarIdFor, findProfessional, loadSalonDirectory } from './salonDirectory.js';
 
 const requireEnv = (name: string) => {
   const value = process.env[name];
   if (!value) throw new Error(`Variável obrigatória ausente: ${name}`);
   return value;
-};
-
-const getCalendarId = (professionalId: string) => {
-  const calendarEnvByProfessional: Record<string, string> = {
-    prof_elisangela: 'GOOGLE_CALENDAR_ID_ELISANGELA',
-    prof_talitha: 'GOOGLE_CALENDAR_ID_TALITHA',
-    prof_nayara: 'GOOGLE_CALENDAR_ID_NAYARA'
-  };
-  const professionalCalendar = process.env[calendarEnvByProfessional[professionalId]];
-  return professionalCalendar || requireEnv('GOOGLE_CALENDAR_ID');
 };
 
 const base64Url = (value: string | Buffer) => Buffer.from(value)
@@ -48,14 +40,12 @@ const getAccessToken = async () => {
 export const calendarEventId = (appointmentId: string) =>
   `lev${createHash('sha256').update(appointmentId).digest('hex').slice(0, 40)}`;
 
-const getProfessionalColor = (professionalId: string): string => {
-  const colors: Record<string, string> = {
-    'prof_elisangela': '5',  // Banana (Amarelo Ouro)
-    'prof_talitha': '6',     // Tangerine (Laranja)
-    'prof_nayara': '8'       // Graphite (Marrom)
-  };
-  return colors[professionalId] || '0';
-};
+// Texto que liga o evento ao agendamento. A forma antiga (com o nome curto da LEV)
+// continua sendo aceita na busca, para achar os eventos já criados.
+const appointmentMarker = (appointmentId: string) => `Agendamento: ${appointmentId}`;
+const legacyAppointmentMarker = (appointmentId: string) => `Agendamento ${LEV_SALON.shortName}: ${appointmentId}`;
+export const describesAppointment = (description: string | undefined, appointmentId: string) =>
+  Boolean(description && (description.includes(appointmentMarker(appointmentId)) || description.includes(legacyAppointmentMarker(appointmentId))));
 
 const getStatusNotifications = (status: string): { method: string; minutes: number }[] => {
   const statusMap: Record<string, { method: string; minutes: number }[]> = {
@@ -70,15 +60,20 @@ const getStatusNotifications = (status: string): { method: string; minutes: numb
   return statusMap[status] || [];
 };
 
-export const syncGoogleCalendarEvent = async (appointment: any) => {
-  const calendarId = getCalendarId(appointment.professionalId);
+export const syncGoogleCalendarEvent = async (appointment: any, salonId: string) => {
+  const dir = await loadSalonDirectory(salonId);
+  const calendarId = calendarIdFor(dir, appointment.professionalId);
+  // Salão (ou profissional) sem agenda do Google: não chama o Google
+  if (!calendarId) return { skipped: 'sem agenda do Google' } as const;
   const token = await getAccessToken();
   const eventId = calendarEventId(appointment.id);
   const baseUrl = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`;
   const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   if (['cancelado_cliente', 'cancelado_coworking'].includes(appointment.status)) {
-    const calendarIds = [...new Set([calendarId, process.env.GOOGLE_CALENDAR_ID].filter(Boolean))] as string[];
+    // A agenda geral (eventos antigos) só é limpa para a LEV
+    const generalCalendar = dir.salonId === LEV_SALON_ID ? process.env.GOOGLE_CALENDAR_ID : undefined;
+    const calendarIds = [...new Set([calendarId, generalCalendar].filter(Boolean))] as string[];
     let deletedCount = 0;
 
     for (const targetCalendarId of calendarIds) {
@@ -100,7 +95,7 @@ export const syncGoogleCalendarEvent = async (appointment: any) => {
         const result = await lookup.json() as { items?: Array<{ id?: string; description?: string; extendedProperties?: { private?: { levAppointmentId?: string } } }> };
         for (const item of result.items || []) {
           const matches = item.extendedProperties?.private?.levAppointmentId === appointment.id
-            || item.description?.includes(`Agendamento LEV: ${appointment.id}`);
+            || describesAppointment(item.description, appointment.id);
           if (item.id && matches && item.id !== eventId) foundIds.add(item.id);
         }
       }
@@ -115,14 +110,14 @@ export const syncGoogleCalendarEvent = async (appointment: any) => {
     return { action: 'deleted', eventId, deletedCount };
   }
 
-  const services = Array.isArray(appointment.serviceNames) ? appointment.serviceNames.join(', ') : 'Atendimento LEV';
+  const services = Array.isArray(appointment.serviceNames) ? appointment.serviceNames.join(', ') : `Atendimento ${dir.shortName}`;
 
   const statusLabel: Record<string, string> = {
     'confirmado': '✅ Confirmado',
     'pendente': '⏳ Pendente',
     'concluido': '✔️ Concluído',
     'cancelado_cliente': '❌ Cancelado (Cliente)',
-    'cancelado_coworking': '❌ Cancelado (LEV)'
+    'cancelado_coworking': `❌ Cancelado (${dir.shortName})`
   };
 
   const event = {
@@ -140,12 +135,12 @@ export const syncGoogleCalendarEvent = async (appointment: any) => {
       `📊 Status: ${statusLabel[appointment.status] || appointment.status}`,
       appointment.notes ? `📝 Observações: ${appointment.notes}` : '',
       '',
-      `🔗 Agendamento LEV: ${appointment.id}`,
+      `🔗 ${appointmentMarker(appointment.id)}`,
       `🔄 Última atualização: ${new Date().toLocaleString('pt-BR')}`
     ].filter(Boolean).join('\n'),
     start: { dateTime: `${appointment.date}T${appointment.startTime}:00`, timeZone: 'America/Sao_Paulo' },
     end: { dateTime: `${appointment.date}T${appointment.endTime}:00`, timeZone: 'America/Sao_Paulo' },
-    colorId: getProfessionalColor(appointment.professionalId),
+    colorId: findProfessional(dir, appointment.professionalId)?.googleColorId || '0',
     transparency: appointment.status === 'confirmado' ? 'opaque' : 'transparent',
     reminders: {
       useDefault: false,

@@ -3,6 +3,7 @@ import { countPendingForPhone, phoneKey } from './appointmentService';
 import { publicErrorMessage } from './security';
 import { verifyTurnstile } from './turnstile';
 import { validateBlock } from '../calendar/block';
+import type { SalonDirectory } from './salonDirectory';
 
 describe('limite de pedidos por telefone', () => {
   it('reconhece o mesmo celular com ou sem DDI e máscara', () => {
@@ -49,12 +50,16 @@ describe('verificação anti-robô', () => {
 
 describe('bloqueio de agenda', () => {
   const ok = { professionalId: 'prof_nayara', date: '2026-11-05', startTime: '12:00', endTime: '13:00', type: 'pausa' };
-  it('aceita um bloqueio válido', () => expect(validateBlock(ok)).toBeNull());
+  const dir: SalonDirectory = {
+    salonId: 'lev', name: 'LEV Coworking Beauty', shortName: 'LEV',
+    professionals: [{ id: 'prof_nayara', name: 'Nayara', whatsapp: '5541996556742', googleColorId: '8', googleCalendarId: null }]
+  };
+  it('aceita um bloqueio válido', () => expect(validateBlock(ok, dir)).toBeNull());
   it('recusa dados inválidos', () => {
-    expect(validateBlock({ ...ok, professionalId: 'prof_x' })).not.toBeNull();
-    expect(validateBlock({ ...ok, date: '05/11/2026' })).not.toBeNull();
-    expect(validateBlock({ ...ok, startTime: '25:00' })).not.toBeNull();
-    expect(validateBlock({ ...ok, endTime: '11:00' })).not.toBeNull();
-    expect(validateBlock({ ...ok, type: 'qualquer' })).not.toBeNull();
+    expect(validateBlock({ ...ok, professionalId: 'prof_x' }, dir)).not.toBeNull();
+    expect(validateBlock({ ...ok, date: '05/11/2026' }, dir)).not.toBeNull();
+    expect(validateBlock({ ...ok, startTime: '25:00' }, dir)).not.toBeNull();
+    expect(validateBlock({ ...ok, endTime: '11:00' }, dir)).not.toBeNull();
+    expect(validateBlock({ ...ok, type: 'qualquer' }, dir)).not.toBeNull();
   });
 });
