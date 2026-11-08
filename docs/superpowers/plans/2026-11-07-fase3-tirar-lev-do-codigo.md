@@ -13,7 +13,7 @@
 ## Regras gerais
 
 - **A LEV não pode mudar para as clientes.** Com `CURRENT_SALON_ID = 'lev'`, a página pública, o agendamento e as mensagens do robô ficam idênticos (textos aprovados pela dona em 04/11/2026). Rótulos internos do painel e mensagens de erro da equipe podem perder a palavra "LEV" ("Acesso restrito à equipe do salão.").
-- **O código funciona antes da migração ser rodada.** Sem a coluna `google_calendar_id`, a LEV continua usando as variáveis `GOOGLE_CALENDAR_ID_*` da Vercel.
+- **O código funciona antes da migração ser rodada.** Sem a tabela `professional_calendars`, a LEV continua usando as variáveis `GOOGLE_CALENDAR_ID_*` da Vercel.
 - **Os ids da LEV continuam valendo nos dados.** `prof_elisangela`, `prof_talitha`, `prof_nayara` seguem no banco; só saem do código.
 - **Lugares permitidos para dados da LEV:** `src/data/**`, `api/_lib/levDefaults.ts` e arquivos de teste. Em qualquer outro lugar, o teste-guarda (Tarefa 7) falha.
 - Ids técnicos que já existem no Google Agenda (`calendarEventId` com prefixo `lev`, propriedade `levAppointmentId`) **não mudam**: mudar quebraria a busca dos eventos já criados.
@@ -55,7 +55,7 @@
 - Criar: `public/salao-exemplo/logo.svg`, `capa.svg`, `ana.svg`, `bia.svg`
 
 **Produz:**
-- `public.professionals.google_calendar_id text` (pode ser nulo). Fica fora do `payload`, então a sincronização do painel (que grava só `payload`) não apaga.
+- Tabela nova `public.professional_calendars (salon_id text references salons(id), professional_id text, google_calendar_id text not null, updated_at timestamptz default now(), primary key (salon_id, professional_id))`, RLS ligada **sem nenhuma regra** e `grant` só para `service_role`. Só o servidor lê e grava. (Revisão de segurança de 07/11: numa coluna de `professionals` o público leria o id e a própria profissional poderia apontar para a agenda de outro salão.)
 - Regra única `catalog_services_salon_id_id_key unique (salon_id, id)`.
 - `20261108b`: `drop constraint if exists catalog_services_pkey` + `add constraint catalog_services_pkey primary key (salon_id, id)` + `drop constraint if exists catalog_services_salon_id_id_key`.
 
@@ -126,17 +126,17 @@
 - `salonDirectory.ts`:
   - `type SalonProfessional = { id: string; name: string; whatsapp: string; googleColorId: string; googleCalendarId: string | null }`
   - `type SalonDirectory = { salonId: string; name: string; shortName: string; professionals: SalonProfessional[] }`
-  - `loadSalonDirectory(salonId: string): Promise<SalonDirectory>` — lê `salons?id=eq.{id}&select=name`, `salon_settings?id=eq.geral&select=payload` (para `brand.shortName`) e `professionals?select=id,payload,google_calendar_id&salon_id=eq.{id}`. Se a leitura com `google_calendar_id` der 400 (migração não rodada), repete sem a coluna. Guarda em memória por 60 s por salão. Para a LEV, completa o que faltar (nome, telefone, cor, calendário pela variável `calendarEnv`) com `levDefaults`; se o banco falhar por inteiro, a LEV usa só `levDefaults`, e outro salão devolve lista vazia.
+  - `loadSalonDirectory(salonId: string): Promise<SalonDirectory>` — lê `salons?id=eq.{id}&select=name`, `salon_settings?id=eq.geral&select=payload` (para `brand.shortName`) `professionals?select=id,payload&salon_id=eq.{id}` e `professional_calendars?select=professional_id,google_calendar_id&salon_id=eq.{id}` (chave de serviço). Se a leitura de `professional_calendars` falhar (migração não rodada), segue sem ela. Guarda em memória por 60 s por salão. Para a LEV, completa o que faltar (nome, telefone, cor, calendário pela variável `calendarEnv`) com `levDefaults`; se o banco falhar por inteiro, a LEV usa só `levDefaults`, e outro salão devolve lista vazia.
   - `findProfessional(dir: SalonDirectory, id: string): SalonProfessional | undefined`
   - `calendarIdFor(dir: SalonDirectory, professionalId: string): string | null` — `googleCalendarId` da profissional; senão, **só para a LEV**, `process.env.GOOGLE_CALENDAR_ID`; senão `null`.
 - `bookingCatalog.ts`: `loadBookingServices(salonId: string): Promise<BookingService[]>` (lê `catalog_services` do salão sem os apagados; para a LEV, completa com `LEV_BOOKING_SERVICES` os ids que faltarem). `PROFESSIONALS`, `BOOKING_SERVICES` e `servicesFor` saem.
 - `syncGoogleCalendarEvent(appointment, salonId: string)` — com `calendarIdFor` = `null`, não chama o Google e devolve `{ skipped: 'sem agenda do Google' }`. A descrição do evento passa a ter `🔗 Agendamento: {id}`; a busca aceita a forma nova e a antiga `Agendamento LEV: {id}`. "Atendimento LEV" e "Cancelado (LEV)" usam `dir.shortName`.
 
 - [ ] **Passo 1: testes que falham** (`salonDirectory.test.ts`, com `fetch` simulado)
-  - LEV com banco devolvendo as 3 profissionais e `google_calendar_id` preenchido → `calendarIdFor(dir, 'prof_talitha')` é o valor da coluna.
-  - LEV com 400 na leitura com a coluna e sucesso sem ela, `GOOGLE_CALENDAR_ID_TALITHA=cal-t` → `'cal-t'`.
+  - LEV com banco devolvendo as 3 profissionais e `professional_calendars` com a Talitha → `calendarIdFor(dir, 'prof_talitha')` é esse valor.
+  - LEV com 404 em `professional_calendars`, `GOOGLE_CALENDAR_ID_TALITHA=cal-t` → `'cal-t'`.
   - LEV com o banco fora do ar (500 em tudo) → 3 profissionais, `name === 'LEV Coworking Beauty'`, `shortName === 'LEV'`.
-  - `demo` com profissional sem `google_calendar_id` e `GOOGLE_CALENDAR_ID=cal-lev` → `calendarIdFor` é `null`.
+  - `demo` sem linha em `professional_calendars` e `GOOGLE_CALENDAR_ID=cal-lev` → `calendarIdFor` é `null`.
   - `demo` com banco fora do ar → `professionals` vazia (nunca as da LEV).
   - `create.ts`: público (salão `lev`) com `professionalId: 'prof_aurora_ana'` → 400 `'Profissional inválida.'`; com `'prof_talitha'` → segue.
   - `block.ts`: profissional fora do diretório do salão do login → `'Profissional inválida.'`.
@@ -212,7 +212,7 @@ export interface SalonBrand {
 - [ ] **Passo 2:** fotos "depois" da LEV, iguais às da Tarefa 0, em `docs/test-reports/fase3-depois/`. Comparar lado a lado; só a diferença mínima dos degradês (decisão 3) é aceita.
 - [ ] **Passo 3:** juntar em `main` e publicar (deploy automático da Vercel). Conferir que o endereço da LEV abre com a página de sempre.
 - [ ] **Passo 4 (dona do projeto, no SQL Editor do Supabase):** rodar `20261108_fase3_salao_proprio.sql` e o bloco de verificação.
-- [ ] **Passo 5:** preencher `professionals.google_calendar_id` das 3 profissionais da LEV com os valores atuais das variáveis `GOOGLE_CALENDAR_ID_ELISANGELA`, `_TALITHA`, `_NAYARA` (lidos com `vercel env pull` para a pasta temporária; o arquivo não vai para o git). Criar um agendamento de teste para cada uma pelo painel e conferir que cai na agenda certa do Google; depois cancelar.
+- [ ] **Passo 5:** inserir em `professional_calendars` as 3 profissionais da LEV com os valores atuais das variáveis `GOOGLE_CALENDAR_ID_ELISANGELA`, `_TALITHA`, `_NAYARA` (lidos com `vercel env pull` para a pasta temporária; o arquivo não vai para o git). Criar um agendamento de teste para cada uma pelo painel e conferir que cai na agenda certa do Google; depois cancelar.
 - [ ] **Passo 6:** rodar `supabase/seeds/salao_exemplo.sql`. Abrir com `VITE_SALON_ID=demo npm run dev` e conferir no celular e no computador: nome, logo, capa, cores, textos, as duas profissionais e os 4 preços do Studio Aurora. Rodar no console `document.body.innerText.match(/LEV|Elisangela|Talitha|Nayara/g)` → `null`. Abrir o modal de agendamento e conferir que lista só Ana e Bia. Fotos em `docs/test-reports/fase3-salao-exemplo/`.
 - [ ] **Passo 7:** rodar `20261108b_catalogo_chave_por_salao.sql`. Pela conta da admin da LEV, editar o preço de um serviço e voltar ao valor original; conferir que gravou (o envio com `on_conflict=salon_id,id` funciona com a chave nova).
 - [ ] **Passo 8:** atualizar a Fase 3 em `docs/superpowers/plans/2026-11-03-lev-multi-salao.md` ("concluída e no ar", com o que foi conferido) e marcar as caixinhas deste plano. Commit `docs: fase 3 concluida e conferida`.

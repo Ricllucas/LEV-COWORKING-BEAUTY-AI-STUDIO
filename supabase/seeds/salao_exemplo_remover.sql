@@ -10,6 +10,7 @@ delete from public.schedule_blocks       where salon_id = 'demo';
 delete from public.payments              where salon_id = 'demo';
 delete from public.professional_private  where salon_id = 'demo';
 delete from public.professionals         where salon_id = 'demo';
+delete from public.professional_calendars where salon_id = 'demo';
 delete from public.salon_settings        where salon_id = 'demo';
 delete from public.catalog_services      where salon_id = 'demo';
 delete from public.reminder_history      where salon_id = 'demo';
