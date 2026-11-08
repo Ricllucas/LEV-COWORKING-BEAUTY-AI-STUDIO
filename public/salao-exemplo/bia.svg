@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400" role="img" aria-label="Retrato ilustrado de Bia">
+  <rect width="400" height="400" fill="#E3EFEE"/>
+  <circle cx="200" cy="160" r="70" fill="#F7FAF9"/>
+  <path d="M130 160a70 70 0 0 1 140 0c-30-30-110-30-140 0z" fill="#E07A5F"/>
+  <path d="M60 400a140 140 0 0 1 280 0z" fill="#E07A5F"/>
+  <path d="M170 290h60v110h-60z" fill="#F7FAF9" opacity="0.5"/>
+</svg>

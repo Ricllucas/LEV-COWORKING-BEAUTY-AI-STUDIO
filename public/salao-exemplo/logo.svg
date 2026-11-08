@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="160" viewBox="0 0 400 160" role="img" aria-label="Studio Aurora">
+  <rect width="400" height="160" rx="16" fill="#F7FAF9"/>
+  <path d="M30 110a40 40 0 0 1 80 0z" fill="#E07A5F"/>
+  <path d="M42 110a28 28 0 0 1 56 0z" fill="#F7FAF9"/>
+  <path d="M52 110a18 18 0 0 1 36 0z" fill="#2F6F73"/>
+  <rect x="22" y="114" width="96" height="5" rx="2.5" fill="#2F6F73"/>
+  <text x="136" y="82" font-family="Georgia, serif" font-size="34" font-weight="700" fill="#1F2A44">Studio Aurora</text>
+  <text x="138" y="108" font-family="Arial, sans-serif" font-size="13" letter-spacing="3" fill="#2F6F73">CABELO E UNHAS</text>
+</svg>
