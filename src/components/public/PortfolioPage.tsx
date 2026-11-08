@@ -116,11 +116,11 @@ export const PortfolioPage: React.FC = () => {
 
       {/* Banner da marca */}
       <section className="px-6 pt-6 pb-10 sm:pt-10 sm:pb-14">
-        <h1 className="sr-only">Portfólio LEV Coworking Beauty</h1>
+        <h1 className="sr-only">Portfólio {LEV_PORTFOLIO.bannerTitle}</h1>
         <a href="/" aria-label="Página inicial LEV" className="max-w-4xl mx-auto flex flex-col items-center gap-6">
           <img
             src="/brand/lev-logo-horizontal.webp"
-            alt="LEV Coworking Beauty"
+            alt={LEV_PORTFOLIO.bannerTitle}
             width={1437}
             height={438}
             loading="eager"

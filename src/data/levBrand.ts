@@ -60,6 +60,8 @@ const clip = (name: string, alt: string, category: PortfolioWorkCategory): Portf
 });
 
 export const LEV_PORTFOLIO = {
+  // Nome exibido no banner do portfólio (título oculto e texto alternativo do logo).
+  bannerTitle: 'LEV Coworking Beauty',
   // Trabalhos publicados no Instagram da LEV (@levcoworkingbeauty), da Talitha (@talithakum_beauty)
   // e da Nayara (@studiobynayara). Cada foto ou vídeo aparece uma única vez no site:
   // as que estão nos destaques, nas seções de noivas ou na página inicial não se repetem aqui.
