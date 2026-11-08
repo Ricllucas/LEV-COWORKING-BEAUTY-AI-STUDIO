@@ -62,7 +62,10 @@ describe('endpoint de confirmação pelo link', () => {
     const res = makeRes();
     await handler({ method: 'POST', body: { t: token }, headers: { 'content-type': 'application/json' } }, res);
     expect(res.statusCode).toBe(409);
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(res.body.error).toBe('Este horário não está mais aguardando confirmação. Confira no painel da LEV.');
+    // Só uma leitura do agendamento e nenhuma gravação (as outras leituras são do diretório do salão)
+    expect(fetchMock.mock.calls.filter(([url]) => String(url).includes('/rest/v1/appointments?'))).toHaveLength(1);
+    expect(fetchMock.mock.calls.some(([, init]) => init?.method && init.method !== 'GET')).toBe(false);
   });
 
   it('recusa link falso sem consultar o banco', async () => {

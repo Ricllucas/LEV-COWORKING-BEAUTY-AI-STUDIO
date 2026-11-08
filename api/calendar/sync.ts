@@ -49,8 +49,10 @@ export default async function handler(req: any, res: any) {
   const isCron = constantTimeSecretEquals(bearer, process.env.CRON_SECRET);
   const staff = isCron ? null : await authenticateStaff(req.headers?.authorization);
   if (!isCron && !staff) return res.status(401).json({ error: 'Acesso restrito à equipe do salão.' });
-  // Equipe: salão do login. Tarefa agendada: o Google Agenda configurado é o da LEV.
+  // Equipe: salão do login. Tarefa agendada: salão padrão.
   const salonId = staff ? staff.salonId : DEFAULT_SALON_ID;
+  // A agenda geral (GOOGLE_CALENDAR_ID) é só do salão padrão; outro salão não lê o Google
+  if (salonId !== DEFAULT_SALON_ID) return res.status(200).json({ skipped: 'sem agenda do Google' });
 
   try {
     const calendarId = requireEnv('GOOGLE_CALENDAR_ID');

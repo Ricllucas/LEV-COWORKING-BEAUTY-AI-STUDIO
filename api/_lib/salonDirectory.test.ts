@@ -308,3 +308,44 @@ describe('agendamento pelo WhatsApp usa o diretório do salão', () => {
     expect(await run('demo', 'professional', '3')).toContain('Opção inválida.');
   });
 });
+
+describe('sincronização geral da agenda só no salão padrão', () => {
+  it('equipe do salão demo → skipped, sem chamar o Google e sem a agenda da LEV', async () => {
+    process.env.GOOGLE_CALENDAR_ID = 'cal-lev';
+    vi.mocked(authenticateStaff).mockResolvedValue({ userId: 'u1', role: 'admin', salonId: 'demo' });
+    const { default: syncHandler } = await import('../calendar/sync');
+    const res = fakeRes();
+    await syncHandler({ method: 'GET', headers: { authorization: 'Bearer token' }, socket: { remoteAddress: `10.0.1.${++ip}` } }, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ skipped: 'sem agenda do Google' });
+    const urls = fetchMock.mock.calls.map(([url]) => String(url));
+    expect(urls.some(url => url.includes('googleapis.com'))).toBe(false);
+    expect(urls.some(url => url.includes('cal-lev'))).toBe(false);
+  });
+});
+
+describe('textos de horário ocupado usam o nome curto do salão', () => {
+  // Terça-feira futura; já existe um agendamento das 10:00 às 11:00
+  const day = '2099-01-13';
+  const busy = { id: 'apt_outro', professionalId: 'prof_x', date: day, startTime: '10:00', endTime: '11:00', status: 'confirmado' };
+  beforeEach(() => {
+    const base = fetchMock.getMockImplementation()!;
+    fetchMock.mockImplementation(async (input: string | URL, init?: RequestInit) =>
+      String(input).includes('/rest/v1/appointments?') ? new Response(JSON.stringify([{ payload: busy }]), { status: 200 }) : base(input, init));
+  });
+  const attempt = async (salonId: string) => {
+    const { assertAvailable } = await import('./appointmentService');
+    return assertAvailable(salonId, { id: 'apt_novo', professionalId: 'prof_x', date: day, startTime: '10:30', endTime: '11:30' } as Parameters<typeof assertAvailable>[1]);
+  };
+
+  it('LEV: texto igual ao de hoje', async () => {
+    await expect(attempt('lev')).rejects.toThrow(/^Este horário já está reservado no Studio LEV\. Escolha outro horário disponível\.$/);
+  });
+
+  it('outro salão: nome curto dele, sem LEV', async () => {
+    answers = { salons: ok([{ name: 'Studio Aurora' }]), salon_settings: ok([{ payload: { brand: { shortName: 'Aurora' } } }]), professionals: ok(demoRows), professional_calendars: ok([]) };
+    const error = await attempt('demo').catch((e: Error) => e);
+    expect((error as Error).message).toBe('Este horário já está reservado no Studio Aurora. Escolha outro horário disponível.');
+    expect((error as Error).message).not.toContain('LEV');
+  });
+});

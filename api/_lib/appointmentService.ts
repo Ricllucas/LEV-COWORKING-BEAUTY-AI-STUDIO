@@ -3,6 +3,7 @@ import { notificationService } from './notificationService.js';
 import { LEV_BOOKING_SERVICES, LEV_SALON_ID } from './levDefaults.js';
 import { RETIRED_SERVICE_IDS } from '../../src/data/retiredServices.js';
 import { salonFilter, withSalon } from './tenant.js';
+import { loadSalonDirectory } from './salonDirectory.js';
 
 export type UnifiedAppointment = {
   id: string; clientId: string; clientName: string; clientPhone: string; clientEmail?: string;
@@ -182,7 +183,8 @@ export const assertAvailable = async (
     start < toMinutes(current.endTime) &&
     end > toMinutes(current.startTime)
   )) {
-    const error = new Error('Este horário já está reservado no Studio LEV. Escolha outro horário disponível.');
+    const { shortName } = await loadSalonDirectory(salonId);
+    const error = new Error(`Este horário já está reservado no Studio ${shortName}. Escolha outro horário disponível.`);
     (error as Error & { status?: number }).status = 409; throw error;
   }
   // A equipe pode encaixar em cima de um bloqueio; cliente (site e WhatsApp) não.
@@ -269,7 +271,8 @@ export const assertPublicBookingLimit = async (salonId: string, phone: string) =
   if (!response.ok) throw new Error('Não foi possível consultar a agenda.');
   const rows = await response.json() as Array<{ payload: UnifiedAppointment }>;
   if (countPendingForPhone(rows.map(row => row.payload), phone) >= MAX_PENDING_PER_PHONE) {
-    const error = new Error('Você já tem pedidos de agendamento aguardando confirmação. Aguarde a profissional confirmar ou fale com a LEV pelo WhatsApp.');
+    const { shortName } = await loadSalonDirectory(salonId);
+    const error = new Error(`Você já tem pedidos de agendamento aguardando confirmação. Aguarde a profissional confirmar ou fale com a ${shortName} pelo WhatsApp.`);
     (error as Error & { status?: number }).status = 429;
     throw error;
   }

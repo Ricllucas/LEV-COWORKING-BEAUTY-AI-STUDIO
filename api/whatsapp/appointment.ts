@@ -2,6 +2,7 @@ import { verifyConfirmToken } from '../_lib/confirmLink.js';
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { applyApiSecurity, publicErrorMessage, rateLimit, validJsonRequest } from '../_lib/security.js';
 import { DEFAULT_SALON_ID, salonFilter } from '../_lib/tenant.js';
+import { loadSalonDirectory } from '../_lib/salonDirectory.js';
 
 // Confirmação do horário pela profissional, a partir do link enviado no WhatsApp.
 // GET  ?t=<token>  → mostra o resumo do horário (não altera nada; o WhatsApp abre links sozinho para gerar prévia)
@@ -42,8 +43,9 @@ export default async function handler(req: any, res: any) {
     if (!supabaseUrl || !serviceKey) throw new Error('Servidor de agendamentos não configurado.');
     const headers = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
     const id = encodeURIComponent(check.appointmentId);
-    // Link público: LEV por enquanto (a fase 4 usa o endereço)
+    // Link público: salão padrão por enquanto (a fase 4 usa o endereço)
     const salonId = DEFAULT_SALON_ID;
+    const panelHint = async () => `Confira no painel da ${(await loadSalonDirectory(salonId)).shortName}.`;
 
     const found = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${id}&select=id,status,payload&limit=1&${salonFilter(salonId)}`, { headers });
     const rows = found.ok ? await found.json() as StoredRow[] : [];
@@ -53,7 +55,7 @@ export default async function handler(req: any, res: any) {
 
     if (rows[0].status === 'confirmado') return json(res, 200, { ...summary(rows[0]), alreadyConfirmed: true });
     if (rows[0].status !== 'aguardando_confirmacao') {
-      return json(res, 409, { error: 'Este horário não está mais aguardando confirmação. Confira no painel da LEV.', ...summary(rows[0]) });
+      return json(res, 409, { error: `Este horário não está mais aguardando confirmação. ${await panelHint()}`, ...summary(rows[0]) });
     }
 
     const updatedAt = new Date().toISOString();
@@ -72,7 +74,7 @@ export default async function handler(req: any, res: any) {
     });
     const updated = update.ok ? await update.json() as StoredRow[] : [];
     if (!update.ok) return json(res, 502, { error: 'Não foi possível confirmar agora. Tente de novo em instantes.' });
-    if (!updated[0]) return json(res, 409, { error: 'Este horário mudou enquanto você confirmava. Confira no painel da LEV.' });
+    if (!updated[0]) return json(res, 409, { error: `Este horário mudou enquanto você confirmava. ${await panelHint()}` });
 
     try {
       await syncGoogleCalendarEvent(appointment, salonId);
