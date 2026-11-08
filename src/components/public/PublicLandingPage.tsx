@@ -152,7 +152,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <button
               type="button" onClick={() => onOpenBookingModal()}
-              className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-(--brand-accent) via-(--brand-accent) to-(--brand-primary) hover:from-(--brand-primary) hover:to-(--brand-primary) text-white font-semibold text-sm transition-all shadow-[0_0_25px_rgba(161,134,91,0.25)] flex items-center justify-center gap-2 group hover:scale-[1.02]"
+              className="w-full sm:w-auto px-10 py-4 rounded-2xl bg-gradient-to-r from-(--brand-accent) via-(--brand-accent) to-(--brand-primary) hover:from-(--brand-primary) hover:to-(--brand-primary) text-white font-semibold text-sm transition-all shadow-[0_0_25px_color-mix(in_srgb,var(--brand-accent)_25%,transparent)] flex items-center justify-center gap-2 group hover:scale-[1.02]"
             >
               <MessageCircle className="w-5 h-5 text-(--brand-text) group-hover:scale-110 transition-transform" />
               Escolher profissional e agendar
@@ -170,15 +170,16 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
           <div className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {brand.highlights.map((item, idx) => {
               const Icon = highlightIcons[idx % highlightIcons.length];
+              const desc = withProfessionalNames(item.desc, professionals.map(p => p.name)).trim();
               return (
-              <div key={idx} className="p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-(--brand-text)/10 hover:border-(--brand-accent)/40 text-left transition-all hover:shadow-[0_0_15px_rgba(161,134,91,0.1)]">
+              <div key={idx} className="p-4 bg-white/80 backdrop-blur-md rounded-2xl border border-(--brand-text)/10 hover:border-(--brand-accent)/40 text-left transition-all hover:shadow-[0_0_15px_color-mix(in_srgb,var(--brand-accent)_10%,transparent)]">
                 <div className="flex items-center gap-2 mb-1.5">
                   <div className="p-1.5 rounded-lg bg-(--brand-accent)/10 border border-(--brand-accent)/20">
                     <Icon className="w-4 h-4 text-(--brand-primary)" />
                   </div>
                   <span className="text-xs font-semibold text-(--brand-text)">{item.title}</span>
                 </div>
-                <span className="text-[11px] text-(--brand-primary) font-medium block">{withProfessionalNames(item.desc, professionals.map(p => p.name))}</span>
+                {desc && <span className="text-[11px] text-(--brand-primary) font-medium block">{desc}</span>}
               </div>
               );
             })}
@@ -290,7 +291,7 @@ export const PublicLandingPage: React.FC<PublicLandingPageProps> = ({ onOpenBook
       {/* Spa de Noivas & Produção VIP Experience Banner */}
       {brand.featureTitle && (
       <section className="py-12 px-4 max-w-6xl mx-auto">
-        <div className="relative rounded-3xl bg-gradient-to-br from-(--brand-surface) via-(--brand-surface) to-(--brand-bg) border border-(--brand-accent)/40 p-6 sm:p-10 overflow-hidden shadow-[0_0_50px_rgba(161,134,91,0.15)]">
+        <div className="relative rounded-3xl bg-gradient-to-br from-(--brand-surface) via-(--brand-surface) to-(--brand-bg) border border-(--brand-accent)/40 p-6 sm:p-10 overflow-hidden shadow-[0_0_50px_color-mix(in_srgb,var(--brand-accent)_15%,transparent)]">
           {/* Decorative Gold Sparkles Background */}
           <div className="absolute -top-12 -right-12 w-64 h-64 bg-(--brand-accent)/15 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-12 -left-12 w-64 h-64 bg-(--brand-accent)/10 rounded-full blur-3xl pointer-events-none" />

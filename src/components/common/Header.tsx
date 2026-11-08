@@ -48,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
 
   return (
     <header className={`sticky top-0 z-30 backdrop-blur-md border-b transition-all ${
-      isPublicView ? 'bg-[#FCF9F2]/90 border-[#3D312A]/10' : 'bg-[#0a0a0a]/90 border-white/10'
+      isPublicView ? 'bg-(--brand-bg)/90 border-(--brand-text)/10' : 'bg-[#0a0a0a]/90 border-white/10'
     }`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2">
@@ -96,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenPWAInstaller}
               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-medium transition-all ${
                 isPublicView
-                  ? 'border-[#A1865B]/30 bg-[#A1865B]/10 text-[#8C7249] hover:bg-[#A1865B]/20'
+                  ? 'border-(--brand-accent)/30 bg-(--brand-accent)/10 text-(--brand-primary) hover:bg-(--brand-accent)/20'
                   : 'border-[#c4b491]/30 bg-[#c4b491]/10 text-[#c4b491] hover:bg-[#c4b491]/20'
               }`}
               title="Instalar aplicativo PWA"
@@ -110,7 +110,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenNotifications}
               className={`relative p-2 rounded-xl border transition-colors ${
                 isPublicView
-                  ? 'border-[#3D312A]/10 bg-white text-[#3D312A]/70 hover:text-[#3D312A] hover:bg-[#F3EBDD]'
+                  ? 'border-(--brand-text)/10 bg-white text-(--brand-text)/70 hover:text-(--brand-text) hover:bg-(--brand-surface)'
                   : 'border-white/10 bg-white/[0.03] text-white/70 hover:text-white hover:bg-white/[0.08]'
               }`}
               aria-label="Notificações"

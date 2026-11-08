@@ -4,23 +4,37 @@ import { LEV_BRAND } from '../data/levBrand';
 import { NEUTRAL_BRAND } from '../data/salonDefaults';
 import type { CoworkingSettings, SalonBrand } from '../types';
 
-// Cópia funda de dados simples (textos, números, listas): quem recebe a marca
-// pode mexer nela sem alterar a marca de fábrica nem o que veio gravado.
-const copy = <T,>(value: T): T => structuredClone(value);
+// Nota de avaliação vinda do banco: número inteiro de 0 a 5.
+export const clampRating = (rating: unknown): number =>
+  Math.max(0, Math.min(5, Math.round(Number(rating) || 0)));
 
 // Marca do salão: o que está gravado em `settings.brand` por cima da marca de
 // fábrica (LEV para a LEV, neutra para os outros), campo a campo e cor a cor.
 export const resolveBrand = (settings: CoworkingSettings, salonId: string): SalonBrand => {
   const factory = salonId === DEFAULT_SALON_ID ? LEV_BRAND : NEUTRAL_BRAND;
   const saved = settings.brand ?? {};
-  const merged: SalonBrand = { ...factory, ...saved, colors: { ...factory.colors, ...saved.colors } };
+  // Cores uma a uma; cor gravada como `null` fica com a de fábrica.
+  const colors = { ...factory.colors };
+  for (const [name, value] of Object.entries(saved.colors ?? {}) as [keyof SalonBrand['colors'], string | null | undefined][]) {
+    if (value != null) colors[name] = value;
+  }
+  const merged: SalonBrand = { ...factory, ...saved, colors };
   // Valores gravados como `null` (fora o das avaliações) não apagam a fábrica.
   for (const key of Object.keys(saved) as (keyof SalonBrand)[]) {
     if (key !== 'googleReviews' && merged[key] == null) {
       (merged as Record<keyof SalonBrand, unknown>)[key] = factory[key];
     }
   }
-  return copy(merged);
+  // Cópia funda das listas e objetos: quem recebe a marca pode mexer nela sem
+  // alterar a de fábrica nem a gravada. O logo (texto grande e imutável) não
+  // é copiado a cada chamada.
+  const { logoUrl, ...rest } = merged;
+  const brand: SalonBrand = structuredClone(rest);
+  if (logoUrl !== undefined) brand.logoUrl = logoUrl;
+  if (brand.googleReviews) {
+    brand.googleReviews.reviews = brand.googleReviews.reviews.map(review => ({ ...review, rating: clampRating(review.rating) }));
+  }
+  return brand;
 };
 
 // Marca do salão deste site.

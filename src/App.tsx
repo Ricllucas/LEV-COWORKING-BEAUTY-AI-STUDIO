@@ -74,6 +74,12 @@ function Application() {
   const { state: coworkingState, dispatch } = useCoworking();
   const currentUser = coworkingState.currentUser;
 
+  // Nome do salão na aba, atualizado quando os dados da nuvem chegam.
+  const salonName = coworkingState.settings.name;
+  useEffect(() => {
+    if (salonName) document.title = salonName;
+  }, [salonName]);
+
   const cleanPath = window.location.pathname.replace(/\/+$/, '');
   const isAdminRoute = cleanPath === '/admin';
   const isProfessionalRoute = cleanPath === '/profissional';
@@ -265,7 +271,7 @@ function Application() {
     <ErrorBoundary>
       <div className={`min-h-screen font-sans flex flex-col ${
         isClientOrGuest
-          ? 'bg-(--brand-bg) text-(--brand-text) selection:bg-[#E6D7C3] selection:text-(--brand-text)'
+          ? 'bg-(--brand-bg) text-(--brand-text) selection:bg-(--brand-accent)/30 selection:text-(--brand-text)'
           : 'bg-[#050505] text-white selection:bg-[#c4b491]/30 selection:text-white'
       }`} style={publicBrandStyle}>
       {/* Header */}

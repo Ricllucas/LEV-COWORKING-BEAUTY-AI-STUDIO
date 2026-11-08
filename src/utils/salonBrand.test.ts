@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { brandLogoUrl, brandStyle, emphasisParts, resolveBrand, withProfessionalNames } from './salonBrand';
+import { brandLogoUrl, brandStyle, clampRating, emphasisParts, resolveBrand, withProfessionalNames } from './salonBrand';
+import type { CoworkingSettings } from '../types';
 import { LEV_BRAND } from '../data/levBrand';
 import { NEUTRAL_BRAND, bundledDataFor } from '../data/salonDefaults';
 import { INITIAL_SETTINGS } from '../data/initialData';
@@ -58,6 +59,35 @@ describe('resolveBrand', () => {
     expect(JSON.stringify(LEV_BRAND)).toBe(before);
     expect(override).toEqual({ colors: { primary: '#000000' } });
     expect(resolveBrand(INITIAL_SETTINGS, 'lev')).toEqual(LEV_BRAND);
+  });
+});
+
+describe('resolveBrand com dados do banco', () => {
+  it('cor gravada como null volta para a cor de fábrica', () => {
+    const brand = { colors: { primary: null, accent: '#E07A5F' } } as unknown as CoworkingSettings['brand'];
+    const resolved = resolveBrand({ ...neutro, brand }, 'demo');
+    expect(resolved.colors.primary).toBe(NEUTRAL_BRAND.colors.primary);
+    expect(resolved.colors.accent).toBe('#E07A5F');
+  });
+
+  it('nota das avaliações fica entre 0 e 5, inteira', () => {
+    const reviews = [7, -2, 4.6, 'abc', '3'].map(rating => ({ author: 'a', text: 't', rating })) as unknown as { author: string; text: string; rating: number }[];
+    const resolved = resolveBrand({ ...neutro, brand: { googleReviews: { rating: 5, total: 5, url: '', reviews } } }, 'demo');
+    expect(resolved.googleReviews?.reviews.map(r => r.rating)).toEqual([5, 0, 5, 0, 3]);
+  });
+
+  it('clampRating', () => {
+    expect(clampRating(undefined)).toBe(0);
+    expect(clampRating(2.4)).toBe(2);
+    expect(clampRating(10)).toBe(5);
+  });
+
+  it('o logo não é copiado, mas as listas continuam separadas', () => {
+    const a = resolveBrand(INITIAL_SETTINGS, 'lev');
+    const b = resolveBrand(INITIAL_SETTINGS, 'lev');
+    expect(a.logoUrl).toBe(LEV_BRAND.logoUrl);
+    expect(a.works).not.toBe(b.works);
+    expect(a.works).not.toBe(LEV_BRAND.works);
   });
 });
 

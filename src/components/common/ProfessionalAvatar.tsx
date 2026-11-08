@@ -29,7 +29,7 @@ export const ProfessionalAvatar: React.FC<ProfessionalAvatarProps> = ({
 
   return (
     <div
-      className={`relative rounded-full overflow-hidden flex items-center ${bordered ? 'bg-stone-900 border-2 border-[#c4b491] shadow-md' : 'bg-[#F3EBDD]'} justify-center shrink-0 text-[#c4b491] font-serif font-bold select-none ${sizeClassName} ${className}`}
+      className={`relative rounded-full overflow-hidden flex items-center ${bordered ? 'bg-stone-900 border-2 border-[#c4b491] shadow-md text-[#c4b491]' : 'bg-[var(--brand-surface,#F3EBDD)] text-[var(--brand-accent,#c4b491)]'} justify-center shrink-0 font-serif font-bold select-none ${sizeClassName} ${className}`}
     >
       {/* Centered fallback initial letter */}
       <span className={textClassName}>{initial}</span>

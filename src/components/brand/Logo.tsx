@@ -22,7 +22,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', className = '' }) => {
   };
 
   return (
-    <span className={`inline-flex items-center justify-center overflow-hidden rounded-xl bg-[#f8f4ec] shadow-[0_12px_40px_rgba(196,180,145,0.18)] ${className}`}>
+    <span className={`inline-flex items-center justify-center overflow-hidden rounded-xl bg-[var(--brand-bg,#f8f4ec)] shadow-[0_12px_40px_color-mix(in_srgb,var(--brand-accent,#c4b491)_18%,transparent)] ${className}`}>
       {src ? (
         <img
           src={src}
@@ -34,7 +34,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 'md', className = '' }) => {
           decoding="async"
         />
       ) : (
-        <span className={`${sizes[size]} flex items-center justify-center font-serif font-semibold text-[#3D312A]`}>
+        <span className={`${sizes[size]} flex items-center justify-center font-serif font-semibold text-[var(--brand-text,#3D312A)]`}>
           {(settings.name || '').slice(0, 1)}
         </span>
       )}

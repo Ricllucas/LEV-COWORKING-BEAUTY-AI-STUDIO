@@ -77,14 +77,14 @@ export const ConfirmAppointmentPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-(--brand-bg) text-(--brand-text) flex items-center justify-center px-5 py-10 font-sans" style={brandStyle(currentBrand(StorageService.getSettings()))}>
-      <div className="w-full max-w-md rounded-3xl bg-white shadow-xl border border-[#E6D7C3] p-7 space-y-6">
+      <div className="w-full max-w-md rounded-3xl bg-white shadow-xl border border-(--brand-accent)/30 p-7 space-y-6">
         <div className="flex justify-center"><Logo size="md" /></div>
 
-        {view.kind === 'loading' && <p className="text-center text-sm text-[#7A6A5C]">Carregando o horário...</p>}
+        {view.kind === 'loading' && <p className="text-center text-sm text-(--brand-text)/70">Carregando o horário...</p>}
 
         {data && (
-          <div className="rounded-2xl bg-(--brand-bg) border border-[#E6D7C3] p-5 space-y-2 text-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#A08A6A]">Agendamento</p>
+          <div className="rounded-2xl bg-(--brand-bg) border border-(--brand-accent)/30 p-5 space-y-2 text-sm">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--brand-accent)">Agendamento</p>
             <p><span className="font-semibold">Cliente:</span> {data.clientFirstName}</p>
             <p><span className="font-semibold">Serviço:</span> {data.serviceNames.join(', ')}</p>
             <p className="capitalize"><span className="font-semibold normal-case">Data:</span> {formatDate(data.date)}</p>
@@ -95,7 +95,7 @@ export const ConfirmAppointmentPage: React.FC = () => {
 
         {view.kind === 'ready' && (
           <>
-            <p className="text-center text-sm text-[#7A6A5C]">⏳ Este horário ainda <strong>não está confirmado</strong>.</p>
+            <p className="text-center text-sm text-(--brand-text)/70">⏳ Este horário ainda <strong>não está confirmado</strong>.</p>
             <button
               type="button"
               onClick={() => confirm(view.data)}
@@ -129,7 +129,7 @@ export const ConfirmAppointmentPage: React.FC = () => {
           </div>
         )}
 
-        <p className="text-center text-xs text-[#A08A6A]">
+        <p className="text-center text-xs text-(--brand-accent)">
           Também dá para confirmar pelo <a href="/profissional" className="underline">painel do salão</a>.
         </p>
       </div>
