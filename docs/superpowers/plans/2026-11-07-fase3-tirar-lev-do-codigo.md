@@ -210,8 +210,8 @@ export interface SalonBrand {
 
 - [ ] **Passo 1:** `npm run test -- --run`, `npm run lint`, `npm run build`, `npm run e2e` (falhas antigas conhecidas da Fase 2 não contam; falha nova bloqueia).
 - [ ] **Passo 2:** fotos "depois" da LEV, iguais às da Tarefa 0, em `docs/test-reports/fase3-depois/`. Comparar lado a lado; só a diferença mínima dos degradês (decisão 3) é aceita.
-- [ ] **Passo 3:** juntar em `main` e publicar (deploy automático da Vercel). Conferir que o endereço da LEV abre com a página de sempre.
-- [ ] **Passo 4 (dona do projeto, no SQL Editor do Supabase):** rodar `20261108_fase3_salao_proprio.sql` e o bloco de verificação.
+- [ ] **Passo 3 (dona do projeto, no SQL Editor do Supabase, ANTES de publicar):** rodar `20261108_fase3_salao_proprio.sql` e o bloco de verificação. Ela só acrescenta coisas; o código antigo continua funcionando. Precisa vir antes porque o catálogo novo grava com `on_conflict=salon_id,id`.
+- [ ] **Passo 4:** juntar em `main` e publicar (deploy automático da Vercel). Conferir que o endereço da LEV abre com a página de sempre.
 - [ ] **Passo 5:** inserir em `professional_calendars` as 3 profissionais da LEV com os valores atuais das variáveis `GOOGLE_CALENDAR_ID_ELISANGELA`, `_TALITHA`, `_NAYARA` (lidos com `vercel env pull` para a pasta temporária; o arquivo não vai para o git). Criar um agendamento de teste para cada uma pelo painel e conferir que cai na agenda certa do Google; depois cancelar.
 - [ ] **Passo 6:** rodar `supabase/seeds/salao_exemplo.sql`. Abrir com `VITE_SALON_ID=demo npm run dev` e conferir no celular e no computador: nome, logo, capa, cores, textos, as duas profissionais e os 4 preços do Studio Aurora. Rodar no console `document.body.innerText.match(/LEV|Elisangela|Talitha|Nayara/g)` → `null`. Abrir o modal de agendamento e conferir que lista só Ana e Bia. Fotos em `docs/test-reports/fase3-salao-exemplo/`.
 - [ ] **Passo 7:** rodar `20261108b_catalogo_chave_por_salao.sql`. Pela conta da admin da LEV, editar o preço de um serviço e voltar ao valor original; conferir que gravou (o envio com `on_conflict=salon_id,id` funciona com a chave nova).
