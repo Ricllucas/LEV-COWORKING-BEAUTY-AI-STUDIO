@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findMaintenanceDue, isDueForConfirmation, isDueForThanks, isWithinSendingHours, messages, type AutomatedAppointment } from './automatedMessages';
+import { findMaintenanceDue, isDueForConfirmation, isDueForThanks, isWithinSendingHours, messages, renderMessage, type AutomatedAppointment, type SalonNames } from './automatedMessages';
 import { toBrazilianNumber } from './openwa';
 
 const apt = (overrides: Partial<AutomatedAppointment>): AutomatedAppointment => ({
@@ -15,6 +15,9 @@ const apt = (overrides: Partial<AutomatedAppointment>): AutomatedAppointment => 
   status: 'concluido',
   ...overrides
 });
+
+const LEV: SalonNames = { name: 'LEV Coworking Beauty', shortName: 'LEV' };
+const AURORA: SalonNames = { name: 'Studio Aurora', shortName: 'Aurora' };
 
 // Horários em UTC; Brasília = UTC-3
 const at = (iso: string) => new Date(iso);
@@ -49,9 +52,9 @@ describe('mensagens automáticas', () => {
 
   it('monta a mensagem de manutenção com o primeiro nome e o prazo', () => {
     const [due] = findMaintenanceDue([apt({ date: '2026-10-18' })], new Set(), '2026-11-02');
-    expect(messages.maintenance(due)).toContain('Ana, maravilhosa');
-    expect(messages.maintenance(due)).toContain('linda');
-    expect(messages.maintenance(due)).toContain('15 dias');
+    expect(messages.maintenance(due, LEV)).toContain('Ana, maravilhosa');
+    expect(messages.maintenance(due, LEV)).toContain('linda');
+    expect(messages.maintenance(due, LEV)).toContain('15 dias');
   });
 
   it('confirma para a cliente só depois que a equipe confirma o horário', () => {
@@ -86,7 +89,7 @@ describe('mensagens automáticas', () => {
 
   it('confirmação no texto aprovado pela LEV', () => {
     const a = apt({ clientName: 'Erica Souza', date: '2026-11-04', startTime: '17:30', status: 'confirmado', professionalName: 'Elisangela', serviceNames: ['Mão tradicional'] });
-    expect(messages.confirmation(a)).toBe(
+    expect(messages.confirmation(a, LEV)).toBe(
       'Olá, Erica! Tudo bem? Seu horário no LEV Coworking Beauty está confirmado!\n\n' +
       '📅 04/11/2026\n' +
       '🕒 Às 17h30\n' +
@@ -98,23 +101,23 @@ describe('mensagens automáticas', () => {
   });
 
   it('confirmação com mais de um serviço e hora cheia', () => {
-    const text = messages.confirmation(apt({ date: '2026-11-05', startTime: '09:00', status: 'confirmado', serviceNames: ['Pé', 'Mão'] }));
+    const text = messages.confirmation(apt({ date: '2026-11-05', startTime: '09:00', status: 'confirmado', serviceNames: ['Pé', 'Mão'] }), LEV);
     expect(text).toContain('🕒 Às 9h\n');
     expect(text).toContain('💅 Serviços: Pé, Mão\n');
   });
 
   it('lembrete de 1 hora no texto aprovado pela LEV', () => {
     const a = apt({ clientName: 'Erica Souza', date: '2026-11-04', startTime: '17:30', professionalName: 'Elisangela' });
-    expect(messages.reminder1Hour(a)).toBe('Olá, Erica! Passando para lembrar que seu horário no LEV é hoje, às 17h30, com Elisangela. Esperamos você! Até mais. 🤍');
+    expect(messages.reminder1Hour(a, LEV)).toBe('Olá, Erica! Passando para lembrar que seu horário no LEV é hoje, às 17h30, com Elisangela. Esperamos você! Até mais. 🤍');
   });
 
   it('lembrete da véspera no mesmo estilo', () => {
     const a = apt({ clientName: 'Erica Souza', date: '2026-11-05', startTime: '17:30', professionalName: 'Elisangela' });
-    expect(messages.reminder1Day(a)).toBe('Olá, Erica! Passando para lembrar que seu horário no LEV é amanhã, às 17h30, com Elisangela. Esperamos você! Até mais. 🤍');
+    expect(messages.reminder1Day(a, LEV)).toBe('Olá, Erica! Passando para lembrar que seu horário no LEV é amanhã, às 17h30, com Elisangela. Esperamos você! Até mais. 🤍');
   });
 
   it('agradecimento continua carinhoso e elogia a cliente', () => {
-    const text = messages.thanks(apt({ date: '2026-11-05', startTime: '10:00' }));
+    const text = messages.thanks(apt({ date: '2026-11-05', startTime: '10:00' }), LEV);
     expect(text).toContain('Ana');
     expect(text).toMatch(/maravilhosa|linda/);
   });
@@ -123,5 +126,61 @@ describe('mensagens automáticas', () => {
     expect(toBrazilianNumber('(41) 99999-1111')).toBe('5541999991111');
     expect(toBrazilianNumber('5541999991111')).toBe('5541999991111');
     expect(toBrazilianNumber('123')).toBe('');
+  });
+});
+describe('mensagens com o nome do salão', () => {
+  // Atendimento fixo; textos copiados da saída de antes da Fase 3 (aprovados pela LEV em 04/11/2026)
+  const fixed = apt({
+    clientName: 'Maria Souza', professionalId: 'prof_talitha', professionalName: 'Talitha',
+    serviceNames: ['Lash Lifting'], date: '2026-11-20', startTime: '14:00', endTime: '15:00', status: 'confirmado'
+  });
+  const due = { appointment: fixed, serviceName: 'Lash Lifting', days: 21 };
+
+  it('LEV: as 5 mensagens saem iguais, caractere por caractere', () => {
+    expect(messages.confirmation(fixed, LEV)).toBe(
+      'Olá, Maria! Tudo bem? Seu horário no LEV Coworking Beauty está confirmado!\n\n' +
+      '📅 20/11/2026\n' +
+      '🕒 Às 14h\n' +
+      '💅 Serviço: Lash Lifting\n' +
+      '👩 Profissional: Talitha\n\n' +
+      'Agradecemos pela preferência! Será um prazer recebê-la. ✨\n' +
+      'Caso precise remarcar, pedimos que nos avise com antecedência.'
+    );
+    expect(messages.reminder1Day(fixed, LEV)).toBe('Olá, Maria! Passando para lembrar que seu horário no LEV é amanhã, às 14h, com Talitha. Esperamos você! Até mais. 🤍');
+    expect(messages.reminder1Hour(fixed, LEV)).toBe('Olá, Maria! Passando para lembrar que seu horário no LEV é hoje, às 14h, com Talitha. Esperamos você! Até mais. 🤍');
+    expect(messages.thanks(fixed, LEV)).toBe(
+      'Maria, que linda você ficou! 😍💖 Muito obrigada por escolher o LEV Coworking Beauty para o seu atendimento de Lash Lifting. Foi um prazer cuidar de você, maravilhosa!\n\n' +
+      'Qualquer dúvida sobre os cuidados, é só chamar por aqui. ✨'
+    );
+    expect(messages.maintenance(due, LEV)).toBe(
+      'Oi, Maria, maravilhosa! 💖 Já faz 21 dias do seu atendimento de Lash Lifting aqui no LEV, e chegou o momento perfeito da manutenção para você continuar linda e deslumbrante! ✨\n\n' +
+      'Quer que a Talitha reserve um horário especial para você? É só responder esta mensagem. 😍'
+    );
+  });
+
+  it('outro salão: nenhuma mensagem fala da LEV', () => {
+    const texts = [
+      messages.confirmation(fixed, AURORA),
+      messages.reminder1Day(fixed, AURORA),
+      messages.reminder1Hour(fixed, AURORA),
+      messages.thanks(fixed, AURORA),
+      messages.maintenance(due, AURORA)
+    ];
+    texts.forEach(text => expect(text).not.toContain('LEV'));
+    expect(texts[0]).toContain('no Studio Aurora está confirmado');
+    expect(texts[1]).toContain('seu horário no Aurora é amanhã');
+    expect(texts[3]).toContain('escolher o Studio Aurora');
+    expect(texts[4]).toContain('aqui no Aurora');
+  });
+
+  it('sem nome de profissional usa o texto de reserva', () => {
+    const semNome = apt({ ...fixed, professionalName: undefined });
+    expect(messages.confirmation(semNome, LEV)).toContain('👩 Profissional: a sua profissional\n');
+    expect(messages.maintenance({ ...due, appointment: semNome }, LEV)).toContain('Quer que a sua profissional reserve');
+  });
+
+  it('renderMessage troca todas as ocorrências e apaga marcador sem valor', () => {
+    expect(renderMessage('{a} e {a}, {b}!', { a: 'Oi' })).toBe('Oi e Oi, !');
+    expect(renderMessage('{a}', { a: '{b}', b: 'não' })).toBe('{b}');
   });
 });

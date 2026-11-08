@@ -1,5 +1,6 @@
 import { Appointment } from '../types';
 import { MAINTENANCE_RULES, normalize } from './maintenanceRules';
+import type { SalonNames } from './salonNames';
 
 export { maintenanceDaysFor } from './maintenanceRules';
 
@@ -32,7 +33,8 @@ const ACTIVE_STATUSES = new Set(['aguardando_confirmacao', 'confirmado']);
 const THANK_YOU_WINDOW_DAYS = 3;
 const MAINTENANCE_WINDOW_DAYS = 30;
 
-export const buildFollowUps = (appointments: Appointment[], today: string, sent: Set<string>): FollowUp[] => {
+// `salon`: nome do salão nas mensagens (ver salonNames).
+export const buildFollowUps = (appointments: Appointment[], today: string, sent: Set<string>, salon: SalonNames): FollowUp[] => {
   const tomorrow = addDays(today, 1);
   const items: FollowUp[] = [];
 
@@ -45,8 +47,8 @@ export const buildFollowUps = (appointments: Appointment[], today: string, sent:
         key: `lembrete:${apt.id}`,
         kind: 'lembrete',
         appointment: apt,
-        // Mesmo texto do lembrete automático (aprovado pela LEV em 04/11/2026)
-        message: `Olá, ${firstName(apt.clientName)}! Passando para lembrar que seu horário no LEV é ${when}, às ${formatHour(apt.startTime)}, com ${apt.professionalName}. Esperamos você! Até mais. 🤍`
+        // Mesmo texto do lembrete automático (aprovado em 04/11/2026)
+        message: `Olá, ${firstName(apt.clientName)}! Passando para lembrar que seu horário no ${salon.shortName} é ${when}, às ${formatHour(apt.startTime)}, com ${apt.professionalName}. Esperamos você! Até mais. 🤍`
       });
     });
 
@@ -60,7 +62,7 @@ export const buildFollowUps = (appointments: Appointment[], today: string, sent:
         key: `agradecimento:${apt.id}`,
         kind: 'agradecimento',
         appointment: apt,
-        message: `Olá, ${firstName(apt.clientName)}! Obrigada por escolher o LEV Coworking Beauty para o seu ${apt.serviceNames.join(', ')}. Foi um prazer te atender! 💛 Qualquer dúvida sobre os cuidados, estou por aqui.`
+        message: `Olá, ${firstName(apt.clientName)}! Obrigada por escolher o ${salon.name} para o seu ${apt.serviceNames.join(', ')}. Foi um prazer te atender! 💛 Qualquer dúvida sobre os cuidados, estou por aqui.`
       });
     });
 
@@ -92,7 +94,7 @@ export const buildFollowUps = (appointments: Appointment[], today: string, sent:
       kind: 'manutencao',
       appointment: apt,
       dueDate,
-      message: `Olá, ${firstName(apt.clientName)}! Já faz ${days} dias do seu ${label} aqui no LEV, e chegou o momento ideal da manutenção para manter tudo lindo. ✨ Quer que eu reserve um horário para você? É só me responder por aqui.`
+      message: `Olá, ${firstName(apt.clientName)}! Já faz ${days} dias do seu ${label} aqui no ${salon.shortName}, e chegou o momento ideal da manutenção para manter tudo lindo. ✨ Quer que eu reserve um horário para você? É só me responder por aqui.`
     });
   });
 

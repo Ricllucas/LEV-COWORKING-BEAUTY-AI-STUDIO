@@ -3,6 +3,8 @@ import { Appointment } from '../../types';
 import { buildWhatsAppLink } from '../../utils/formatters';
 import { scopedStorageKey } from '../../config/salon';
 import { buildFollowUps, FollowUp, FollowUpKind } from '../../utils/followUps';
+import { salonNames } from '../../utils/salonNames';
+import { StorageService } from '../../services/storage';
 import { WhatsAppRobotService } from '../../services/whatsappRobot';
 import { Bell, Heart, RefreshCw, MessageCircle, Check, Bot } from 'lucide-react';
 
@@ -57,7 +59,10 @@ export const FollowUpsPanel: React.FC<FollowUpsPanelProps> = ({ appointments, to
       setIsTesting(false);
     }
   };
-  const items = useMemo(() => buildFollowUps(appointments, today, sent), [appointments, today, sent]);
+  const items = useMemo(
+    () => buildFollowUps(appointments, today, sent, salonNames(StorageService.getSettings())),
+    [appointments, today, sent]
+  );
 
   const markSent = (item: FollowUp) => {
     const next = new Set(sent).add(item.key);

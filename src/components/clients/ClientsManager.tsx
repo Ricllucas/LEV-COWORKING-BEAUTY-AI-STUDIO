@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Client, Professional } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudClientService } from '../../services/cloudClients';
-import { formatPhone, buildWhatsAppLink } from '../../utils/formatters';
+import { formatPhone, buildWhatsAppLink, clientContactMessage } from '../../utils/formatters';
+import { contactSalonName } from '../../utils/salonNames';
 import { Search, Plus, User, Phone, Mail, Calendar, MessageCircle, AlertTriangle, ShieldCheck, X, Edit3 } from 'lucide-react';
 
 interface ClientsManagerProps {
@@ -99,7 +100,7 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
     try {
       const savedClient = await CloudClientService.save(newClient);
       StorageService.saveClient(savedClient);
-      setFeedback({ type: 'success', text: `${savedClient.fullName} foi incluída na base compartilhada da LEV.` });
+      setFeedback({ type: 'success', text: `${savedClient.fullName} foi incluída na base compartilhada do salão.` });
       setIsOpenForm(false);
       if (onCloseNewModal) onCloseNewModal();
 
@@ -174,7 +175,7 @@ export const ClientsManager: React.FC<ClientsManagerProps> = ({ isNewModalOpen, 
                 </div>
 
                 <a
-                  href={buildWhatsAppLink(client.phone, `Olá, ${client.fullName}! Tudo bem? Entramos em contato do LEV COWORKING BEAUTY.`)}
+                  href={buildWhatsAppLink(client.phone, clientContactMessage(client.fullName, contactSalonName(StorageService.getSettings())))}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={e => e.stopPropagation()}

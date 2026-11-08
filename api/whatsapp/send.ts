@@ -1,6 +1,7 @@
 import { applyApiSecurity, rateLimit, safeText, validJsonRequest } from '../_lib/security.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
 import { isOpenWaConfigured, sendOpenWaText } from '../_lib/openwa.js';
+import { loadSalonDirectory } from '../_lib/salonDirectory.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 
@@ -21,7 +22,8 @@ export default async function handler(req: any, res: any) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body || {};
     const phone = safeText(body.phone, 24);
     if (phone.replace(/\D/g, '').length < 10) return json(res, 400, { error: 'Informe um telefone com DDD.' });
-    await sendOpenWaText(phone, 'Teste do robô de WhatsApp da LEV Coworking Beauty ✅ Se você recebeu esta mensagem, as mensagens automáticas estão funcionando.');
+    const salon = await loadSalonDirectory(staff.salonId);
+    await sendOpenWaText(phone, `Teste do robô de WhatsApp do ${salon.name} ✅ Se você recebeu esta mensagem, as mensagens automáticas estão funcionando.`);
     return json(res, 200, { sent: true });
   } catch (error) {
     return json(res, 502, { error: error instanceof Error ? error.message : 'Não foi possível enviar pelo robô de WhatsApp.' });

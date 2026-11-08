@@ -4,6 +4,7 @@ import { StorageService } from '../../services/storage';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
 import { canRemoveScheduleBlock, canSeeAppointmentPrice } from '../../utils/agendaVisibility';
 import { formatCurrency, formatDateBR, getDayOfWeekName, generateWhatsAppMessage, buildWhatsAppLink } from '../../utils/formatters';
+import { contactSalonName, salonNames } from '../../utils/salonNames';
 import { agendaColorFor, agendaToneFor } from '../../utils/professionalColors';
 import {
   Calendar as CalendarIcon,
@@ -791,7 +792,9 @@ export const AgendaView: React.FC<AgendaViewProps> = ({ currentUser, onOpenNewBo
                       professionalName: selectedApt.professionalName,
                       serviceName: selectedApt.serviceNames.join(', '),
                       date: selectedApt.date,
-                      time: selectedApt.startTime
+                      time: selectedApt.startTime,
+                      coworkingName: contactSalonName(StorageService.getSettings()),
+                      salonShortName: salonNames(StorageService.getSettings()).shortName
                     })
                   )}
                   target="_blank"

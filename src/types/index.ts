@@ -254,6 +254,12 @@ export interface SystemNotification {
   linkTo?: string;
 }
 
+// Marca do salão. Por enquanto só o nome curto das mensagens; a Fase 3
+// (Tarefa 6) acrescenta cores e textos da página pública.
+export interface SalonBrandOverrides {
+  shortName?: string;
+}
+
 export interface CoworkingSettings {
   name: string;
   subName: string;
@@ -271,6 +277,7 @@ export interface CoworkingSettings {
   logoUrl?: string;
   heroBannerUrl?: string;
   galleryImages?: { url: string; title: string; desc: string }[];
+  brand?: SalonBrandOverrides;
 }
 
 export interface AuditLog {

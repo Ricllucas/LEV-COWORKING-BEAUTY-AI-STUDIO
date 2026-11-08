@@ -189,7 +189,7 @@ export const whatsappValidator = {
             to: cleanPhone,
             type: 'text',
             text: {
-              body: '🧪 Teste de integração LEV Coworking Beauty - Mensagem de validação'
+              body: '🧪 Teste de integração do robô de WhatsApp - Mensagem de validação'
             }
           })
         }
@@ -259,7 +259,7 @@ export const whatsappValidator = {
 
   // 6. Relatório completo
   runFullValidation: async (testPhoneNumber?: string) => {
-    console.log('\n🔍 VALIDADOR WHATSAPP BUSINESS LEV COWORKING\n');
+    console.log('\n🔍 VALIDADOR WHATSAPP BUSINESS\n');
     console.log('=' .repeat(60));
 
     // 1. Variáveis de ambiente

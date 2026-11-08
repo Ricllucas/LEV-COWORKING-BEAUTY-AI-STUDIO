@@ -18,6 +18,8 @@ import {
   formatPhone,
   buildWhatsAppLink,
   generateWhatsAppMessage,
+  clientContactMessage,
+  waitlistSlotMessage,
 } from './formatters';
 
 describe('formatCurrency', () => {
@@ -194,5 +196,50 @@ describe('getProfessionalWhatsApp por salão', () => {
 
   it('LEV ignora o número geral da LEV por padrão', () => {
     expect(getProfessionalWhatsApp('prof_elisangela', { whatsapp: '41984979940' })).toBe('5541992461203');
+  });
+});
+describe('mensagens do site com o nome do salão', () => {
+  afterEach(() => { salon.id = 'lev'; });
+  const data = { clientName: 'Maria Souza', professionalName: 'Talitha', serviceName: 'Lash Lifting', date: '2026-11-20', time: '14:00', totalPrice: 150, depositValue: 45, pixKey: 'pix-talitha' };
+  const AURORA = { coworkingName: 'Studio Aurora', salonShortName: 'Aurora' };
+  const types = ['solicitacao_agendamento_cliente', 'confirmacao', 'lembrete', 'solicitacao_sinal', 'confirmacao_pagamento', 'reagendamento', 'cancelamento', 'aniversario', 'pos_atendimento', 'outro'];
+
+  // Textos copiados da saída de antes da Fase 3 (as telas não passavam o nome do salão)
+  it('LEV: textos iguais aos de antes, caractere por caractere', () => {
+    const R = 'R$ ';
+    const levNames = { coworkingName: 'LEV COWORKING BEAUTY', salonShortName: 'LEV' };
+    const expected: Record<string, string> = {
+      solicitacao_agendamento_cliente: `Olá! Sou *Maria Souza* e acabei de solicitar um agendamento pelo site da LEV.\n\n👩‍💼 Profissional: *Talitha*\n💅 Serviço(s): *Lash Lifting*\n📅 Data: *20/11/2026*\n⏰ Horário: *14:00*\n💰 Valor total: *${R}150,00*\n💳 Sinal: *${R}45,00*\n🔑 Chave Pix: *pix-talitha*\n\nPor favor, confirme o recebimento da minha solicitação. Enviarei o comprovante do sinal por aqui.`,
+      confirmacao: 'Olá, Maria Souza! ✨ Seu atendimento com Talitha no *LEV COWORKING BEAUTY* está agendado para *20/11/2026* às *14:00* (Lash Lifting).\n\nCaso precise de suporte ou dúvidas, estamos à disposição. Te esperamos! 🌸',
+      lembrete: 'Olá, Maria Souza! 🌸 Lembramos do seu agendamento no *LEV COWORKING BEAUTY* amanhã (20/11/2026) às *14:00* com Talitha (Lash Lifting). Por favor, confirme sua presença respondendo este aviso. Atenciosamente! ✨',
+      solicitacao_sinal: `Olá, Maria Souza! Para confirmar seu agendamento de *Lash Lifting* com Talitha para o dia *20/11/2026 às 14:00*, pedimos a transferência do sinal de *${R}45,00*.\n\nChave Pix: *pix-talitha*\n\nPor favor, envie o comprovante após realizar o pagamento. Muito obrigada! 💖`,
+      confirmacao_pagamento: 'Recebemos o seu pagamento referente ao agendamento no *LEV COWORKING BEAUTY*! 🎉 Seu atendimento está 100% confirmado para *20/11/2026* às *14:00*. Te aguardamos com muito carinho!',
+      reagendamento: 'Olá, Maria Souza! Seu agendamento no *LEV COWORKING BEAUTY* foi alterado para *20/11/2026* às *14:00* com Talitha (Lash Lifting). Se precisar de ajustes, avise-nos por aqui! ✨',
+      cancelamento: 'Olá, Maria Souza. Confirmamos o cancelamento do seu agendamento de *Lash Lifting* para o dia *20/11/2026*. Ficamos à disposição caso deseje remarcar para outra data! 🌸',
+      aniversario: 'Parabéns, Maria Souza! 🎉 O *LEV COWORKING BEAUTY* deseja um dia iluminado! Preparamos um carinho especial para você neste mês de aniversário. Entre em contato para agendar seu momento de beleza! 💖',
+      pos_atendimento: 'Olá, Maria Souza! Muito obrigada por escolher o *LEV COWORKING BEAUTY*! 💖 Foi um prazer atender você hoje. Como foi sua experiência com Talitha? Ficaremos muito felizes em receber sua avaliação! ✨',
+      outro: 'Olá, Maria Souza! Entramos em contato do *LEV COWORKING BEAUTY* sobre seu atendimento de Lash Lifting com Talitha.'
+    };
+    types.forEach(type => {
+      // Com os nomes vindos da tela e sem eles (padrão do salão)
+      expect(generateWhatsAppMessage(type, { ...data, ...levNames })).toBe(expected[type]);
+      expect(generateWhatsAppMessage(type, data)).toBe(expected[type]);
+    });
+    expect(generateWhatsAppMessage('solicitacao_agendamento_cliente', { ...data, depositValue: undefined })).toBe(
+      `Olá! Sou *Maria Souza* e acabei de solicitar um agendamento pelo site da LEV.\n\n👩‍💼 Profissional: *Talitha*\n💅 Serviço(s): *Lash Lifting*\n📅 Data: *20/11/2026*\n⏰ Horário: *14:00*\n💰 Valor total: *${R}150,00*\n\nPor favor, confirme o recebimento da minha solicitação.`
+    );
+    expect(clientContactMessage('Maria Souza', 'LEV COWORKING BEAUTY')).toBe('Olá, Maria Souza! Tudo bem? Entramos em contato do LEV COWORKING BEAUTY.');
+    expect(waitlistSlotMessage('Maria Souza', 'Lash Lifting', 'LEV COWORKING BEAUTY')).toBe('Olá, Maria Souza! Vagou um horário no LEV COWORKING BEAUTY para Lash Lifting. Gostaria de agendar?');
+  });
+
+  it('outro salão: nenhuma mensagem fala da LEV', () => {
+    salon.id = 'demo';
+    types.forEach(type => expect(generateWhatsAppMessage(type, { ...data, ...AURORA })).not.toContain('LEV'));
+    // Sem nome informado, também não cai no nome da LEV
+    types.forEach(type => expect(generateWhatsAppMessage(type, data)).not.toContain('LEV'));
+    expect(generateWhatsAppMessage('solicitacao_agendamento_cliente', { ...data, ...AURORA })).toContain('pelo site da Aurora.');
+    expect(generateWhatsAppMessage('confirmacao', { ...data, ...AURORA })).toContain('no *Studio Aurora*');
+    expect(clientContactMessage('Maria Souza', 'Studio Aurora')).toBe('Olá, Maria Souza! Tudo bem? Entramos em contato do Studio Aurora.');
+    expect(waitlistSlotMessage('Maria Souza', 'Corte', 'Studio Aurora')).toBe('Olá, Maria Souza! Vagou um horário no Studio Aurora para Corte. Gostaria de agendar?');
   });
 });

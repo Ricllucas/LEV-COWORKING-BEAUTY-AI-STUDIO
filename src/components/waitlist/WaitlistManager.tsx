@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { WaitlistEntry, Professional, Service } from '../../types';
 import { StorageService } from '../../services/storage';
-import { formatPhone, buildWhatsAppLink } from '../../utils/formatters';
+import { formatPhone, buildWhatsAppLink, waitlistSlotMessage } from '../../utils/formatters';
+import { contactSalonName } from '../../utils/salonNames';
 import { Clock, Plus, MessageCircle, Check, X, User } from 'lucide-react';
 
 export const WaitlistManager: React.FC = () => {
@@ -97,7 +98,7 @@ export const WaitlistManager: React.FC = () => {
 
               <div className="pt-2 border-t border-white/10 flex justify-end">
                 <a
-                  href={buildWhatsAppLink(entry.clientPhone, `Olá, ${entry.clientName}! Vagou um horário no LEV COWORKING BEAUTY para ${entry.serviceName}. Gostaria de agendar?`)}
+                  href={buildWhatsAppLink(entry.clientPhone, waitlistSlotMessage(entry.clientName, entry.serviceName, contactSalonName(StorageService.getSettings())))}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1"

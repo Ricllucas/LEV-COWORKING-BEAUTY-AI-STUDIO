@@ -1,5 +1,6 @@
 import { supabaseConfig, serviceHeaders } from '../_lib/staffAuth.js';
 import { assertSalonId, salonFilter } from '../_lib/tenant.js';
+import { loadSalonDirectory } from '../_lib/salonDirectory.js';
 import { isOpenWaConfigured, sendOpenWaText } from '../_lib/openwa.js';
 import { isCronAuthorized, isDueFor1Day, isDueFor1Hour, type RemindersSent } from '../_lib/reminderRules.js';
 import {
@@ -10,11 +11,12 @@ import {
   isDueForThanks,
   isWithinSendingHours,
   messages,
-  type AutomatedAppointment
+  type AutomatedAppointment,
+  type SalonNames
 } from '../_lib/automatedMessages.js';
 
 // Disparado a cada 5 minutos pelo Supabase (pg_cron). Envia pelo robô de
-// WhatsApp da LEV: lembretes (1 dia e 1 hora antes), agradecimento e manutenção.
+// WhatsApp: lembretes (1 dia e 1 hora antes), agradecimento e manutenção.
 // Processa salão por salão (só os ativos); o limite de envios por rodada vale
 // para todos juntos, porque hoje todos usam o mesmo número de WhatsApp.
 
@@ -23,7 +25,7 @@ type Kind = 'confirmacao' | '1dia' | '1hora' | 'agradecimento' | 'manutencao';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const ACTIVE = new Set(['aguardando_confirmacao', 'confirmado']);
-// Poucas mensagens por rodada e com intervalo, para proteger o número da LEV
+// Poucas mensagens por rodada e com intervalo, para proteger o número do robô
 const MAX_PER_RUN = 6;
 const PAUSE_MS = 4000;
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
@@ -85,6 +87,9 @@ const activeSalonIds = async (): Promise<string[]> => {
 // Monta a fila de mensagens de um salão, só com os agendamentos dele.
 const queueForSalon = async (rawSalonId: string, now: Date, today: string): Promise<QueueItem[]> => {
   const salonId = assertSalonId(rawSalonId);
+  // Nome do salão nas mensagens (uma leitura por salão; nunca falha: sem banco, usa o nome de fábrica)
+  const directory = await loadSalonDirectory(salonId);
+  const salon: SalonNames = { name: directory.name, shortName: directory.shortName };
   const from = addDays(today, -75);
   const until = addDays(today, 2);
   const rows = await (await query(
@@ -99,11 +104,11 @@ const queueForSalon = async (rawSalonId: string, now: Date, today: string): Prom
     // Lembrete só para horários confirmados pela profissional: um número digitado
     // no site público não recebe mensagens até a equipe confirmar o agendamento.
     if (apt.status === 'confirmado') {
-      if (!apt.sent['1hora'] && isDueFor1Hour(apt, now)) queue.push({ apt, kind: '1hora', text: messages.reminder1Hour(apt) });
-      else if (!apt.sent['1dia'] && isDueFor1Day(apt, now)) queue.push({ apt, kind: '1dia', text: messages.reminder1Day(apt) });
-      else if (!apt.sent.confirmacao && isDueForConfirmation(apt, now, apt.sent)) queue.push({ apt, kind: 'confirmacao', text: messages.confirmation(apt) });
+      if (!apt.sent['1hora'] && isDueFor1Hour(apt, now)) queue.push({ apt, kind: '1hora', text: messages.reminder1Hour(apt, salon) });
+      else if (!apt.sent['1dia'] && isDueFor1Day(apt, now)) queue.push({ apt, kind: '1dia', text: messages.reminder1Day(apt, salon) });
+      else if (!apt.sent.confirmacao && isDueForConfirmation(apt, now, apt.sent)) queue.push({ apt, kind: 'confirmacao', text: messages.confirmation(apt, salon) });
     }
-    if (!apt.sent.agradecimento && isDueForThanks(apt, now)) queue.push({ apt, kind: 'agradecimento', text: messages.thanks(apt) });
+    if (!apt.sent.agradecimento && isDueForThanks(apt, now)) queue.push({ apt, kind: 'agradecimento', text: messages.thanks(apt, salon) });
   });
 
   const upcomingPhones = new Set(
@@ -114,7 +119,7 @@ const queueForSalon = async (rawSalonId: string, now: Date, today: string): Prom
   const done = appointments.filter(apt => apt.status === 'concluido' && apt.date <= today);
   findMaintenanceDue(done, upcomingPhones, today).forEach(due => {
     const apt = appointments.find(item => item.id === due.appointment.id);
-    if (apt && !apt.sent.manutencao) queue.push({ apt, kind: 'manutencao', text: messages.maintenance(due) });
+    if (apt && !apt.sent.manutencao) queue.push({ apt, kind: 'manutencao', text: messages.maintenance(due, salon) });
   });
   return queue;
 };

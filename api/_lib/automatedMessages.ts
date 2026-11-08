@@ -1,6 +1,6 @@
 import { maintenanceDaysFor } from '../../src/utils/maintenanceRules.js';
 
-// Textos e regras de horário das mensagens automáticas da LEV.
+// Textos e regras de horário das mensagens automáticas do robô (um texto para todos os salões).
 
 export type AutomatedAppointment = {
   id: string;
@@ -77,7 +77,7 @@ export const isDueForConfirmation = (apt: AutomatedAppointment, now: Date, sent:
 };
 
 const MAINTENANCE_WINDOW_DAYS = 30;
-// Decisão da LEV: ao ligar o robô, só chamar quem vencer a partir desta data
+// Decisão de 02/11/2026: ao ligar o robô, só chamar quem vencer a partir desta data
 export const MAINTENANCE_START_DATE = '2026-11-02';
 
 export type MaintenanceDue = { appointment: AutomatedAppointment; serviceName: string; days: number };
@@ -109,34 +109,72 @@ export const findMaintenanceDue = (
   });
 };
 
-// Tom da LEV para as clientes: alegre, carinhoso e entusiasmado.
-export const messages = {
-  // Confirmação e lembretes: texto aprovado pela LEV em 04/11/2026
-  confirmation: (apt: AutomatedAppointment) =>
-    `Olá, ${firstName(apt.clientName)}! Tudo bem? Seu horário no LEV Coworking Beauty está confirmado!
+// Nome do salão nas mensagens: completo (ex.: "Studio Aurora") e curto (ex.: "Aurora").
+export type SalonNames = { name: string; shortName: string };
 
-📅 ${formatDate(apt.date)}
-🕒 Às ${formatHour(apt.startTime)}
-💅 ${apt.serviceNames.length > 1 ? 'Serviços' : 'Serviço'}: ${apt.serviceNames.join(', ')}
-👩 Profissional: ${apt.professionalName || 'a sua profissional'}
+type TemplateKey = 'confirmation' | 'reminder1Day' | 'reminder1Hour' | 'thanks' | 'maintenance';
+
+// Tom das mensagens às clientes: alegre, carinhoso e entusiasmado.
+// Confirmação e lembretes: texto aprovado pela dona do salão principal em 04/11/2026;
+// a saída para esse salão é idêntica à de antes (conferido no teste).
+export const MESSAGE_TEMPLATES: Record<TemplateKey, string> = {
+  confirmation: `Olá, {cliente}! Tudo bem? Seu horário no {salao} está confirmado!
+
+📅 {data}
+🕒 Às {hora}
+💅 {rotuloServico}: {servicos}
+👩 Profissional: {profissional}
 
 Agradecemos pela preferência! Será um prazer recebê-la. ✨
 Caso precise remarcar, pedimos que nos avise com antecedência.`,
 
-  reminder1Day: (apt: AutomatedAppointment) =>
-    `Olá, ${firstName(apt.clientName)}! Passando para lembrar que seu horário no LEV é amanhã, às ${formatHour(apt.startTime)}, com ${apt.professionalName || 'a sua profissional'}. Esperamos você! Até mais. 🤍`,
+  reminder1Day: 'Olá, {cliente}! Passando para lembrar que seu horário no {salaoCurto} é amanhã, às {hora}, com {profissional}. Esperamos você! Até mais. 🤍',
 
-  reminder1Hour: (apt: AutomatedAppointment) =>
-    `Olá, ${firstName(apt.clientName)}! Passando para lembrar que seu horário no LEV é hoje, às ${formatHour(apt.startTime)}, com ${apt.professionalName || 'a sua profissional'}. Esperamos você! Até mais. 🤍`,
+  reminder1Hour: 'Olá, {cliente}! Passando para lembrar que seu horário no {salaoCurto} é hoje, às {hora}, com {profissional}. Esperamos você! Até mais. 🤍',
 
-  thanks: (apt: AutomatedAppointment) =>
-    `${firstName(apt.clientName)}, que linda você ficou! 😍💖 Muito obrigada por escolher o LEV Coworking Beauty para o seu atendimento de ${apt.serviceNames.join(', ')}. Foi um prazer cuidar de você, maravilhosa!
+  thanks: `{cliente}, que linda você ficou! 😍💖 Muito obrigada por escolher o {salao} para o seu atendimento de {servicos}. Foi um prazer cuidar de você, maravilhosa!
 
 Qualquer dúvida sobre os cuidados, é só chamar por aqui. ✨`,
 
-  maintenance: ({ appointment, serviceName, days }: MaintenanceDue) =>
-    `Oi, ${firstName(appointment.clientName)}, maravilhosa! 💖 Já faz ${days} dias do seu atendimento de ${serviceName} aqui no LEV, e chegou o momento perfeito da manutenção para você continuar linda e deslumbrante! ✨
+  maintenance: `Oi, {cliente}, maravilhosa! 💖 Já faz {dias} dias do seu atendimento de {servico} aqui no {salaoCurto}, e chegou o momento perfeito da manutenção para você continuar linda e deslumbrante! ✨
 
-Quer que a ${appointment.professionalName || 'sua profissional'} reserve um horário especial para você? É só responder esta mensagem. 😍`
+Quer que a {profissional} reserve um horário especial para você? É só responder esta mensagem. 😍`
 };
 
+// Troca cada {marcador} pelo valor; marcador sem valor vira texto vazio.
+// Uma passada só: um valor que contenha "{...}" não é trocado de novo.
+export const renderMessage = (template: string, vars: Record<string, string>): string =>
+  template.replace(/\{(\w+)\}/g, (_, key: string) => vars[key] ?? '');
+const baseVars = (apt: AutomatedAppointment, salon: SalonNames) => ({
+  cliente: firstName(apt.clientName),
+  salao: salon.name,
+  salaoCurto: salon.shortName,
+  hora: formatHour(apt.startTime),
+  profissional: apt.professionalName || 'a sua profissional'
+});
+
+export const messages = {
+  confirmation: (apt: AutomatedAppointment, salon: SalonNames) => renderMessage(MESSAGE_TEMPLATES.confirmation, {
+    ...baseVars(apt, salon),
+    data: formatDate(apt.date),
+    rotuloServico: apt.serviceNames.length > 1 ? 'Serviços' : 'Serviço',
+    servicos: apt.serviceNames.join(', ')
+  }),
+
+  reminder1Day: (apt: AutomatedAppointment, salon: SalonNames) => renderMessage(MESSAGE_TEMPLATES.reminder1Day, baseVars(apt, salon)),
+
+  reminder1Hour: (apt: AutomatedAppointment, salon: SalonNames) => renderMessage(MESSAGE_TEMPLATES.reminder1Hour, baseVars(apt, salon)),
+
+  thanks: (apt: AutomatedAppointment, salon: SalonNames) => renderMessage(MESSAGE_TEMPLATES.thanks, {
+    ...baseVars(apt, salon),
+    servicos: apt.serviceNames.join(', ')
+  }),
+
+  maintenance: ({ appointment, serviceName, days }: MaintenanceDue, salon: SalonNames) => renderMessage(MESSAGE_TEMPLATES.maintenance, {
+    ...baseVars(appointment, salon),
+    servico: serviceName,
+    dias: String(days),
+    // "Quer que a {profissional}": aqui a reserva é "sua profissional", sem outro "a"
+    profissional: appointment.professionalName || 'sua profissional'
+  })
+};

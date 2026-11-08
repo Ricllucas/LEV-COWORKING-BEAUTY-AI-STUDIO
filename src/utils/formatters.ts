@@ -4,6 +4,7 @@
 import { CURRENT_SALON_ID, isDefaultSalon } from '../config/salon';
 import { bundledDataFor } from '../data/salonDefaults';
 import { LEV_PROFESSIONAL_WHATSAPP } from '../data/levBrand';
+import { contactSalonName, salonNames } from './salonNames';
 
 const digitsOnly = (value: string | undefined) => (value || '').replace(/\D/g, '');
 
@@ -72,14 +73,19 @@ export function generateWhatsAppMessage(type: string, data: {
   depositValue?: number;
   totalPrice?: number;
   pixKey?: string;
+  // Nome do salão (contactSalonName) e nome curto (salonNames). Sem eles, usa os
+  // dados de fábrica do salão deste site.
   coworkingName?: string;
+  salonShortName?: string;
 }): string {
-  const coworking = data.coworkingName || "LEV COWORKING BEAUTY";
+  const bundled = bundledDataFor(CURRENT_SALON_ID).settings;
+  const coworking = data.coworkingName || contactSalonName(bundled);
+  const shortName = data.salonShortName || salonNames(bundled).shortName;
   const dateFormatted = formatDateBR(data.date);
 
   switch (type) {
     case 'solicitacao_agendamento_cliente':
-      return `Olá! Sou *${data.clientName}* e acabei de solicitar um agendamento pelo site da LEV.\n\n👩‍💼 Profissional: *${data.professionalName}*\n💅 Serviço(s): *${data.serviceName}*\n📅 Data: *${dateFormatted}*\n⏰ Horário: *${data.time}*\n💰 Valor total: *${formatCurrency(data.totalPrice || 0)}*${data.depositValue ? `\n💳 Sinal: *${formatCurrency(data.depositValue)}*\n🔑 Chave Pix: *${data.pixKey || 'Consulte a profissional'}*` : ''}\n\nPor favor, confirme o recebimento da minha solicitação.${data.depositValue ? ' Enviarei o comprovante do sinal por aqui.' : ''}`;
+      return `Olá! Sou *${data.clientName}* e acabei de solicitar um agendamento pelo site da ${shortName}.\n\n👩‍💼 Profissional: *${data.professionalName}*\n💅 Serviço(s): *${data.serviceName}*\n📅 Data: *${dateFormatted}*\n⏰ Horário: *${data.time}*\n💰 Valor total: *${formatCurrency(data.totalPrice || 0)}*${data.depositValue ? `\n💳 Sinal: *${formatCurrency(data.depositValue)}*\n🔑 Chave Pix: *${data.pixKey || 'Consulte a profissional'}*` : ''}\n\nPor favor, confirme o recebimento da minha solicitação.${data.depositValue ? ' Enviarei o comprovante do sinal por aqui.' : ''}`;
 
     case 'confirmacao':
       return `Olá, ${data.clientName}! ✨ Seu atendimento com ${data.professionalName} no *${coworking}* está agendado para *${dateFormatted}* às *${data.time}* (${data.serviceName}).\n\nCaso precise de suporte ou dúvidas, estamos à disposição. Te esperamos! 🌸`;
@@ -109,3 +115,10 @@ export function generateWhatsAppMessage(type: string, data: {
       return `Olá, ${data.clientName}! Entramos em contato do *${coworking}* sobre seu atendimento de ${data.serviceName} com ${data.professionalName}.`;
   }
 }
+// Contato da equipe com uma cliente (lista de clientes).
+export const clientContactMessage = (clientName: string, salonName: string): string =>
+  `Olá, ${clientName}! Tudo bem? Entramos em contato do ${salonName}.`;
+
+// Aviso de vaga para quem está na lista de espera.
+export const waitlistSlotMessage = (clientName: string, serviceName: string, salonName: string): string =>
+  `Olá, ${clientName}! Vagou um horário no ${salonName} para ${serviceName}. Gostaria de agendar?`;

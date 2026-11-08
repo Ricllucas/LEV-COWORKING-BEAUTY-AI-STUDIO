@@ -133,3 +133,11 @@ export const LEV_PORTFOLIO = {
   bridalProfessionalId: LEV_BRIDAL_PROFESSIONAL_ID,
   bridalWhatsAppText: 'Olá, Talitha! Vi o portfólio da LEV e gostaria de um orçamento para Produção Noivas.'
 };
+// --- Nome nas mensagens --------------------------------------------------
+
+// Nome curto ("seu horário no LEV").
+export const LEV_SHORT_NAME = 'LEV';
+// Nome completo como as mensagens às clientes escrevem (robô e lembretes do painel).
+export const LEV_MESSAGE_NAME = 'LEV Coworking Beauty';
+// Nome em maiúsculas usado nos contatos montados pelo site (links de WhatsApp).
+export const LEV_CONTACT_NAME = 'LEV COWORKING BEAUTY';

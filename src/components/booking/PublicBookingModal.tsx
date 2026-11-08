@@ -3,6 +3,7 @@ import { Professional, Service, Client, Appointment, User, PublicScheduleBlock }
 import { StorageService } from '../../services/storage';
 import { getAvailableSlots, SlotAvailability } from '../../utils/scheduleHelper';
 import { formatCurrency, formatDateBR, generateWhatsAppMessage, buildWhatsAppLink, getProfessionalWhatsApp } from '../../utils/formatters';
+import { contactSalonName, salonNames } from '../../utils/salonNames';
 import { getSpecialtyIcon } from '../common/SpecialtyIcons';
 import { ProfessionalAvatar } from '../common/ProfessionalAvatar';
 import { CloudAppointmentService } from '../../services/cloudAppointments';
@@ -788,7 +789,9 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
                       time: confirmedApt.startTime,
                       totalPrice: confirmedApt.totalPrice,
                       depositValue: totalDeposit,
-                      pixKey: currentProf?.pixKey
+                      pixKey: currentProf?.pixKey,
+                      coworkingName: contactSalonName(StorageService.getSettings()),
+                      salonShortName: salonNames(StorageService.getSettings()).shortName
                     })
                   )}
                   target="_blank"
