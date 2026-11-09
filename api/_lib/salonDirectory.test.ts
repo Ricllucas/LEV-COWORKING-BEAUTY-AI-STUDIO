@@ -270,6 +270,47 @@ describe('aviso de novo agendamento para a profissional', () => {
     expect(message).toContain('Confira e confirme pelo painel da LEV.');
   });
 
+  it('LEV: profissional cadastrada com o número geral do salão → aviso vai para o número pessoal de fábrica', async () => {
+    vi.mocked(sendOpenWaText).mockClear();
+    answers = {
+      salons: ok([{ name: 'LEV Coworking Beauty' }]),
+      salon_settings: ok([{ payload: { whatsapp: '(41) 98497-9940' } }]),
+      professionals: ok([{ id: 'prof_talitha', payload: { id: 'prof_talitha', name: 'Talitha', whatsapp: '41984979940' } }]),
+      professional_calendars: ok([])
+    };
+    const { sendProfessionalNotification } = await realModule();
+    expect(await sendProfessionalNotification(data('prof_talitha'), 'lev')).toBe(true);
+    expect(vi.mocked(sendOpenWaText).mock.calls[0][0]).toBe('5541999983228');
+  });
+
+  it('LEV: número geral é ignorado mesmo se a leitura das configurações falhar', async () => {
+    vi.mocked(sendOpenWaText).mockClear();
+    answers = {
+      salons: ok([{ name: 'LEV Coworking Beauty' }]),
+      salon_settings: down,
+      professionals: ok([{ id: 'prof_talitha', payload: { id: 'prof_talitha', name: 'Talitha', whatsapp: '5541984979940' } }]),
+      professional_calendars: ok([])
+    };
+    const { sendProfessionalNotification } = await realModule();
+    expect(await sendProfessionalNotification(data('prof_talitha'), 'lev')).toBe(true);
+    expect(vi.mocked(sendOpenWaText).mock.calls[0][0]).toBe('5541999983228');
+  });
+
+  it('outro salão: profissional com o número geral do salão fica sem número direto', async () => {
+    vi.mocked(sendOpenWaText).mockClear();
+    answers = {
+      salons: ok([{ name: 'Studio Aurora' }]),
+      salon_settings: ok([{ payload: { whatsapp: '5548911112222', brand: { shortName: 'Aurora' } } }]),
+      professionals: ok([{ id: 'prof_aurora_ana', payload: { id: 'prof_aurora_ana', name: 'Ana', whatsapp: '48911112222' } }]),
+      professional_calendars: ok([])
+    };
+    const dir = await loadSalonDirectory('demo');
+    expect(findProfessional(dir, 'prof_aurora_ana')?.whatsapp).toBe('');
+    const { sendProfessionalNotification } = await realModule();
+    expect(await sendProfessionalNotification(data('prof_aurora_ana'), 'demo')).toBe(false);
+    expect(sendOpenWaText).not.toHaveBeenCalled();
+  });
+
   it('outro salão: número e nome curto do próprio salão; profissional da LEV não recebe', async () => {
     vi.mocked(sendOpenWaText).mockClear();
     answers = { salons: ok([{ name: 'Studio Aurora' }]), salon_settings: ok([{ payload: { brand: { shortName: 'Aurora' } } }]), professionals: ok(demoRows), professional_calendars: ok([]) };
@@ -340,6 +381,12 @@ describe('textos de horário ocupado usam o nome curto do salão', () => {
 
   it('LEV: texto igual ao de hoje', async () => {
     await expect(attempt('lev')).rejects.toThrow(/^Este horário já está reservado no Studio LEV\. Escolha outro horário disponível\.$/);
+  });
+
+  it('nome que já começa com Studio não vira "Studio Studio"', async () => {
+    answers = { salons: ok([{ name: 'Studio Aurora' }]), salon_settings: ok([]), professionals: ok(demoRows), professional_calendars: ok([]) };
+    const error = await attempt('demo').catch((e: Error) => e);
+    expect((error as Error).message).toBe('Este horário já está reservado no Studio Aurora. Escolha outro horário disponível.');
   });
 
   it('outro salão: nome curto dele, sem LEV', async () => {

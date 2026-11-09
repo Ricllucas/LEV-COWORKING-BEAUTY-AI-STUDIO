@@ -1,7 +1,7 @@
 // Quem trabalha em cada salão, com WhatsApp, cor e agenda do Google, lido do banco.
 // A LEV completa o que faltar com os dados de fábrica (levDefaults); outro salão
 // nunca recebe dados nem a agenda da LEV.
-import { LEV_PROFESSIONALS, LEV_SALON, LEV_SALON_ID } from './levDefaults.js';
+import { LEV_PROFESSIONALS, LEV_SALON, LEV_SALON_ID, LEV_SALON_MAIN_WHATSAPP } from './levDefaults.js';
 import { serviceHeaders, supabaseConfig } from './staffAuth.js';
 import { assertSalonId, salonFilter } from './tenant.js';
 
@@ -39,7 +39,7 @@ const byName = (a: SalonProfessional, b: SalonProfessional) => a.name.localeComp
 const buildDirectory = async (salonId: string): Promise<{ directory: SalonDirectory; complete: boolean }> => {
   const [salons, settings, professionalRows, calendarRows] = await Promise.all([
     readRows<{ name?: unknown }>(base => `${base}/rest/v1/salons?id=eq.${salonId}&select=name`),
-    readRows<{ payload?: { brand?: { shortName?: unknown } } | null }>(base => `${base}/rest/v1/salon_settings?id=eq.geral&select=payload&${salonFilter(salonId)}`),
+    readRows<{ payload?: { whatsapp?: unknown; brand?: { shortName?: unknown } } | null }>(base => `${base}/rest/v1/salon_settings?id=eq.geral&select=payload&${salonFilter(salonId)}`),
     readRows<ProfessionalRow>(base => `${base}/rest/v1/professionals?select=id,payload&${salonFilter(salonId)}`),
     // Tabela da migração 20261108: se ainda não existir, segue sem ela
     readRows<CalendarRow>(base => `${base}/rest/v1/professional_calendars?select=professional_id,google_calendar_id&${salonFilter(salonId)}`)
@@ -51,6 +51,14 @@ const buildDirectory = async (salonId: string): Promise<{ directory: SalonDirect
     if (id && calendarId) calendars.set(id, calendarId);
   }
 
+  // O número geral do salão nunca é contato direto de uma profissional (mesma regra do navegador)
+  const salonNumbers = [digits(settings?.[0]?.payload?.whatsapp), isLev ? LEV_SALON_MAIN_WHATSAPP : ''].filter(Boolean);
+  const isSalonNumber = (value: string) => salonNumbers.some(number => {
+    const local = number.startsWith('55') ? number.slice(2) : number;
+    return value === number || value === local || value === `55${local}`;
+  });
+  const directNumber = (value: unknown) => { const number = digits(value); return isSalonNumber(number) ? '' : number; };
+
   const fromDb = new Map<string, SalonProfessional>();
   for (const row of professionalRows || []) {
     const id = text(row.id);
@@ -58,7 +66,7 @@ const buildDirectory = async (salonId: string): Promise<{ directory: SalonDirect
     fromDb.set(id, {
       id,
       name: text(row.payload?.name),
-      whatsapp: digits(row.payload?.whatsapp),
+      whatsapp: directNumber(row.payload?.whatsapp),
       googleColorId: DEFAULT_COLOR_ID,
       googleCalendarId: calendars.get(id) || null
     });

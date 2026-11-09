@@ -4,6 +4,9 @@ import type { BookingService } from './bookingCatalog.js';
 
 export const LEV_SALON_ID = 'lev';
 
+// Número geral (recepção) da LEV: nunca vale como contato direto de uma profissional
+export const LEV_SALON_MAIN_WHATSAPP = '5541984979940';
+
 export const LEV_SALON = { name: 'LEV Coworking Beauty', shortName: 'LEV' };
 
 export type LevProfessional = {
