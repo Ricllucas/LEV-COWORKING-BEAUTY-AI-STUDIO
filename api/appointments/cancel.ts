@@ -45,7 +45,7 @@ export default async function handler(req: any, res: any) {
     if (!save.ok) throw new Error('Não foi possível cancelar o agendamento no servidor.');
 
     let calendarSynced = false;
-    try { await syncGoogleCalendarEvent(updated, salonId); calendarSynced = true; }
+    try { calendarSynced = !('skipped' in await syncGoogleCalendarEvent(updated, salonId)); }
     catch (error) { console.error('Google Calendar cancellation error:', error); }
 
     notificationService.notifyAppointmentStatusChange({
