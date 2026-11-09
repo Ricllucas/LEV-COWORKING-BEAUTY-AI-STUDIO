@@ -184,7 +184,7 @@ export const assertAvailable = async (
     end > toMinutes(current.startTime)
   )) {
     const { shortName } = await loadSalonDirectory(salonId);
-    const error = new Error(`Este horário já está reservado no Studio ${shortName}. Escolha outro horário disponível.`);
+    const error = new Error(`Este horário já está reservado no ${/^studio\b/i.test(shortName) ? '' : 'Studio '}${shortName}. Escolha outro horário disponível.`);
     (error as Error & { status?: number }).status = 409; throw error;
   }
   // A equipe pode encaixar em cima de um bloqueio; cliente (site e WhatsApp) não.
