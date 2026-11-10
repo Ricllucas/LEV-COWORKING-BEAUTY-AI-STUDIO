@@ -1,7 +1,8 @@
 import { assertSalonId, DEFAULT_SALON_ID } from '../../api/_lib/tenant';
+import { bootSalonId } from './siteSalon';
 
-// Salão atendido por este site. Na fase 4 passa a vir do endereço do site.
-// Por enquanto vem de VITE_SALON_ID (ex.: `VITE_SALON_ID=demo npm run dev`);
+// Salão atendido por este site: o que main.tsx descobriu pelo endereço (siteSalon.ts)
+// antes de carregar o App. Sem essa etapa (testes), vem de VITE_SALON_ID;
 // sem a variável, ou com valor fora do formato, é o salão padrão — nunca derruba o site.
 // O filtro aqui no navegador é só comodidade: a proteção de verdade entre
 // salões vem do servidor e das regras do banco (RLS por salão, fases 2 e 5).
@@ -15,7 +16,7 @@ const resolveSalonId = (raw: unknown): string => {
   }
 };
 
-export const CURRENT_SALON_ID: string = resolveSalonId(import.meta.env.VITE_SALON_ID);
+export const CURRENT_SALON_ID: string = bootSalonId() ?? resolveSalonId(import.meta.env.VITE_SALON_ID);
 
 export const isDefaultSalon = (): boolean => CURRENT_SALON_ID === DEFAULT_SALON_ID;
 
