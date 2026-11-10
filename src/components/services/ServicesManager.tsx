@@ -3,6 +3,7 @@ import { Service, Professional, CategoryType } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudServiceCatalog } from '../../services/cloudServiceCatalog';
 import { formatCurrency } from '../../utils/formatters';
+import { buildServiceFromForm } from '../../utils/serviceForm';
 import { Plus, Edit2, Trash2, Clock, DollarSign, Check, X } from 'lucide-react';
 
 // Papel de quem está logada nesta aba (getCurrentUser devolve visitante para a equipe).
@@ -86,25 +87,11 @@ export const ServicesManager: React.FC = () => {
 
     const prof = professionals.find(p => p.id === professionalId);
 
-    const serviceObj: Service = {
-      id: editingService ? editingService.id : "srv_" + Date.now(),
-      name,
-      category,
-      description,
-      professionalId,
-      professionalName: prof?.name || "Profissional",
-      durationMinutes: Number(durationMinutes),
-      bufferAfterMinutes: 10,
-      price: Number(price),
-      promotionalPrice: promotionalPrice ? Number(promotionalPrice) : undefined,
-      depositRequired: depositValue > 0,
-      depositValue: Number(depositValue),
-      color: prof?.color || "#D4AF37",
-      active: true,
-      onlineBookingEnabled: true,
-      minNoticeHours: 2,
-      maxCancellationNoticeHours: 24
-    };
+    const serviceObj: Service = buildServiceFromForm(
+      { name, category, description, professionalId, durationMinutes, price, promotionalPrice, depositValue },
+      editingService,
+      prof
+    );
 
     StorageService.saveService(serviceObj);
     try {
