@@ -43,8 +43,8 @@
 
 ## Tarefa 0: preparação
 
-- [ ] **Passo 1:** a partir de `main` atualizada, criar o ramo `fase3-sem-lev`.
-- [ ] **Passo 2:** com `npm run dev`, tirar fotos de tela da página inicial da LEV (celular 390×844 e computador 1440×900), do modal de agendamento aberto no passo 1 e da página `/portfolio`. Salvar em `docs/test-reports/fase3-antes/`. Commit `docs: fotos da LEV antes da fase 3`.
+- [x] **Passo 1:** a partir de `main` atualizada, criar o ramo `fase3-sem-lev`.
+- [x] **Passo 2:** com `npm run dev`, tirar fotos de tela da página inicial da LEV (celular 390×844 e computador 1440×900), do modal de agendamento aberto no passo 1 e da página `/portfolio`. Salvar em `docs/test-reports/fase3-antes/`. Commit `docs: fotos da LEV antes da fase 3`.
 
 ## Tarefa 1: banco e salão de exemplo
 
@@ -59,16 +59,16 @@
 - Regra única `catalog_services_salon_id_id_key unique (salon_id, id)`.
 - `20261108b`: `drop constraint if exists catalog_services_pkey` + `add constraint catalog_services_pkey primary key (salon_id, id)` + `drop constraint if exists catalog_services_salon_id_id_key`.
 
-- [ ] **Passo 1:** escrever `20261108_fase3_salao_proprio.sql` no padrão das migrações anteriores: pode rodar mais de uma vez, sem blocos `do $$`, termina com `notify pgrst, 'reload schema';` e bloco de verificação comentado (coluna existe; regra única existe).
-- [ ] **Passo 2:** escrever `20261108b_catalogo_chave_por_salao.sql`. No cabeçalho: "rodar só depois que o código da fase 3 estiver no ar" (o código antigo usa `on_conflict=id`).
-- [ ] **Passo 3:** escrever `salao_exemplo.sql` (com `on conflict do update`, pode rodar de novo):
+- [x] **Passo 1:** escrever `20261108_fase3_salao_proprio.sql` no padrão das migrações anteriores: pode rodar mais de uma vez, sem blocos `do $$`, termina com `notify pgrst, 'reload schema';` e bloco de verificação comentado (coluna existe; regra única existe).
+- [x] **Passo 2:** escrever `20261108b_catalogo_chave_por_salao.sql`. No cabeçalho: "rodar só depois que o código da fase 3 estiver no ar" (o código antigo usa `on_conflict=id`).
+- [x] **Passo 3:** escrever `salao_exemplo.sql` (com `on conflict do update`, pode rodar de novo):
   - `salons`: `('demo', 'demo', 'Studio Aurora', 'teste')`.
   - `salon_settings` linha `id = 'geral'`, `payload` = `CoworkingSettings` completo (nome "Studio Aurora", endereço "Rua das Flores, 100, Centro, Florianópolis - SC", WhatsApp `5548900000000`, Instagram `@studioaurora.exemplo`, política de cancelamento própria, `logoUrl: '/salao-exemplo/logo.svg'`, `heroBannerUrl: '/salao-exemplo/capa.svg'`) com `brand` (tipo da Tarefa 6): cores `{ text: '#1F2A44', primary: '#2F6F73', accent: '#E07A5F', background: '#F7FAF9', surface: '#E3EFEE' }`, textos próprios, `shortName: 'Aurora'`, `googleReviews: null`, `portfolioEnabled: false`.
   - `professionals`: as duas profissionais da decisão 1, `payload` no formato `Professional` (`avatarUrl` `/salao-exemplo/ana.svg` e `bia.svg`, horário de terça a sábado 9h–18h, `color` `#2F6F73` e `#E07A5F`).
   - `catalog_services`: 4 serviços, ids `srv_aurora_1` a `srv_aurora_4` (Corte Feminino 60 min R$ 90; Escova 45 min R$ 60; Manicure 40 min R$ 40; Esmaltação em Gel 60 min R$ 70), `professional_id` e `payload` no formato `Service`.
-- [ ] **Passo 4:** `salao_exemplo_remover.sql`: apaga linhas com `salon_id = 'demo'` em todas as tabelas com `salon_id` e depois a linha de `salons`. Cabeçalho: "Apaga só o salão de exemplo. Pedir aprovação da dona antes de rodar."
-- [ ] **Passo 5:** desenhar os 4 SVG (formas simples e o nome "Studio Aurora" no logo; nada da LEV).
-- [ ] **Passo 6:** commit `feat(banco): agenda do google por profissional e salao de exemplo`.
+- [x] **Passo 4:** `salao_exemplo_remover.sql`: apaga linhas com `salon_id = 'demo'` em todas as tabelas com `salon_id` e depois a linha de `salons`. Cabeçalho: "Apaga só o salão de exemplo. Pedir aprovação da dona antes de rodar."
+- [x] **Passo 5:** desenhar os 4 SVG (formas simples e o nome "Studio Aurora" no logo; nada da LEV).
+- [x] **Passo 6:** commit `feat(banco): agenda do google por profissional e salao de exemplo`.
 
 ## Tarefa 2: o site sabe de qual salão é cada dado
 
@@ -85,15 +85,15 @@
 - `bundledDataFor(salonId: string): { settings: CoworkingSettings; professionals: Professional[]; services: Service[] }` — LEV: `INITIAL_SETTINGS`, `INITIAL_PROFESSIONALS`, `INITIAL_SERVICES` sem os aposentados; outro salão: configurações neutras (`name: ''`, demais textos vazios, `depositPercentage: 30`) e listas vazias.
 - `src/data/levLegacy.ts`: as constantes da LEV hoje em `storage.ts` (`LEV_OFFICIAL_AVATARS`, `LEV_OFFICIAL_PIX_KEYS`, usuários de exemplo, ids usados nas correções antigas de catálogo).
 
-- [ ] **Passo 1: testes que falham**
+- [x] **Passo 1: testes que falham**
   - `scopedStorageKey('lev_coworking_services_v1', 'lev')` → `'lev_coworking_services_v1'`; com `'demo'` → `'demo__lev_coworking_services_v1'`.
   - `bundledDataFor('demo')` → `professionals` e `services` vazios, `settings.name === ''`; `bundledDataFor('lev').professionals.length === 3`.
   - `CloudServiceCatalog.load()` com `CURRENT_SALON_ID = 'demo'` (mock de `../config/salon`) e nuvem devolvendo só `srv_aurora_1` → resultado só com `srv_aurora_1` (nenhum serviço da LEV).
   - `CloudServiceCatalog.upsert` chama `catalog_services?on_conflict=salon_id,id`.
-- [ ] **Passo 2:** rodar `npx vitest run src/config src/data src/services/cloudServiceCatalog.test.ts` → FALHA.
-- [ ] **Passo 3:** implementar. Em `storage.ts`, `salonDataSync.ts` e `cloudServiceCatalog.ts`: toda chave do `localStorage` passa por `scopedStorageKey`, todo `INITIAL_*` vira `bundledDataFor(CURRENT_SALON_ID)`, e as correções antigas (avatares, Pix, contatos, catálogos da Elisangela e da Talitha, `lev_talitha_additions_20260904`) só rodam quando `isDefaultSalon()`, lendo as constantes de `levLegacy.ts`. Upsert do catálogo com `on_conflict=salon_id,id` (a regra única da Tarefa 1 permite isso antes e depois da `20261108b`).
-- [ ] **Passo 4:** rodar os testes da Tarefa 2 e a suíte toda → PASSA.
-- [ ] **Passo 5:** commit `feat: dados de fabrica e memoria do aparelho separados por salao`.
+- [x] **Passo 2:** rodar `npx vitest run src/config src/data src/services/cloudServiceCatalog.test.ts` → FALHA.
+- [x] **Passo 3:** implementar. Em `storage.ts`, `salonDataSync.ts` e `cloudServiceCatalog.ts`: toda chave do `localStorage` passa por `scopedStorageKey`, todo `INITIAL_*` vira `bundledDataFor(CURRENT_SALON_ID)`, e as correções antigas (avatares, Pix, contatos, catálogos da Elisangela e da Talitha, `lev_talitha_additions_20260904`) só rodam quando `isDefaultSalon()`, lendo as constantes de `levLegacy.ts`. Upsert do catálogo com `on_conflict=salon_id,id` (a regra única da Tarefa 1 permite isso antes e depois da `20261108b`).
+- [x] **Passo 4:** rodar os testes da Tarefa 2 e a suíte toda → PASSA.
+- [x] **Passo 5:** commit `feat: dados de fabrica e memoria do aparelho separados por salao`.
 
 ## Tarefa 3: profissionais vêm dos dados (site)
 
@@ -105,14 +105,14 @@
 - `agendaColorFor(professional: Professional, index: number): string` — LEV e id em `LEV_AGENDA_COLORS`: essa cor; senão `professional.color` se for hex `#rrggbb`; senão `FALLBACK_PALETTE[index % 6]`.
 - `getProfessionalWhatsApp(id, contact)` mantém a assinatura: usa `contact.whatsapp`/`contact.phone` (ignorando o número geral do salão, `CoworkingSettings.whatsapp`); se vazio e `isDefaultSalon()`, `LEV_PROFESSIONAL_WHATSAPP[id]`; senão `''`.
 
-- [ ] **Passo 1: testes que falham**
+- [x] **Passo 1: testes que falham**
   - `agendaColorFor({ id: 'prof_elisangela', color: '#D4AF37' }, 0)` com salão `lev` → `'#d8c7a4'`.
   - `agendaColorFor({ id: 'prof_aurora_ana', color: '#2F6F73' }, 0)` → `'#2F6F73'`; com `color: 'gold'` e índice 7 → `FALLBACK_PALETTE[1]`.
   - `getProfessionalWhatsApp('prof_aurora_ana', {})` com salão `demo` → `''`; `getProfessionalWhatsApp('prof_nayara', {})` com salão `lev` → `'5541996556742'`.
-- [ ] **Passo 2:** rodar → FALHA.
-- [ ] **Passo 3:** implementar. `ProfessionalLoginPage` e `RoleSwitcherModal` montam a lista com `StorageService.getProfessionals()` (estado inicial = primeira da lista, ou vazio se não houver). `AgendaView` usa `agendaColorFor` com `style` no lugar das classes por id; `blockProfId` começa em `professionals[0]?.id ?? ''`. `FinancialManager`: `currentUser.professionalId || professionals[0]?.id || ''`. `PortfolioPage` (os dois arquivos) lê de `LEV_PORTFOLIO`; quando `!isDefaultSalon()`, a rota renderiza a página inicial e o link "Portfólio" some (`brand.portfolioEnabled`, Tarefa 6; até lá, `isDefaultSalon()`).
-- [ ] **Passo 4:** `npm run test -- --run` e `npm run lint` → PASSA.
-- [ ] **Passo 5:** commit `feat: profissionais do painel vem dos dados do salao`.
+- [x] **Passo 2:** rodar → FALHA.
+- [x] **Passo 3:** implementar. `ProfessionalLoginPage` e `RoleSwitcherModal` montam a lista com `StorageService.getProfessionals()` (estado inicial = primeira da lista, ou vazio se não houver). `AgendaView` usa `agendaColorFor` com `style` no lugar das classes por id; `blockProfId` começa em `professionals[0]?.id ?? ''`. `FinancialManager`: `currentUser.professionalId || professionals[0]?.id || ''`. `PortfolioPage` (os dois arquivos) lê de `LEV_PORTFOLIO`; quando `!isDefaultSalon()`, a rota renderiza a página inicial e o link "Portfólio" some (`brand.portfolioEnabled`, Tarefa 6; até lá, `isDefaultSalon()`).
+- [x] **Passo 4:** `npm run test -- --run` e `npm run lint` → PASSA.
+- [x] **Passo 5:** commit `feat: profissionais do painel vem dos dados do salao`.
 
 ## Tarefa 4: o servidor lê o salão do banco (profissionais e Google Agenda)
 
@@ -132,7 +132,7 @@
 - `bookingCatalog.ts`: `loadBookingServices(salonId: string): Promise<BookingService[]>` (lê `catalog_services` do salão sem os apagados; para a LEV, completa com `LEV_BOOKING_SERVICES` os ids que faltarem). `PROFESSIONALS`, `BOOKING_SERVICES` e `servicesFor` saem.
 - `syncGoogleCalendarEvent(appointment, salonId: string)` — com `calendarIdFor` = `null`, não chama o Google e devolve `{ skipped: 'sem agenda do Google' }`. A descrição do evento passa a ter `🔗 Agendamento: {id}`; a busca aceita a forma nova e a antiga `Agendamento LEV: {id}`. "Atendimento LEV" e "Cancelado (LEV)" usam `dir.shortName`.
 
-- [ ] **Passo 1: testes que falham** (`salonDirectory.test.ts`, com `fetch` simulado)
+- [x] **Passo 1: testes que falham** (`salonDirectory.test.ts`, com `fetch` simulado)
   - LEV com banco devolvendo as 3 profissionais e `professional_calendars` com a Talitha → `calendarIdFor(dir, 'prof_talitha')` é esse valor.
   - LEV com 404 em `professional_calendars`, `GOOGLE_CALENDAR_ID_TALITHA=cal-t` → `'cal-t'`.
   - LEV com o banco fora do ar (500 em tudo) → 3 profissionais, `name === 'LEV Coworking Beauty'`, `shortName === 'LEV'`.
@@ -140,10 +140,10 @@
   - `demo` com banco fora do ar → `professionals` vazia (nunca as da LEV).
   - `create.ts`: público (salão `lev`) com `professionalId: 'prof_aurora_ana'` → 400 `'Profissional inválida.'`; com `'prof_talitha'` → segue.
   - `block.ts`: profissional fora do diretório do salão do login → `'Profissional inválida.'`.
-- [ ] **Passo 2:** rodar `npx vitest run api/_lib/salonDirectory.test.ts` → FALHA.
-- [ ] **Passo 3:** implementar. `create.ts` e `block.ts` trocam o `Set` fixo por `findProfessional`. `staff-list.ts` usa nomes do diretório e "Profissional"/"Atendimento"/"Agenda" como texto reserva. `whatsappProfessionalNotification.ts` usa `whatsapp` do diretório e `dir.shortName` em "Novo agendamento — {shortName}" e "painel da {shortName}"; recebe o `salonId`. `whatsappBooking.ts` monta os menus com o diretório e `loadBookingServices`, e "fluxo oficial da {shortName}". `appointmentService.ts` usa `LEV_BOOKING_SERVICES` como reserva só para a LEV. Apagar `professionalName` de `whatsapp.ts`. Mensagens 401: "Acesso restrito à equipe do salão.".
-- [ ] **Passo 4:** `npm run test -- --run` e `npm run lint` → PASSA.
-- [ ] **Passo 5:** commit `feat(api): profissionais e agenda do google lidos do salao`.
+- [x] **Passo 2:** rodar `npx vitest run api/_lib/salonDirectory.test.ts` → FALHA.
+- [x] **Passo 3:** implementar. `create.ts` e `block.ts` trocam o `Set` fixo por `findProfessional`. `staff-list.ts` usa nomes do diretório e "Profissional"/"Atendimento"/"Agenda" como texto reserva. `whatsappProfessionalNotification.ts` usa `whatsapp` do diretório e `dir.shortName` em "Novo agendamento — {shortName}" e "painel da {shortName}"; recebe o `salonId`. `whatsappBooking.ts` monta os menus com o diretório e `loadBookingServices`, e "fluxo oficial da {shortName}". `appointmentService.ts` usa `LEV_BOOKING_SERVICES` como reserva só para a LEV. Apagar `professionalName` de `whatsapp.ts`. Mensagens 401: "Acesso restrito à equipe do salão.".
+- [x] **Passo 4:** `npm run test -- --run` e `npm run lint` → PASSA.
+- [x] **Passo 5:** commit `feat(api): profissionais e agenda do google lidos do salao`.
 
 ## Tarefa 5: mensagens do robô com o nome do salão
 
@@ -155,11 +155,11 @@
 - `type SalonNames = { name: string; shortName: string }`; cada função de `messages` ganha o segundo parâmetro `salon: SalonNames` (ex.: `messages.confirmation(apt, salon)`).
 - No site, as mensagens montadas no navegador usam `StorageService.getSettings()` (`name` e `brand.shortName`, Tarefa 6).
 
-- [ ] **Passo 1: teste que falha (texto exato da LEV).** Antes de mexer, copiar para o teste a saída atual de cada uma das 5 mensagens para um atendimento fixo (cliente "Maria Souza", profissional "Talitha", 2026-11-20 às 14:00, serviço "Lash Lifting", manutenção de 21 dias). Novo teste: `messages.X(apt, { name: 'LEV Coworking Beauty', shortName: 'LEV' })` igual ao texto copiado, caractere por caractere. Segundo teste: com `{ name: 'Studio Aurora', shortName: 'Aurora' }`, nenhuma mensagem contém `LEV`.
-- [ ] **Passo 2:** rodar → FALHA (assinatura nova).
-- [ ] **Passo 3:** implementar. O cron já anda por salão: carrega `loadSalonDirectory(salonId)` uma vez por salão e passa `{ name, shortName }`. `send.ts`: "Teste do robô de WhatsApp do {nome do salão do login} ✅ ...". Apagar os 3 arquivos mortos.
-- [ ] **Passo 4:** `npm run test -- --run` e `npm run lint` → PASSA.
-- [ ] **Passo 5:** commit `feat: mensagens do robo com o nome de cada salao`.
+- [x] **Passo 1: teste que falha (texto exato da LEV).** Antes de mexer, copiar para o teste a saída atual de cada uma das 5 mensagens para um atendimento fixo (cliente "Maria Souza", profissional "Talitha", 2026-11-20 às 14:00, serviço "Lash Lifting", manutenção de 21 dias). Novo teste: `messages.X(apt, { name: 'LEV Coworking Beauty', shortName: 'LEV' })` igual ao texto copiado, caractere por caractere. Segundo teste: com `{ name: 'Studio Aurora', shortName: 'Aurora' }`, nenhuma mensagem contém `LEV`.
+- [x] **Passo 2:** rodar → FALHA (assinatura nova).
+- [x] **Passo 3:** implementar. O cron já anda por salão: carrega `loadSalonDirectory(salonId)` uma vez por salão e passa `{ name, shortName }`. `send.ts`: "Teste do robô de WhatsApp do {nome do salão do login} ✅ ...". Apagar os 3 arquivos mortos.
+- [x] **Passo 4:** `npm run test -- --run` e `npm run lint` → PASSA.
+- [x] **Passo 5:** commit `feat: mensagens do robo com o nome de cada salao`.
 
 ## Tarefa 6: marca do salão na página pública
 
@@ -189,32 +189,32 @@ export interface SalonBrand {
 - `brandStyle(brand: SalonBrand): React.CSSProperties` — define `--brand-text`, `--brand-primary`, `--brand-accent`, `--brand-bg`, `--brand-surface`.
 - Troca de cores nos componentes públicos (Tailwind 4): `#3D312A` → `(--brand-text)`, `#8C7249` e `#6B5440` → `(--brand-primary)`, `#A1865B` e `#B39A70` → `(--brand-accent)`, `#FCF9F2` → `(--brand-bg)`, `#F3EBDD` → `(--brand-surface)`; transparências como `text-(--brand-text)/80`.
 
-- [ ] **Passo 1: testes que falham**
+- [x] **Passo 1: testes que falham**
   - `resolveBrand(INITIAL_SETTINGS, 'lev')` igual a `LEV_BRAND`.
   - `resolveBrand({ ...neutro, brand: { colors: { primary: '#2F6F73' } } }, 'demo')` → `colors.primary === '#2F6F73'` e as outras 4 cores de `NEUTRAL_BRAND`.
   - `JSON.stringify(resolveBrand(neutro, 'demo'))` não contém `LEV`, `Elisangela`, `Talitha`, `Nayara`.
-- [ ] **Passo 2:** rodar → FALHA.
-- [ ] **Passo 3:** implementar. Nos componentes da lista: nome do salão de `settings.name`, nome curto de `brand.shortName`, logo de `settings.logoUrl`, textos e fotos de `resolveBrand`, cores pelas variáveis CSS aplicadas na raiz de cada página pública com `brandStyle`. O destaque "Especialistas ..." lista os nomes das profissionais carregadas. `document.title = settings.name` ao abrir. Seção de avaliações só aparece se `googleReviews` não for nulo; link do portfólio só se `portfolioEnabled`. O painel da equipe (tema escuro) não muda de cor nesta fase.
-- [ ] **Passo 4:** `npm run test -- --run`, `npm run lint`, `npm run build` → PASSA.
-- [ ] **Passo 5:** commit `feat: pagina publica com a marca de cada salao`.
+- [x] **Passo 2:** rodar → FALHA.
+- [x] **Passo 3:** implementar. Nos componentes da lista: nome do salão de `settings.name`, nome curto de `brand.shortName`, logo de `settings.logoUrl`, textos e fotos de `resolveBrand`, cores pelas variáveis CSS aplicadas na raiz de cada página pública com `brandStyle`. O destaque "Especialistas ..." lista os nomes das profissionais carregadas. `document.title = settings.name` ao abrir. Seção de avaliações só aparece se `googleReviews` não for nulo; link do portfólio só se `portfolioEnabled`. O painel da equipe (tema escuro) não muda de cor nesta fase.
+- [x] **Passo 4:** `npm run test -- --run`, `npm run lint`, `npm run build` → PASSA.
+- [x] **Passo 5:** commit `feat: pagina publica com a marca de cada salao`.
 
 ## Tarefa 7: teste-guarda
 
 **Arquivos:** criar `src/test/semLevNoCodigo.test.ts`.
 
-- [ ] **Passo 1:** teste que percorre `src/` e `api/` (arquivos `.ts` e `.tsx`), pulando `src/data/**`, `api/_lib/levDefaults.ts` e arquivos `*.test.ts(x)`, e falha listando cada arquivo e linha que casar com `/prof_elisangela|prof_talitha|prof_nayara/` ou `/LEV Coworking/i`. Um segundo caso confere que o próprio teste enxerga arquivos (quantidade lida > 50), para não passar vazio.
-- [ ] **Passo 2:** rodar `npx vitest run src/test/semLevNoCodigo.test.ts`. Se aparecer algum resto, corrigir no lugar certo (dados para `src/data/` ou `levDefaults.ts`; texto para `settings`/`brand`).
-- [ ] **Passo 3:** rodar a suíte toda → PASSA. Commit `test: guarda contra a LEV fixa no codigo`.
+- [x] **Passo 1:** teste que percorre `src/` e `api/` (arquivos `.ts` e `.tsx`), pulando `src/data/**`, `api/_lib/levDefaults.ts` e arquivos `*.test.ts(x)`, e falha listando cada arquivo e linha que casar com `/prof_elisangela|prof_talitha|prof_nayara/` ou `/LEV Coworking/i`. Um segundo caso confere que o próprio teste enxerga arquivos (quantidade lida > 50), para não passar vazio.
+- [x] **Passo 2:** rodar `npx vitest run src/test/semLevNoCodigo.test.ts`. Se aparecer algum resto, corrigir no lugar certo (dados para `src/data/` ou `levDefaults.ts`; texto para `settings`/`brand`).
+- [x] **Passo 3:** rodar a suíte toda → PASSA. Commit `test: guarda contra a LEV fixa no codigo`.
 
 ## Tarefa 8: publicar e conferir
 
-- [ ] **Passo 1:** `npm run test -- --run`, `npm run lint`, `npm run build`, `npm run e2e` (falhas antigas conhecidas da Fase 2 não contam; falha nova bloqueia).
-- [ ] **Passo 2:** fotos "depois" da LEV, iguais às da Tarefa 0, em `docs/test-reports/fase3-depois/`. Comparar lado a lado; só a diferença mínima dos degradês (decisão 3) é aceita.
-- [ ] **Passo 3 (dona do projeto, no SQL Editor do Supabase, ANTES de publicar):** rodar `20261108_fase3_salao_proprio.sql` e o bloco de verificação. Ela só acrescenta coisas; o código antigo continua funcionando. Precisa vir antes porque o catálogo novo grava com `on_conflict=salon_id,id`.
-- [ ] **Passo 4:** juntar em `main` e publicar (deploy automático da Vercel). Conferir que o endereço da LEV abre com a página de sempre.
-- [ ] **Passo 5:** inserir em `professional_calendars` as 3 profissionais da LEV com os valores atuais das variáveis `GOOGLE_CALENDAR_ID_ELISANGELA`, `_TALITHA`, `_NAYARA` (lidos com `vercel env pull` para a pasta temporária; o arquivo não vai para o git). Criar um agendamento de teste para cada uma pelo painel e conferir que cai na agenda certa do Google; depois cancelar.
-- [ ] **Passo 6:** rodar `supabase/seeds/salao_exemplo.sql`. Abrir com `VITE_SALON_ID=demo npm run dev` e conferir no celular e no computador: nome, logo, capa, cores, textos, as duas profissionais e os 4 preços do Studio Aurora. Rodar no console `document.body.innerText.match(/LEV|Elisangela|Talitha|Nayara/g)` → `null`. Abrir o modal de agendamento e conferir que lista só Ana e Bia. Fotos em `docs/test-reports/fase3-salao-exemplo/`.
-- [ ] **Passo 7:** rodar `20261108b_catalogo_chave_por_salao.sql`. Pela conta da admin da LEV, editar o preço de um serviço e voltar ao valor original; conferir que gravou (o envio com `on_conflict=salon_id,id` funciona com a chave nova).
-- [ ] **Passo 8:** atualizar a Fase 3 em `docs/superpowers/plans/2026-11-03-lev-multi-salao.md` ("concluída e no ar", com o que foi conferido) e marcar as caixinhas deste plano. Commit `docs: fase 3 concluida e conferida`.
+- [x] **Passo 1:** `npm run test -- --run`, `npm run lint`, `npm run build`, `npm run e2e` (falhas antigas conhecidas da Fase 2 não contam; falha nova bloqueia).
+- [x] **Passo 2:** fotos "depois" da LEV, iguais às da Tarefa 0, em `docs/test-reports/fase3-depois/`. Comparar lado a lado; só a diferença mínima dos degradês (decisão 3) é aceita.
+- [x] **Passo 3 (dona do projeto, no SQL Editor do Supabase, ANTES de publicar):** rodar `20261108_fase3_salao_proprio.sql` e o bloco de verificação. Ela só acrescenta coisas; o código antigo continua funcionando. Precisa vir antes porque o catálogo novo grava com `on_conflict=salon_id,id`.
+- [x] **Passo 4:** juntar em `main` e publicar (deploy automático da Vercel). Conferir que o endereço da LEV abre com a página de sempre.
+- [x] **Passo 5:** inserir em `professional_calendars` as 3 profissionais da LEV com os valores atuais das variáveis `GOOGLE_CALENDAR_ID_ELISANGELA`, `_TALITHA`, `_NAYARA` (lidos com `vercel env pull` para a pasta temporária; o arquivo não vai para o git). Criar um agendamento de teste para cada uma pelo painel e conferir que cai na agenda certa do Google; depois cancelar.
+- [x] **Passo 6:** rodar `supabase/seeds/salao_exemplo.sql`. Abrir com `VITE_SALON_ID=demo npm run dev` e conferir no celular e no computador: nome, logo, capa, cores, textos, as duas profissionais e os 4 preços do Studio Aurora. Rodar no console `document.body.innerText.match(/LEV|Elisangela|Talitha|Nayara/g)` → `null`. Abrir o modal de agendamento e conferir que lista só Ana e Bia. Fotos em `docs/test-reports/fase3-salao-exemplo/`.
+- [x] **Passo 7:** rodar `20261108b_catalogo_chave_por_salao.sql`. Pela conta da admin da LEV, editar o preço de um serviço e voltar ao valor original; conferir que gravou (o envio com `on_conflict=salon_id,id` funciona com a chave nova).
+- [x] **Passo 8:** atualizar a Fase 3 em `docs/superpowers/plans/2026-11-03-lev-multi-salao.md` ("concluída e no ar", com o que foi conferido) e marcar as caixinhas deste plano. Commit `docs: fase 3 concluida e conferida`.
 
 **Aceite:** com o Studio Aurora cadastrado, a página dele mostra os próprios nomes, fotos, preços e cores, sem nenhum vestígio da LEV; e a página e as mensagens da LEV continuam iguais.

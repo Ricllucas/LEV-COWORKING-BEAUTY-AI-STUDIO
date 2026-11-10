@@ -190,6 +190,10 @@ Regra para escolher o salão em cada rota:
 
 ## Fase 3 — Tirar a LEV de dentro do código
 
+> **Situação (10/11/2026): concluída e no ar.** Plano detalhado: [`2026-11-07-fase3-tirar-lev-do-codigo.md`](2026-11-07-fase3-tirar-lev-do-codigo.md). As duas migrações (`20261108` e `20261108b`) foram rodadas no Supabase; a chave do catálogo agora é `(salon_id, id)`, então os ids de serviço podem se repetir entre salões. Agenda do Google de cada profissional fica em `professional_calendars` (só o servidor lê). Salão de exemplo "Studio Aurora" cadastrado (`salon_id = 'demo'`) e conferido localmente, sem nenhum vestígio da LEV. Na conferência com a dona apareceram e foram corrigidos dois erros antigos da tela de Serviços: (1) ao salvar, a admin via "Sua sessão expirou", porque a tela pegava o papel de quem estava logada do lugar errado (desde jul/2026); (2) o preço editado era gravado, mas o preço de fábrica voltava por cima, porque a edição perdia a versão do catálogo (desde ago/2026). Conferido: a dona mudou o preço da Mão Tradicional para R$ 36, ficou salvo, e voltou para R$ 35.
+>
+> **Observação:** a tela de Serviços não envia mais a cópia do aparelho para o banco ao abrir (antes isso estava parado pelo erro 1 e, se voltasse a funcionar, uma cópia velha de um celular podia apagar preços certos).
+
 Hoje os ids `prof_elisangela`, `prof_talitha` e `prof_nayara` aparecem em 17 arquivos, e o texto "LEV" em 48.
 
 - **Tarefa 3.1:** `ProfessionalProfileId` deixa de ser uma lista fixa e vira `string` vinda da tabela `professionals`. Atualizar `bookingCatalog.ts`, `AgendaView`, `ProfessionalLoginPage`, `RoleSwitcherModal`, `PortfolioPage`, `formatters.ts` e `whatsappTemplates.ts`.
