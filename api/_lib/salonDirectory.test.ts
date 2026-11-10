@@ -150,7 +150,7 @@ const fakeRes = () => {
 let ip = 0;
 const request = (body: unknown) => ({
   method: 'POST',
-  headers: { 'content-type': 'application/json', authorization: 'Bearer token' },
+  headers: { host: 'lev-coworking-beauty.vercel.app', 'content-type': 'application/json', authorization: 'Bearer token' },
   socket: { remoteAddress: `10.0.0.${++ip}` },
   body
 });

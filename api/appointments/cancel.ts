@@ -1,7 +1,8 @@
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { notificationService } from '../_lib/notificationService.js';
 import { applyApiSecurity, rateLimit, safeText, validJsonRequest, publicErrorMessage } from '../_lib/security.js';
-import { DEFAULT_SALON_ID, salonFilter } from '../_lib/tenant.js';
+import { publicSalonId } from '../_lib/salonFromRequest.js';
+import { salonFilter } from '../_lib/tenant.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const digits = (value: string) => String(value || '').replace(/\D/g, '');
@@ -23,8 +24,9 @@ export default async function handler(req: any, res: any) {
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!url || !key) throw new Error('Servidor de agendamentos não configurado.');
     const headers = { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' };
-    // Site público: LEV por enquanto (a fase 4 usa o endereço)
-    const salonId = DEFAULT_SALON_ID;
+    // Site público: salão do endereço do site
+    const salonId = await publicSalonId(req, res);
+    if (!salonId) return;
     const lookup = await fetch(`${url}/rest/v1/appointments?id=eq.${encodeURIComponent(appointmentId)}&select=payload&limit=1&${salonFilter(salonId)}`, { headers });
     if (!lookup.ok) throw new Error('Não foi possível localizar o agendamento.');
     const rows = await lookup.json() as Array<{ payload: any }>;
@@ -60,7 +62,8 @@ export default async function handler(req: any, res: any) {
 
     return json(res, 200, { appointment: updated, calendarSynced });
   } catch (error) {
-    return json(res, 500, { error: publicErrorMessage(error, 'Não foi possível cancelar o agendamento.') });
+    const status = Number((error as Error & { status?: number })?.status || 500);
+    return json(res, status, { error: publicErrorMessage(error, 'Não foi possível cancelar o agendamento.') });
   }
 }
 

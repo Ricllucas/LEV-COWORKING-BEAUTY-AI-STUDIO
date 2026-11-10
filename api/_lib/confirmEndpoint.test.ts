@@ -34,7 +34,7 @@ describe('endpoint de confirmação pelo link', () => {
   it('abrir o link (GET) só mostra o resumo, sem alterar nada', async () => {
     fetchMock.mockResolvedValueOnce({ ok: true, json: async () => [row('aguardando_confirmacao')] });
     const res = makeRes();
-    await handler({ method: 'GET', query: { t: token }, headers: {} }, res);
+    await handler({ method: 'GET', query: { t: token }, headers: { host: 'lev-coworking-beauty.vercel.app' } }, res);
     expect(res.statusCode).toBe(200);
     expect(res.body.clientFirstName).toBe('Ana');
     expect(fetchMock).toHaveBeenCalledTimes(1);
@@ -47,7 +47,7 @@ describe('endpoint de confirmação pelo link', () => {
       .mockResolvedValueOnce({ ok: true, json: async () => [row('aguardando_confirmacao')] })
       .mockResolvedValueOnce({ ok: true, json: async () => [row('confirmado')] });
     const res = makeRes();
-    await handler({ method: 'POST', body: { t: token }, headers: { 'content-type': 'application/json' } }, res);
+    await handler({ method: 'POST', body: { t: token }, headers: { host: 'lev-coworking-beauty.vercel.app', 'content-type': 'application/json' } }, res);
     expect(res.statusCode).toBe(200);
     expect(res.body.confirmed).toBe(true);
     const [url, init] = fetchMock.mock.calls[1];
@@ -60,7 +60,7 @@ describe('endpoint de confirmação pelo link', () => {
   it('não reabre horário cancelado', async () => {
     fetchMock.mockResolvedValueOnce({ ok: true, json: async () => [row('cancelado_cliente')] });
     const res = makeRes();
-    await handler({ method: 'POST', body: { t: token }, headers: { 'content-type': 'application/json' } }, res);
+    await handler({ method: 'POST', body: { t: token }, headers: { host: 'lev-coworking-beauty.vercel.app', 'content-type': 'application/json' } }, res);
     expect(res.statusCode).toBe(409);
     expect(res.body.error).toBe('Este horário não está mais aguardando confirmação. Confira no painel da LEV.');
     // Só uma leitura do agendamento e nenhuma gravação (as outras leituras são do diretório do salão)
@@ -70,7 +70,7 @@ describe('endpoint de confirmação pelo link', () => {
 
   it('recusa link falso sem consultar o banco', async () => {
     const res = makeRes();
-    await handler({ method: 'POST', body: { t: 'apt_teste.4070000000.falso' }, headers: { 'content-type': 'application/json' } }, res);
+    await handler({ method: 'POST', body: { t: 'apt_teste.4070000000.falso' }, headers: { host: 'lev-coworking-beauty.vercel.app', 'content-type': 'application/json' } }, res);
     expect(res.statusCode).toBe(400);
     expect(fetchMock).not.toHaveBeenCalled();
   });

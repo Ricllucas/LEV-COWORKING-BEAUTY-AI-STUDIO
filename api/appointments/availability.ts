@@ -1,6 +1,6 @@
 import { listAppointmentsByDate, listBlocksByDate } from '../_lib/appointmentService.js';
 import { applyApiSecurity, rateLimit, publicErrorMessage } from '../_lib/security.js';
-import { DEFAULT_SALON_ID } from '../_lib/tenant.js';
+import { publicSalonId } from '../_lib/salonFromRequest.js';
 
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 
@@ -11,7 +11,10 @@ export default async function handler(req: any, res: any) {
   const date = String(req.query?.date || '');
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return json(res, 400, { error: 'Data inválida.' });
   try {
-    const [list, blocks] = await Promise.all([listAppointmentsByDate(DEFAULT_SALON_ID, date), listBlocksByDate(DEFAULT_SALON_ID, date)]);
+    // Site público: salão do endereço do site
+    const salonId = await publicSalonId(req, res);
+    if (!salonId) return;
+    const [list, blocks] = await Promise.all([listAppointmentsByDate(salonId, date), listBlocksByDate(salonId, date)]);
     const appointments = list.map(item => ({
       id: item.id,
       professionalId: item.professionalId,
@@ -22,7 +25,8 @@ export default async function handler(req: any, res: any) {
     }));
     return json(res, 200, { appointments, blocks });
   } catch (error) {
-    return json(res, 500, { error: publicErrorMessage(error, 'Falha ao consultar a disponibilidade.') });
+    const status = Number((error as Error & { status?: number })?.status || 500);
+    return json(res, status, { error: publicErrorMessage(error, 'Falha ao consultar a disponibilidade.') });
   }
 }
 

@@ -1,7 +1,8 @@
 import { verifyConfirmToken } from '../_lib/confirmLink.js';
 import { syncGoogleCalendarEvent } from '../_lib/googleCalendar.js';
 import { applyApiSecurity, publicErrorMessage, rateLimit, validJsonRequest } from '../_lib/security.js';
-import { DEFAULT_SALON_ID, salonFilter } from '../_lib/tenant.js';
+import { publicSalonId } from '../_lib/salonFromRequest.js';
+import { salonFilter } from '../_lib/tenant.js';
 import { loadSalonDirectory } from '../_lib/salonDirectory.js';
 
 // Confirmação do horário pela profissional, a partir do link enviado no WhatsApp.
@@ -43,8 +44,9 @@ export default async function handler(req: any, res: any) {
     if (!supabaseUrl || !serviceKey) throw new Error('Servidor de agendamentos não configurado.');
     const headers = { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` };
     const id = encodeURIComponent(check.appointmentId);
-    // Link público: salão padrão por enquanto (a fase 4 usa o endereço)
-    const salonId = DEFAULT_SALON_ID;
+    // Link público: salão do endereço do site
+    const salonId = await publicSalonId(req, res);
+    if (!salonId) return;
     const panelHint = async () => `Confira no painel da ${(await loadSalonDirectory(salonId)).shortName}.`;
 
     const found = await fetch(`${supabaseUrl}/rest/v1/appointments?id=eq.${id}&select=id,status,payload&limit=1&${salonFilter(salonId)}`, { headers });
@@ -84,6 +86,7 @@ export default async function handler(req: any, res: any) {
     return json(res, 200, { ...summary(updated[0]), confirmed: true });
   } catch (error) {
     console.error('[CONFIRMAR LINK] Erro:', error);
-    return json(res, 500, { error: publicErrorMessage(error, 'Não foi possível confirmar o horário.') });
+    const status = Number((error as Error & { status?: number })?.status || 500);
+    return json(res, status, { error: publicErrorMessage(error, 'Não foi possível confirmar o horário.') });
   }
 }

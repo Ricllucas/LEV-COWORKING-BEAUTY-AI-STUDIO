@@ -95,7 +95,7 @@ describe('bloqueios da profissional valem para o site público', () => {
 
   it('availability responde { appointments, blocks } e os bloqueios vêm sem título', async () => {
     const res = fakeRes();
-    await availability({ method: 'GET', query: { date: DAY }, headers: {}, socket: { remoteAddress: '1.1.1.1' } }, res);
+    await availability({ method: 'GET', query: { date: DAY }, headers: { host: 'lev-coworking-beauty.vercel.app' }, socket: { remoteAddress: '1.1.1.1' } }, res);
     expect(res.statusCode).toBe(200);
     expect(res.body).toEqual({
       appointments: [],

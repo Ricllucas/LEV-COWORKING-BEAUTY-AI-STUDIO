@@ -84,3 +84,31 @@ describe('publicSalonId', () => {
     await expect(publicSalonId({ headers: { host: 'demo.localhost:3000' } }, fakeRes())).resolves.toBe('demo');
   });
 });
+
+describe('rota pública fica no salão do endereço', () => {
+  it('pelo endereço do salão demo, cancelar procura só no demo', async () => {
+    const fetchMock = vi.fn(async (url: string) => new Response(JSON.stringify(url.includes('/rpc/') ? 'demo' : []), { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const cancel = (await import('../appointments/cancel')).default;
+    const res = Object.assign(fakeRes(), { setHeader: vi.fn() });
+    await cancel({
+      method: 'POST',
+      headers: { host: 'demo.localhost', 'content-type': 'application/json' },
+      socket: { remoteAddress: '10.9.9.9' },
+      body: { appointmentId: 'apt_da_lev', clientPhone: '41999990000' }
+    }, res);
+    const lookup = fetchMock.mock.calls.map(call => String(call[0])).find(url => url.includes('/rest/v1/appointments'));
+    expect(lookup).toContain('salon_id=eq.demo');
+    expect(res.statusCode).toBe(404);
+  });
+
+  it('endereço desconhecido não consulta agendamentos', async () => {
+    const fetchMock = vi.fn(async (_url: string) => new Response('null', { status: 200 }));
+    vi.stubGlobal('fetch', fetchMock);
+    const availability = (await import('../appointments/availability')).default;
+    const res = Object.assign(fakeRes(), { setHeader: vi.fn() });
+    await availability({ method: 'GET', query: { date: '2099-01-12' }, headers: { host: 'nao-existe.com' }, socket: { remoteAddress: '10.9.9.8' } }, res);
+    expect(res.statusCode).toBe(404);
+    expect(fetchMock.mock.calls.every(call => String(call[0]).includes('/rpc/'))).toBe(true);
+  });
+});

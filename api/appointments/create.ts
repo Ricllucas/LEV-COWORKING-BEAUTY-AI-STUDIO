@@ -3,7 +3,7 @@ import { verifyTurnstile } from '../_lib/turnstile.js';
 import { sendProfessionalNotification } from '../_lib/whatsappProfessionalNotification.js';
 import { applyApiSecurity, publicErrorMessage, rateLimit, requestIp, safeText, secureId, validJsonRequest } from '../_lib/security.js';
 import { authenticateStaff } from '../_lib/staffAuth.js';
-import { DEFAULT_SALON_ID } from '../_lib/tenant.js';
+import { publicSalonId } from '../_lib/salonFromRequest.js';
 import { findProfessional, loadSalonDirectory } from '../_lib/salonDirectory.js';
 const json = (res: any, status: number, body: unknown) => res.status(status).json(body);
 const valid = (a: any) => Boolean(a?.id && a?.professionalId && a?.clientName && a?.clientPhone && /^\d{4}-\d{2}-\d{2}$/.test(a?.date || '') && /^\d{2}:\d{2}$/.test(a?.startTime || '') && /^\d{2}:\d{2}$/.test(a?.endTime || ''));
@@ -13,8 +13,9 @@ export default async function handler(req: any, res: any) {
   if (!rateLimit(req, res, 'booking-create', 12, 10 * 60_000) || !validJsonRequest(req, res)) return;
   try {
     const staff = await authenticateStaff(req.headers?.authorization);
-    // Equipe: salão do login. Site público: LEV por enquanto (a fase 4 usa o endereço).
-    const salonId = staff ? staff.salonId : DEFAULT_SALON_ID;
+    // Equipe: salão do login. Site público: salão do endereço do site.
+    const salonId = staff ? staff.salonId : await publicSalonId(req, res);
+    if (!salonId) return;
     const raw = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
     const appointment = {
       ...raw,
