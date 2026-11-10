@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Service, Professional, CategoryType } from '../../types';
 import { StorageService } from '../../services/storage';
 import { CloudServiceCatalog } from '../../services/cloudServiceCatalog';
-import { bundledDataFor } from '../../data/salonDefaults';
-import { CURRENT_SALON_ID, scopedStorageKey } from '../../config/salon';
 import { formatCurrency } from '../../utils/formatters';
 import { Plus, Edit2, Trash2, Clock, DollarSign, Check, X } from 'lucide-react';
+
+// Papel de quem está logada nesta aba (getCurrentUser devolve visitante para a equipe).
+const staffRole = () => StorageService.getSyncUser()?.role ?? 'cliente';
 
 export const ServicesManager: React.FC = () => {
   const [services, setServices] = useState<Service[]>([]);
@@ -35,23 +36,10 @@ export const ServicesManager: React.FC = () => {
       }
     };
     load();
-    const user = StorageService.getCurrentUser();
+    // Ao abrir, só lê o catálogo do banco. Não envia a cópia do aparelho: uma
+    // cópia velha de um celular apagaria preços certos que estão no banco.
     if (CloudServiceCatalog.isConfigured()) {
-      const localServices = StorageService.getServices();
-      const hasLocalAdminChanges = JSON.stringify(localServices) !== JSON.stringify(bundledDataFor(CURRENT_SALON_ID).services);
-      const needsAdminMigration = user.role === 'admin'
-        && hasLocalAdminChanges
-        && localStorage.getItem(scopedStorageKey('lev_catalog_admin_migrated_v1')) !== 'done';
-      const publish = needsAdminMigration
-        ? CloudServiceCatalog.syncAll(localServices, user.role)
-        : user.role === 'profissional' && user.professionalId
-          ? CloudServiceCatalog.syncProfessional(localServices, user.professionalId, user.role)
-          : Promise.resolve();
-      publish
-        .then(() => {
-          if (needsAdminMigration) localStorage.setItem(scopedStorageKey('lev_catalog_admin_migrated_v1'), 'done');
-        })
-        .then(() => CloudServiceCatalog.load())
+      CloudServiceCatalog.load()
         .then(items => {
           StorageService.replaceServices(items);
           setServices(items);
@@ -120,7 +108,7 @@ export const ServicesManager: React.FC = () => {
 
     StorageService.saveService(serviceObj);
     try {
-      await CloudServiceCatalog.save(serviceObj, StorageService.getCurrentUser().role);
+      await CloudServiceCatalog.save(serviceObj, staffRole());
       const published = await CloudServiceCatalog.load();
       StorageService.replaceServices(published);
       setServices(published);
@@ -136,7 +124,7 @@ export const ServicesManager: React.FC = () => {
       if (!service) return;
       StorageService.deleteService(id);
       try {
-        await CloudServiceCatalog.remove(service, StorageService.getCurrentUser().role);
+        await CloudServiceCatalog.remove(service, staffRole());
       } catch (error) {
         StorageService.saveService(service);
         alert(error instanceof Error ? error.message : 'Não foi possível remover o serviço do catálogo público.');
