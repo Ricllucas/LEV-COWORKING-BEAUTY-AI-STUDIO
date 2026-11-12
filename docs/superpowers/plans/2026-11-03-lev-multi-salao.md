@@ -205,6 +205,10 @@ Hoje os ids `prof_elisangela`, `prof_talitha` e `prof_nayara` aparecem em 17 arq
 
 ## Fase 4 — Endereço de cada salão
 
+> **Situação (11/11/2026): 4.1, 4.2 e 4.4 concluídas e no ar. Falta a 4.3 (domínio comprado).** Plano detalhado: [`2026-11-10-fase4-endereco-do-salao.md`](2026-11-10-fase4-endereco-do-salao.md). A migração `20261110_salon_domains.sql` foi rodada no Supabase. Conferido no banco de produção: `salon_for_address` devolve `lev`, `demo` e `null` (endereço desconhecido). O site e o servidor foram conferidos com o banco real: `demo.localhost` abre o Studio Aurora e um endereço desconhecido mostra "salão não encontrado". No ar, `lev-coworking-beauty.vercel.app` abre a LEV sem consultar o banco, os horários livres vêm da LEV e um cancelamento de agendamento inexistente é recusado (404).
+>
+> **Observação:** os testes de navegador (`npm run e2e`) já falhavam antes desta fase (10 de 12 no Chrome, com o mesmo resultado em `main` antes e depois). O motivo é que procuram textos que aparecem mais de uma vez na página. Isso precisa ser consertado à parte.
+
 - **Tarefa 4.1:** coluna `salons.domains text[]`. Função `resolveSalonFromHost(host): Promise<string | null>` com testes: `lev.seudominio.com.br` → `lev`; domínio próprio cadastrado → o salão dele; endereço desconhecido → `null` → página "salão não encontrado".
 - **Tarefa 4.2:** `CURRENT_SALON_ID` (site) e as rotas públicas (API) passam a usar o endereço.
 - **Tarefa 4.3:** na Vercel: domínio coringa `*.seudominio.com.br` + domínios próprios dos clientes. **Precisa de você:** comprar o domínio do produto e escolher o nome.
