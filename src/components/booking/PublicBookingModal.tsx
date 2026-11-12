@@ -326,7 +326,7 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs" style={brandStyle(currentBrand(settings))}>
-      <div className="booking-modal bg-white rounded-2xl max-w-xl w-full border border-(--brand-text)/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-(--brand-text)">
+      <div role="dialog" aria-modal="true" aria-label="Agendamento online" className="booking-modal bg-white rounded-2xl max-w-xl w-full border border-(--brand-text)/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] text-(--brand-text)">
         {/* Header */}
         <div className="p-4 bg-(--brand-bg) border-b border-(--brand-text)/10 flex items-center justify-between shrink-0">
           <div>
@@ -339,6 +339,8 @@ export const PublicBookingModal: React.FC<PublicBookingModalProps> = ({
           </div>
           <button
             onClick={resetModal}
+            aria-label="Fechar"
+            title="Fechar"
             className="p-1.5 rounded-full hover:bg-(--brand-text)/10 text-(--brand-text)/70 transition-colors"
           >
             <X className="w-5 h-5" />

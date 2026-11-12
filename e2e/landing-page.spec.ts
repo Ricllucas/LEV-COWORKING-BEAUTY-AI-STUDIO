@@ -1,4 +1,13 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+
+// A página pública abre já com a janela de agendamento por cima (de propósito).
+// Para olhar a página por trás, fechamos a janela primeiro.
+async function closeBookingWindow(page: Page) {
+  const dialog = page.getByRole('dialog', { name: 'Agendamento online' });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Fechar' }).click();
+  await expect(dialog).toBeHidden();
+}
 
 test.describe('Landing Page', () => {
   test.beforeEach(async ({ page }) => {
@@ -6,76 +15,69 @@ test.describe('Landing Page', () => {
   });
 
   test('should load landing page successfully', async ({ page }) => {
-    // Check title
     await expect(page).toHaveTitle('LEV COWORKING BEAUTY');
-
-    // Check main heading
-    await expect(page.locator('text=Sua Beleza Completa')).toBeVisible();
+    await closeBookingWindow(page);
+    await expect(page.getByRole('heading', { level: 2, name: /Sua Beleza Completa/ })).toBeVisible();
   });
 
   test('should display professionals section', async ({ page }) => {
-    // Scroll to professionals section
-    const professionalsSection = page.locator('text=Conheça nossas especialistas');
-    await professionalsSection.scrollIntoViewIfNeeded();
-    await expect(professionalsSection).toBeVisible();
+    await closeBookingWindow(page);
+    const section = page.getByRole('heading', { name: 'Conheça nossas especialistas' });
+    await section.scrollIntoViewIfNeeded();
+    await expect(section).toBeVisible();
 
-    // Check for professional names
-    await expect(page.locator('text=Elisangela')).toBeVisible();
-    await expect(page.locator('text=Talitha')).toBeVisible();
-    await expect(page.locator('text=Nayara')).toBeVisible();
+    for (const name of ['Elisangela', 'Talitha', 'Nayara']) {
+      await expect(page.getByRole('heading', { level: 3, name, exact: true })).toBeVisible();
+      await expect(page.getByRole('button', { name: `Agendar com ${name}` })).toBeVisible();
+    }
   });
 
   test('should display services menu', async ({ page }) => {
-    const servicesSection = page.locator('text=Menu de Atendimentos');
-    await servicesSection.scrollIntoViewIfNeeded();
-    await expect(servicesSection).toBeVisible();
-
-    // Check service categories
-    await expect(page.locator('button:has-text("Todos os Serviços")')).toBeVisible();
+    await closeBookingWindow(page);
+    const section = page.getByRole('heading', { name: 'Menu de Atendimentos' });
+    await section.scrollIntoViewIfNeeded();
+    await expect(section).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Todos os Serviços' })).toBeVisible();
   });
 
   test('should filter services by professional', async ({ page }) => {
-    const servicesSection = page.locator('text=Menu de Atendimentos');
-    await servicesSection.scrollIntoViewIfNeeded();
+    await closeBookingWindow(page);
+    await page.getByRole('heading', { name: 'Menu de Atendimentos' }).scrollIntoViewIfNeeded();
 
-    // Click on a professional filter
-    const elisangelaFilter = page.locator('button:has-text("Elisangela")').first();
-    await elisangelaFilter.click();
+    // Antes do filtro aparecem serviços de todas as profissionais.
+    await expect(page.getByRole('heading', { level: 3, name: 'Extensão de Cílios' })).toBeVisible();
 
-    // Verify services are filtered
-    await expect(page.locator('text=Manicure Tradicional')).toBeVisible();
+    await page.getByRole('button', { name: /^Elisangela \(/ }).click();
+
+    await expect(page.getByRole('heading', { level: 3, name: 'Mão Tradicional' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 3, name: 'Extensão de Cílios' })).toHaveCount(0);
   });
 
-  test('should have working WhatsApp links', async ({ page, context }) => {
-    // Intercept new page (WhatsApp link opens in new tab)
-    const newPagePromise = context.waitForEvent('page');
-
-    // Find and click a WhatsApp button
-    const whatsappButtons = page.locator('a[href*="wa.me"]');
-    await expect(whatsappButtons.first()).toBeVisible();
-
-    // Check href contains wa.me
-    const href = await whatsappButtons.first().getAttribute('href');
-    expect(href).toContain('wa.me');
+  test('should have working WhatsApp links', async ({ page }) => {
+    await closeBookingWindow(page);
+    const whatsappLinks = page.getByRole('link', { name: 'WhatsApp Direto' });
+    await expect(whatsappLinks).toHaveCount(3);
+    for (const href of await whatsappLinks.evaluateAll(links => links.map(a => a.getAttribute('href')))) {
+      expect(href).toMatch(/^https:\/\/wa\.me\/55\d{10,11}\?text=/);
+    }
   });
 
   test('should display testimonials', async ({ page }) => {
-    const testimonialSection = page.locator('text=O que dizem sobre nosso espaço');
-    await testimonialSection.scrollIntoViewIfNeeded();
-    await expect(testimonialSection).toBeVisible();
-
-    // Check for review content
-    await expect(page.locator('text=Mariana Souza').or(page.locator('text=Patrícia'))).toBeVisible();
+    await closeBookingWindow(page);
+    const section = page.getByRole('heading', { name: 'O que dizem sobre nosso espaço' });
+    await section.scrollIntoViewIfNeeded();
+    await expect(section).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Ver todas as avaliações no Google' })).toBeVisible();
   });
 
   test('should be responsive on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
+    await closeBookingWindow(page);
+    await expect(page.getByRole('heading', { level: 2, name: /Sua Beleza Completa/ })).toBeVisible();
+    await expect(page.getByRole('banner')).toBeVisible();
 
-    // Check main heading is still visible
-    await expect(page.locator('text=Sua Beleza Completa')).toBeVisible();
-
-    // Check navigation is present
-    const mobileNav = page.locator('nav');
-    await expect(mobileNav).toBeVisible();
+    // Nada da página pode passar da largura da tela do celular.
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
   });
 });
