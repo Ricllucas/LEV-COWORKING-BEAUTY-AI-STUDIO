@@ -45,7 +45,7 @@
   - `export function classifyHost(raw: unknown, platformDomains: readonly string[] = PLATFORM_DOMAINS): HostKind`
 - Precisa continuar puro (é importado pelo navegador): sem `process.env` e sem módulos do Node.
 
-- [ ] **Passo 1: testes que falham.** `normalizeHost`:
+- [x] **Passo 1: testes que falham.** `normalizeHost`:
   - `'Lev.Exemplo.com.br:443'` → `'lev.exemplo.com.br'`
   - `'salao.com.br.'` → `'salao.com.br'`
   - `''`, `undefined`, `'a b.com'` e um texto com mais de 253 caracteres → `null`
@@ -57,10 +57,10 @@
   - com `['exemplo.com.br']`: `'lev.exemplo.com.br'` → `{ kind: 'slug', slug: 'lev' }`; `'exemplo.com.br'`, `'www.exemplo.com.br'` e `'a.b.exemplo.com.br'` → `{ kind: 'invalid' }`
   - `'www.salaobonito.com.br'` → `{ kind: 'domain', domain: 'salaobonito.com.br' }` (o `www.` é removido)
   - `'Salao_X.com'` → `{ kind: 'invalid' }`
-- [ ] **Passo 2:** `npx vitest run api/_lib/salonAddress.test.ts` → FALHA (módulo não existe)
-- [ ] **Passo 3:** implementar. Hostname válido: `^[a-z0-9.-]{1,253}$`, sem `..`. O subdomínio (`slug`) precisa passar no formato do id de salão. `www` nunca é slug.
-- [ ] **Passo 4:** o mesmo comando → PASSA
-- [ ] **Passo 5:** commit `feat: classificar endereco do site por salao`
+- [x] **Passo 2:** `npx vitest run api/_lib/salonAddress.test.ts` → FALHA (módulo não existe)
+- [x] **Passo 3:** implementar. Hostname válido: `^[a-z0-9.-]{1,253}$`, sem `..`. O subdomínio (`slug`) precisa passar no formato do id de salão. `www` nunca é slug.
+- [x] **Passo 4:** o mesmo comando → PASSA
+- [x] **Passo 5:** commit `feat: classificar endereco do site por salao`
 
 ### Tarefa 2: Migração `domains` + função `salon_for_address`
 
@@ -70,14 +70,14 @@
 **Interfaces:**
 - Produz: coluna `salons.domains text[] not null default '{}'` e a função `public.salon_for_address(p_slug text, p_domain text) returns text`, com `stable`, `security definer` e `set search_path = public`. Ela devolve o `id` quando **exatamente um** salão com `status not in ('inativo','bloqueado')` tem `slug = p_slug` ou `p_domain = any(domains)`. Nos outros casos devolve `null`. Recebe `grant execute` para `anon`, `authenticated` e `service_role`, e `revoke` de `public`.
 
-- [ ] **Passo 1:** escrever a migração, com índice GIN `salons_domains_idx` em `domains` e um check que exige domínios em minúsculas, sem `www.` no começo (`salons_domains_format_check`). No fim, deixar comentadas as consultas de verificação:
+- [x] **Passo 1:** escrever a migração, com índice GIN `salons_domains_idx` em `domains` e um check que exige domínios em minúsculas, sem `www.` no começo (`salons_domains_format_check`). No fim, deixar comentadas as consultas de verificação:
   ```sql
   select public.salon_for_address('lev', null);          -- 'lev'
   select public.salon_for_address(null, 'nao-existe.com'); -- null
   select public.salon_for_address('demo', null);         -- 'demo' (status 'teste')
   ```
-- [ ] **Passo 2:** a dona roda a migração no Supabase (SQL Editor), depois as três consultas, e confere os resultados.
-- [ ] **Passo 3:** commit `feat(banco): dominios por salao e funcao salon_for_address`
+- [x] **Passo 2:** a dona roda a migração no Supabase (SQL Editor), depois as três consultas, e confere os resultados.
+- [x] **Passo 3:** commit `feat(banco): dominios por salao e funcao salon_for_address`
 
 ### Tarefa 3: Servidor descobre o salão pela requisição
 
@@ -92,17 +92,17 @@
   - `export async function publicSalonId(req: { headers?: Record<string, unknown> }, res: { status(code: number): { json(body: unknown): unknown } }): Promise<string | null>`. Lê `req.headers.host`. Quando o resultado é `null`, já responde `404 { error: 'Salão não encontrado.' }` e devolve `null`. O erro 503 sobe para o `catch` da rota.
   - `export const resetSalonHostCache: () => void` (só para os testes)
 
-- [ ] **Passo 1: testes que falham** (`fetch` simulado com `vi.stubGlobal`):
+- [x] **Passo 1: testes que falham** (`fetch` simulado com `vi.stubGlobal`):
   - `'lev-coworking-beauty.vercel.app'` → `'lev'`, e `fetch` não é chamado
   - `'www.salaobonito.com.br'` → o corpo enviado é `{ p_slug: null, p_domain: 'salaobonito.com.br' }`; resposta `"demo"` → `'demo'`
   - resposta `null` → `null`
   - segunda chamada com o mesmo endereço → `fetch` chamado uma vez só
   - `fetch` rejeita → lança erro com `status === 503`; a chamada seguinte tenta a rede de novo
   - `publicSalonId` com endereço desconhecido → `res.status(404)` e `{ error: 'Salão não encontrado.' }`
-- [ ] **Passo 2:** `npx vitest run api/_lib/salonFromRequest.test.ts` → FALHA
-- [ ] **Passo 3:** implementar
-- [ ] **Passo 4:** o mesmo comando → PASSA
-- [ ] **Passo 5:** commit `feat: servidor descobre o salao pelo endereco`
+- [x] **Passo 2:** `npx vitest run api/_lib/salonFromRequest.test.ts` → FALHA
+- [x] **Passo 3:** implementar
+- [x] **Passo 4:** o mesmo comando → PASSA
+- [x] **Passo 5:** commit `feat: servidor descobre o salao pelo endereco`
 
 ### Tarefa 4: Rotas públicas usam o endereço
 
@@ -113,12 +113,12 @@
 **Interfaces:**
 - Consome: `publicSalonId(req, res)` (Tarefa 3)
 
-- [ ] **Passo 1: teste-guarda que falha.** Ele lê como texto os arquivos de `api/` fora de `_lib/` e de testes. `DEFAULT_SALON_ID` só pode aparecer em `api/calendar/sync.ts` (tarefa agendada da LEV). Os quatro arquivos acima precisam conter `publicSalonId(`.
-- [ ] **Passo 2:** `npx vitest run api/_lib/publicSalonGuard.test.ts` → FALHA
-- [ ] **Passo 3:** trocar `DEFAULT_SALON_ID` por `const salonId = await publicSalonId(req, res); if (!salonId) return;`. Em `create.ts`, fica `staff ? staff.salonId : await publicSalonId(req, res)`. Apagar os comentários "a fase 4 usa o endereço". Os erros com `status` 503 viram resposta 503 no `catch` da rota (em `create.ts` isso já acontece; nas outras, usar o `status` do erro quando existir).
-- [ ] **Passo 4:** acrescentar em `api/_lib/salonFromRequest.test.ts` o teste do item 4 da revisão. Com `host` do salão `demo` e o `fetch` do agendamento devolvendo `[]`, chamar o handler de `cancel.ts`. A URL consultada contém `salon_id=eq.demo` e a resposta é 404.
-- [ ] **Passo 5:** `npm run test` → tudo passa. `npm run lint` → sem erros.
-- [ ] **Passo 6:** commit `feat: rotas publicas usam o salao do endereco`
+- [x] **Passo 1: teste-guarda que falha.** Ele lê como texto os arquivos de `api/` fora de `_lib/` e de testes. `DEFAULT_SALON_ID` só pode aparecer em `api/calendar/sync.ts` (tarefa agendada da LEV). Os quatro arquivos acima precisam conter `publicSalonId(`.
+- [x] **Passo 2:** `npx vitest run api/_lib/publicSalonGuard.test.ts` → FALHA
+- [x] **Passo 3:** trocar `DEFAULT_SALON_ID` por `const salonId = await publicSalonId(req, res); if (!salonId) return;`. Em `create.ts`, fica `staff ? staff.salonId : await publicSalonId(req, res)`. Apagar os comentários "a fase 4 usa o endereço". Os erros com `status` 503 viram resposta 503 no `catch` da rota (em `create.ts` isso já acontece; nas outras, usar o `status` do erro quando existir).
+- [x] **Passo 4:** acrescentar em `api/_lib/salonFromRequest.test.ts` o teste do item 4 da revisão. Com `host` do salão `demo` e o `fetch` do agendamento devolvendo `[]`, chamar o handler de `cancel.ts`. A URL consultada contém `salon_id=eq.demo` e a resposta é 404.
+- [x] **Passo 5:** `npm run test` → tudo passa. `npm run lint` → sem erros.
+- [x] **Passo 6:** commit `feat: rotas publicas usam o salao do endereco`
 
 ### Tarefa 5: Site descobre o salão antes de abrir
 
@@ -136,7 +136,7 @@
   - `salon.ts`: `CURRENT_SALON_ID = bootSalonId() ?? resolveSalonId(import.meta.env.VITE_SALON_ID)` (os testes e o código antigo continuam funcionando sem a etapa de abertura)
   - `SalonNotFound` com a prop `variant: 'not_found' | 'offline'`. Visual neutro, sem nome nem cores da LEV. No modo `offline`, mostra o botão "Tentar de novo" (recarrega a página).
 
-- [ ] **Passo 1: testes que falham** (`siteSalon.test.ts`):
+- [x] **Passo 1: testes que falham** (`siteSalon.test.ts`):
   - `'lev-coworking-beauty.vercel.app'` → `{ status: 'ok', salonId: 'lev' }`, e `fetchImpl` não é chamado
   - `'localhost:3000'` com `envSalonId: 'demo'` → `'demo'`; com `envSalonId: 'X!'` → `'lev'`
   - `'demo.localhost:3000'` com a rpc devolvendo `"demo"` → `ok/demo`, e `storage.setItem('lev_salon_for_host:demo.localhost', 'demo')`
@@ -146,19 +146,19 @@
   `siteSalonGuard.test.ts`:
   - `src/main.tsx` não tem `import` estático de `./App`, `./context/` nem `./services/`
   - `src/config/siteSalon.ts` não importa `./salon`
-- [ ] **Passo 2:** `npx vitest run src/config` → FALHA
-- [ ] **Passo 3:** implementar `siteSalon.ts` e `SalonNotFound.tsx`, e ajustar `salon.ts`. Em `main.tsx`, criar uma função `start()` assíncrona (sem `await` no nível de cima, porque o alvo do build não aceita). Ela valida as variáveis, chama `resolveSiteSalon(window.location.host)` e mostra `SalonNotFound` quando não é `ok`. Quando é `ok`, chama `setBootSalonId` e depois faz `await import('./App.tsx')` e `await import('./context/CoworkingContext.tsx')`.
-- [ ] **Passo 4:** `npx vitest run src/config` → PASSA. `npm run test`, `npm run lint` e `npm run build` → sem erros.
-- [ ] **Passo 5:** conferir no computador. `npm run dev`, abrir `http://localhost:3000` (LEV) e `http://demo.localhost:3000` (Studio Aurora, depois da Tarefa 2 rodada no banco). Abrir também `http://nao-existe.localhost:3000` (deve aparecer "salão não encontrado").
-- [ ] **Passo 6:** commit `feat: site descobre o salao pelo endereco`
+- [x] **Passo 2:** `npx vitest run src/config` → FALHA
+- [x] **Passo 3:** implementar `siteSalon.ts` e `SalonNotFound.tsx`, e ajustar `salon.ts`. Em `main.tsx`, criar uma função `start()` assíncrona (sem `await` no nível de cima, porque o alvo do build não aceita). Ela valida as variáveis, chama `resolveSiteSalon(window.location.host)` e mostra `SalonNotFound` quando não é `ok`. Quando é `ok`, chama `setBootSalonId` e depois faz `await import('./App.tsx')` e `await import('./context/CoworkingContext.tsx')`.
+- [x] **Passo 4:** `npx vitest run src/config` → PASSA. `npm run test`, `npm run lint` e `npm run build` → sem erros.
+- [x] **Passo 5:** conferir no computador. `npm run dev`, abrir `http://localhost:3000` (LEV) e `http://demo.localhost:3000` (Studio Aurora, depois da Tarefa 2 rodada no banco). Abrir também `http://nao-existe.localhost:3000` (deve aparecer "salão não encontrado").
+- [x] **Passo 6:** commit `feat: site descobre o salao pelo endereco`
 
 ### Tarefa 6: Conferência final e publicação
 
-- [ ] **Passo 1:** confirmar que a migração da Tarefa 2 está no banco de produção (as consultas do Passo 2 da Tarefa 2).
-- [ ] **Passo 2:** `npm run e2e` → passa.
-- [ ] **Passo 3:** com a aprovação da dona, publicar (juntar em `main` e `git push origin main`). No site no ar (`lev-coworking-beauty.vercel.app`), conferir que a LEV abre, que dá para agendar e cancelar um horário de teste, e que o painel da admin continua funcionando.
+- [x] **Passo 1:** confirmar que a migração da Tarefa 2 está no banco de produção (as consultas do Passo 2 da Tarefa 2).
+- [x] **Passo 2:** `npm run e2e` → passa.
+- [x] **Passo 3:** com a aprovação da dona, publicar (juntar em `main` e `git push origin main`). No site no ar (`lev-coworking-beauty.vercel.app`), conferir que a LEV abre, que dá para agendar e cancelar um horário de teste, e que o painel da admin continua funcionando.
 - [ ] **Passo 4 (opcional, precisa da dona):** adicionar na Vercel um endereço gratuito `*.vercel.app` para o projeto e registrá-lo em `salons.domains` do `demo`. Abrir esse endereço e conferir que aparece o Studio Aurora.
-- [ ] **Passo 5:** atualizar a seção "Fase 4" do plano geral (4.1, 4.2 e 4.4 feitas; falta a 4.3) e fazer o commit `docs: fase 4 sem o dominio concluida`.
+- [x] **Passo 5:** atualizar a seção "Fase 4" do plano geral (4.1, 4.2 e 4.4 feitas; falta a 4.3) e fazer o commit `docs: fase 4 sem o dominio concluida`.
 
 ## Fora deste plano
 
